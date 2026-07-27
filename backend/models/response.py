@@ -21,6 +21,16 @@ from models.document import UploadedDocument
 # ---------------------------------------------------------------------------
 
 
+class SourceLink(BaseModel):
+    """A web source link discovered during real-time research.
+    Matches TS interface SourceLink in lib/types.ts.
+    """
+
+    title: str
+    url: str
+    snippet: str = ""
+
+
 class DocumentExcerpt(BaseModel):
     """Embedded in Conflict.documentA / documentB.
     Matches TS: { name: string; excerpt: string }
@@ -97,6 +107,7 @@ class AnalysisResult(BaseModel):
     conflicts: list[Conflict]
     recommendation: Recommendation
     suggestedQuestions: list[str] = []
+    sources: list[SourceLink] = []  # Web sources used during analysis
 
 
 # ---------------------------------------------------------------------------

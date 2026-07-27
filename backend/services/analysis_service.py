@@ -10,6 +10,7 @@ from models.response import (
     ComparisonRow,
     Recommendation,
     Risk,
+    SourceLink,
 )
 from prompts.recommendation import build_recommendation_prompt
 from prompts.risk_analysis import build_risk_prompt
@@ -135,6 +136,7 @@ class AnalysisService:
 
         # --- Fetch web context for richer analysis (runs before parallel calls) ---
         web_context = ""
+        web_sources: list[SourceLink] = []
         try:
             from services import web_search
             # Extract company/topic from document names for targeted search
@@ -142,12 +144,17 @@ class AnalysisService:
                 name.replace(".pdf", "").replace("_", " ").replace("-", " ")
                 for name in doc_names[:2]
             )[:100]
-            web_context = await web_search.search(
+            web_context, raw_sources = await web_search.search_with_sources(
                 f"greenwashing {company_hint} sustainability claims"
             )
+            web_sources = [
+                SourceLink(title=s["title"], url=s["url"], snippet=s["snippet"])
+                for s in raw_sources
+            ]
         except Exception as e:
             logger.warning(f"[analysis] Web search failed (non-fatal): {e}")
             web_context = ""
+            web_sources = []
 
         # --- Run the 5 analysis calls in parallel ---
         (
@@ -213,12 +220,13 @@ class AnalysisService:
         analysis = AnalysisResult(
             analyzedAt=datetime.utcnow(),
             executiveSummary=summary_result,
-            greenwashScore=self._clamp_greenwash_score(greenwash_score),
+            greenwashScore=self._clamp_greenwash_score(greenwash_score, risks=risks_result, matrix=matrix_result),
             risks=risks_result,
             comparisonMatrix=matrix_result,
             conflicts=conflicts_result,
             recommendation=recommendation_result,
             suggestedQuestions=suggested_questions,
+            sources=web_sources,
         )
 
         self.session_manager.store_analysis(session_id, analysis)
@@ -304,7 +312,7 @@ class AnalysisService:
                 logger.warning(f"[single-call] Conflict detection failed: {e}")
 
         # Extract and clamp greenwashScore
-        greenwash_score = self._clamp_greenwash_score(data.get("greenwashScore"))
+        greenwash_score = self._clamp_greenwash_score(data.get("greenwashScore"), risks=risks, matrix=matrix)
 
         analysis = AnalysisResult(
             analyzedAt=datetime.utcnow(),
@@ -333,17 +341,62 @@ class AnalysisService:
             )
 
     @staticmethod
-    def _clamp_greenwash_score(raw_score) -> int:
-        """Clamp greenwashScore to [0, 100]. Falls back to 50 for non-numeric values."""
-        if raw_score is None:
-            logger.warning("[greenwashScore] Missing from LLM response, defaulting to 50")
-            return 50
-        try:
-            score = int(raw_score)
-            return max(0, min(100, score))
-        except (TypeError, ValueError):
-            logger.warning(f"[greenwashScore] Non-numeric value '{raw_score}', defaulting to 50")
-            return 50
+    def _clamp_greenwash_score(raw_score, risks=None, matrix=None) -> int | None:
+        """
+        Clamp greenwashScore to [0, 100].
+
+        When the LLM doesn't provide a score (None or non-numeric), compute a
+        data-driven fallback from available analysis results instead of defaulting
+        to an arbitrary 50:
+        - If risks were detected: score = 30 (suspicious)
+        - If comparison matrix has contradictions ("Data Shows" wins): lower further
+        - If no data at all: return None (frontend shows "Unable to determine")
+        """
+        if raw_score is not None:
+            try:
+                score = int(raw_score)
+                return max(0, min(100, score))
+            except (TypeError, ValueError):
+                logger.warning(f"[greenwashScore] Non-numeric value '{raw_score}', computing from data")
+
+        # --- Data-driven fallback ---
+        has_risks = risks and len(risks) > 0
+        has_contradictions = False
+
+        if matrix:
+            for row in matrix:
+                # Check if "Data Shows" won (meaning claim is contradicted)
+                winner = getattr(row, "winner", None) if hasattr(row, "winner") else (row.get("winner") if isinstance(row, dict) else None)
+                if winner and "data" in str(winner).lower():
+                    has_contradictions = True
+                    break
+
+        if not has_risks and not has_contradictions:
+            # No evidence of issues — can't determine a score
+            logger.warning("[greenwashScore] Missing from LLM and no data to compute fallback, returning None")
+            return None
+
+        # Start at 30 (suspicious) if risks exist
+        score = 30 if has_risks else 50
+
+        # Lower further if matrix shows contradictions
+        if has_contradictions:
+            score -= 10
+
+        # More risks = lower score
+        if has_risks:
+            risk_count = len(risks) if risks else 0
+            high_risk_count = sum(
+                1 for r in (risks or [])
+                if (getattr(r, "level", None) or (r.get("level") if isinstance(r, dict) else "")).upper() == "HIGH"
+            )
+            if high_risk_count >= 3:
+                score -= 10
+            elif risk_count >= 5:
+                score -= 5
+
+        logger.info(f"[greenwashScore] Computed data-driven fallback: {max(0, score)} (risks={has_risks}, contradictions={has_contradictions})")
+        return max(0, min(100, score))
     async def _generate_summary_and_questions(
         self,
         system_prompt: str,
