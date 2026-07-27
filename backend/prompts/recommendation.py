@@ -1,14 +1,15 @@
 from models.document import Chunk
 
 
-def build_recommendation_prompt(chunks: list[Chunk]) -> str:
+def build_recommendation_prompt(chunks: list[Chunk], web_context: str = "") -> str:
     context = _format_chunks(chunks)
+    web_block = f"\n{web_context}\n" if web_context else ""
 
     return f"""You are a senior sustainability accountability advisor. Based on these documents, provide decisive action steps that consumers, watchdogs, or regulators should take to hold this company accountable for its environmental claims.
 
 {context}
-
-Focus on: specific questions to ask the company, verification steps anyone can take, regulatory complaints if warranted, and alternative choices consumers can make.
+{web_block}
+Focus on: specific questions to ask the company, verification steps anyone can take, regulatory complaints if warranted, and alternative choices consumers can make. If the web research above points to relevant regulators, certifiers, or existing complaints, incorporate those concrete resources into the action steps.
 
 Return ONLY valid JSON:
 {{

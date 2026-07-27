@@ -135,6 +135,24 @@ class AnalysisService:
         else:
             logger.warning("No document chunks — extraction may have failed")
 
+        # --- STEP 1: Web Research FIRST — so it can enrich every analysis prompt ---
+        # This runs before the LLM calls so real-time online sources actually improve
+        # the accuracy of the verdict, greenwash score, risks, and recommendation.
+        web_research_context = ""
+        if self.web_research:
+            try:
+                key_claims = self._extract_key_claims(chunks)
+                web_ctx = await asyncio.wait_for(
+                    self.web_research.research_for_analysis(doc_names, key_claims),
+                    timeout=15.0,  # Cap web research so it doesn't stall the pipeline
+                )
+                web_research_context = self.web_research.format_for_prompt(web_ctx)
+                if web_research_context:
+                    logger.info(f"[analysis] Web research found {len(web_ctx.results)} results — feeding into analysis prompts")
+            except Exception as web_err:
+                logger.warning(f"[analysis] Web research failed (non-fatal): {web_err}")
+
+        # --- STEP 2: Run the 5 analysis calls in parallel, enriched with web context ---
         (
             summary_and_questions_result,
             risks_result,
@@ -143,19 +161,19 @@ class AnalysisService:
             conflicts_result,
         ) = await asyncio.gather(
             self._with_timeout(
-                self._generate_summary_and_questions(system_prompt, chunks),
+                self._generate_summary_and_questions(system_prompt, chunks, web_context=web_research_context),
                 "summary+questions",
             ),
             self._with_timeout(
-                self._generate_risks(system_prompt, chunks),
+                self._generate_risks(system_prompt, chunks, web_context=web_research_context),
                 "risks",
             ),
             self._with_timeout(
-                self._generate_comparison_matrix(system_prompt, chunks, doc_names),
+                self._generate_comparison_matrix(system_prompt, chunks, doc_names, web_context=web_research_context),
                 "comparison_matrix",
             ),
             self._with_timeout(
-                self._generate_recommendation(system_prompt, chunks),
+                self._generate_recommendation(system_prompt, chunks, web_context=web_research_context),
                 "recommendation",
             ),
             self._with_timeout(
@@ -164,22 +182,6 @@ class AnalysisService:
             ),
             return_exceptions=True,
         )
-
-        # --- Web Research (non-blocking enrichment) ---
-        web_research_context = ""
-        if self.web_research:
-            try:
-                # Extract key claims from chunks for targeted research
-                key_claims = self._extract_key_claims(chunks)
-                web_ctx = await asyncio.wait_for(
-                    self.web_research.research_for_analysis(doc_names, key_claims),
-                    timeout=15.0,  # Don't let web research delay the pipeline
-                )
-                web_research_context = self.web_research.format_for_prompt(web_ctx)
-                if web_research_context:
-                    logger.info(f"[analysis] Web research found {len(web_ctx.results)} results")
-            except Exception as web_err:
-                logger.warning(f"[analysis] Web research failed (non-fatal): {web_err}")
 
         # Unpack summary + questions + greenwashScore
         if isinstance(summary_and_questions_result, Exception):
@@ -350,24 +352,30 @@ class AnalysisService:
         self,
         system_prompt: str,
         chunks: list[Chunk],
+        web_context: str = "",
     ) -> tuple[str, list[str], int | None]:
         """
         Generate executive summary, suggested questions, AND greenwashScore in a single LLM call.
         Uses the QUALITY model (deepseek-v4-pro) for deep reasoning.
         Merging these saves one full LLM round-trip (10-60s).
+
+        If web_context is provided, real-time online sources are cross-referenced
+        to improve the accuracy of the verdict and greenwash score.
         """
         from prompts.executive_summary import _format_chunks
         context = _format_chunks(chunks)
         doc_names = list(dict.fromkeys(c.source_document for c in chunks))
         doc_list = ", ".join(doc_names) if doc_names else "the uploaded document"
 
+        web_block = f"\n{web_context}\n" if web_context else ""
+
         merged_prompt = f"""You are a senior sustainability claims analyst. Write a verdict summary for a consumer or watchdog based on these documents.
 
 DOCUMENTS: {doc_list}
 
 {context}
-
-Lead with the overall sustainability credibility verdict. Flag the most serious greenwashing concern. Include specific claims vs. data comparisons. End with a clear recommended action for consumers.
+{web_block}
+Lead with the overall sustainability credibility verdict. Flag the most serious greenwashing concern. Include specific claims vs. data comparisons. End with a clear recommended action for consumers. If real-time web research above corroborates or contradicts a claim, factor it into your verdict and cite it as "Web source:".
 
 Also provide a Greenwash Score from 0-100:
 - 0-30: HIGH RISK — multiple misleading claims, major contradictions with data
@@ -383,9 +391,9 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
   "suggestedQuestions": ["question1", "question2", "question3", "question4", "question5"]
 }}"""
 
-        # Quality model (deepseek-v4-pro) for nuanced summary; 800 tokens is enough
+        # PREMIUM model (deepseek-v4-pro) for nuanced summary; 800 tokens is enough
         raw = await self.llm_service.complete(
-            system_prompt, merged_prompt, max_tokens=800, fast=False
+            system_prompt, merged_prompt, max_tokens=800, tier="premium"
         )
         raw = _strip_json_fences(raw)
 
@@ -412,14 +420,15 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
         self,
         system_prompt: str,
         chunks: list[Chunk],
+        web_context: str = "",
     ) -> list[Risk]:
-        """Generate risk analysis list using the QUALITY model (deepseek-v4-pro)."""
-        user_prompt = build_risk_prompt(chunks)
+        """Generate risk analysis list using the PREMIUM model (deepseek-v4-pro)."""
+        user_prompt = build_risk_prompt(chunks, web_context=web_context)
         # Increased to 1500 tokens — deepseek-v4-pro is more verbose
         # and needs extra headroom to output 5-8 detailed risk items without truncation.
         # Temperature 0.0 for maximum consistency in risk identification.
         raw = await self.llm_service.complete(
-            system_prompt, user_prompt, max_tokens=1500, temperature=0.0, fast=False
+            system_prompt, user_prompt, max_tokens=1500, temperature=0.0, tier="premium"
         )
         logger.info(f"[risks] raw LLM response: {len(raw)} chars, first 500: {raw[:500]!r}")
         raw = _strip_json_fences(raw)
@@ -476,7 +485,7 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
             )
             try:
                 raw2 = await self.llm_service.complete(
-                    system_prompt, retry_prompt, max_tokens=1500, fast=False
+                    system_prompt, retry_prompt, max_tokens=1500, tier="premium"
                 )
                 raw2 = _strip_json_fences(raw2)
                 logger.info(f"[risks] retry response, first 200: {raw2[:200]!r}")
@@ -516,7 +525,7 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
             )
             try:
                 raw_retry = await self.llm_service.complete(
-                    system_prompt, retry_prompt, max_tokens=1500, temperature=0.0, fast=False
+                    system_prompt, retry_prompt, max_tokens=1500, temperature=0.0, tier="premium"
                 )
                 raw_retry = _strip_json_fences(raw_retry)
                 brace_s = raw_retry.find("{")
@@ -564,6 +573,7 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
         system_prompt: str,
         chunks: list[Chunk],
         doc_names: list[str],
+        web_context: str = "",
     ) -> list[ComparisonRow]:
         """
         Generate comparison matrix rows.
@@ -573,17 +583,18 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
         from prompts.executive_summary import _format_chunks
 
         context = _format_chunks(chunks)
+        web_block = f"\n{web_context}\n" if web_context else ""
         user_prompt = f"""You are analyzing the following sustainability and environmental claims documents:
 
 DOCUMENT CONTEXT:
 {context}
-
+{web_block}
 {COMPARISON_MATRIX_PROMPT}"""
 
-        # QUALITY model — comparison requires reasoning about relative merits
+        # FAST model — comparison is structured output, doesn't need deep reasoning
         # Temperature 0.0 for consistency
         raw = await self.llm_service.complete(
-            system_prompt, user_prompt, max_tokens=1000, temperature=0.0, fast=False
+            system_prompt, user_prompt, max_tokens=1000, temperature=0.0, tier="fast"
         )
         logger.info(f"[matrix] raw LLM response: {len(raw)} chars, first 300: {raw[:300]!r}")
         raw = _strip_json_fences(raw)
@@ -633,15 +644,16 @@ DOCUMENT CONTEXT:
         self,
         system_prompt: str,
         chunks: list[Chunk],
+        web_context: str = "",
     ) -> Recommendation:
         """
         Generate sustainability accountability recommendation.
-        Uses QUALITY model (deepseek-v4-pro) — requires strategic reasoning.
+        Uses PREMIUM model (deepseek-v4-pro) — requires strategic reasoning.
         max_tokens=800 is sufficient for a recommendation with 3-5 next steps.
         """
-        user_prompt = build_recommendation_prompt(chunks)
+        user_prompt = build_recommendation_prompt(chunks, web_context=web_context)
         raw = await self.llm_service.complete(
-            system_prompt, user_prompt, max_tokens=800, fast=False
+            system_prompt, user_prompt, max_tokens=800, tier="premium"
         )
         raw = _strip_json_fences(raw)
 

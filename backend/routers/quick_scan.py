@@ -92,7 +92,7 @@ async def quick_scan(request: Request, body: QuickScanRequest):
             user_prompt=user_prompt,
             max_tokens=600,
             temperature=0.2,
-            fast=True,
+            tier="fast",
         )
         raw = _strip_json_fences(raw)
 

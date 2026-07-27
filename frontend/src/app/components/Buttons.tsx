@@ -15,33 +15,36 @@ export function PrimaryButton({ children, small = false, disabled, ...props }: P
         alignItems: 'center',
         justifyContent: 'center',
         gap: '6px',
-        background: disabled ? 'var(--graphite)' : 'var(--volt)',
-        color: disabled ? 'var(--ghost)' : '#F0F4FF',
+        background: disabled ? 'var(--graphite)' : 'var(--leaf)',
+        color: disabled ? 'var(--ghost)' : 'var(--ink)',
         borderRadius: 'var(--radius-btn)',
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
         fontSize: small ? '13px' : '14px',
-        fontWeight: 500,
+        fontWeight: 600,
         lineHeight: '20px',
-        padding: small ? '8px 12px' : '12px 24px',
+        padding: small ? '8px 14px' : '12px 24px',
         height: small ? '36px' : '44px',
         border: 'none',
-        boxShadow: disabled ? 'none' : '0 0 20px var(--volt-glow)',
+        boxShadow: disabled ? 'none' : '0 0 20px rgba(61, 220, 132, 0.2)',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : 1,
-        transition: 'background 0.15s, box-shadow 0.2s, opacity 0.15s, transform 0.15s',
+        filter: 'brightness(1)',
+        transition: 'all 0.2s ease',
         whiteSpace: 'nowrap',
       }}
       onMouseOver={(e) => {
         if (!disabled) {
-          e.currentTarget.style.background = 'var(--volt-hover)';
-          e.currentTarget.style.boxShadow = '0 0 32px rgba(59,123,246,0.5), 0 0 80px rgba(59,123,246,0.15)';
+          e.currentTarget.style.background = 'var(--leaf)';
+          e.currentTarget.style.filter = 'brightness(1.1)';
+          e.currentTarget.style.boxShadow = '0 0 32px rgba(61, 220, 132, 0.4), 0 4px 16px rgba(61, 220, 132, 0.15)';
           e.currentTarget.style.transform = 'translateY(-1px)';
         }
       }}
       onMouseOut={(e) => {
         if (!disabled) {
-          e.currentTarget.style.background = 'var(--volt)';
-          e.currentTarget.style.boxShadow = '0 0 20px var(--volt-glow)';
+          e.currentTarget.style.background = 'var(--leaf)';
+          e.currentTarget.style.filter = 'brightness(1)';
+          e.currentTarget.style.boxShadow = '0 0 20px rgba(61, 220, 132, 0.2)';
           e.currentTarget.style.transform = 'translateY(0)';
         }
       }}
@@ -71,7 +74,7 @@ export function GhostButton({ children, small = false, disabled, ...props }: Gho
         borderRadius: 'var(--radius-btn)',
         borderColor: 'var(--rule)',
         color: 'var(--ash)',
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
         fontSize: small ? '13px' : '14px',
         fontWeight: 500,
         lineHeight: '20px',
@@ -79,12 +82,12 @@ export function GhostButton({ children, small = false, disabled, ...props }: Gho
         height: small ? '36px' : '44px',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : 1,
-        transition: 'border-color 0.15s, color 0.15s, opacity 0.15s',
+        transition: 'all 0.2s ease',
         whiteSpace: 'nowrap',
       }}
       onMouseOver={(e) => {
         if (!disabled) {
-          e.currentTarget.style.borderColor = 'var(--volt)';
+          e.currentTarget.style.borderColor = 'var(--leaf-border)';
           e.currentTarget.style.color = 'var(--paper)';
         }
       }}

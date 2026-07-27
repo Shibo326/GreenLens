@@ -15,9 +15,11 @@ T = TypeVar("T", bound=BaseModel)
 MAX_TOKENS_DEFAULT = 800
 
 # ── Tiered model config ──────────────────────────────────────────────────────
-# MODEL_QUALITY: deepseek-v4-pro — top reasoning model for summaries, risks, recommendations
-# MODEL_FAST: deepseek-v4-flash — fast extraction/classification for matrix/questions/conflicts
-_MODEL_QUALITY_DEFAULT = "accounts/fireworks/models/deepseek-v4-pro"
+# MODEL_PREMIUM: deepseek-v4-pro — deepest reasoning for summaries, risks, recommendations
+# MODEL_QUALITY: kimi-k2p6 — balanced reasoning + speed for chat and conflict detection
+# MODEL_FAST: deepseek-v4-flash — fast extraction/classification for matrix/questions
+_MODEL_PREMIUM_DEFAULT = "accounts/fireworks/models/deepseek-v4-pro"
+_MODEL_QUALITY_DEFAULT = "accounts/fireworks/models/kimi-k2p6"
 _MODEL_FAST_DEFAULT = "accounts/fireworks/models/deepseek-v4-flash"
 
 
@@ -63,30 +65,31 @@ class LLMService:
         # Vision model — optional, used for /chat/vision endpoint
         self._model_vision = os.getenv("FIREWORKS_MODEL_VISION", "")
 
-        # Tiered models — read from env vars so they can be overridden per-deployment
+        # 3-tier models — read from env vars so they can be overridden per-deployment
+        self._model_premium = os.getenv("FIREWORKS_MODEL_PREMIUM", _MODEL_PREMIUM_DEFAULT)
         self._model_quality = os.getenv("FIREWORKS_MODEL_QUALITY", _MODEL_QUALITY_DEFAULT)
         self._model_fast = os.getenv("FIREWORKS_MODEL_FAST", _MODEL_FAST_DEFAULT)
 
-        # Legacy fallback: if only FIREWORKS_MODEL is set, use it for both tiers
+        # Legacy fallback: if only FIREWORKS_MODEL is set, use it for all tiers
         legacy_model = os.getenv("FIREWORKS_MODEL", "")
         if legacy_model:
+            if not os.getenv("FIREWORKS_MODEL_PREMIUM"):
+                self._model_premium = legacy_model
             if not os.getenv("FIREWORKS_MODEL_QUALITY"):
                 self._model_quality = legacy_model
             if not os.getenv("FIREWORKS_MODEL_FAST"):
                 self._model_fast = legacy_model
 
         # Keep self._model for backward compatibility
-        self._model = self._model_quality
+        self._model = self._model_premium
 
         # Single-call mode: combine ALL analysis into ONE LLM call for extreme speed
         self._single_call_mode = os.getenv("SINGLE_CALL_MODE", "false").lower() == "true"
 
-        # Semaphore: cap concurrent LLM calls at 3 to prevent rate-limit cascades.
-        # Our 5 parallel analysis tasks will queue up rather than all hitting the API at once.
-        self._semaphore = asyncio.Semaphore(3)
+        # Semaphore: cap concurrent LLM calls at 5 (we have 3 models now, can handle more)
+        self._semaphore = asyncio.Semaphore(5)
 
         # Persistent async HTTP client — avoids TCP handshake overhead on every call.
-        # limits: 20 keepalive connections, up to 100 concurrent (covers our 5 parallel calls easily).
         self._client = httpx.AsyncClient(
             timeout=120.0,
             limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
@@ -94,9 +97,10 @@ class LLMService:
 
         logger.info(f"Fireworks AI configured: endpoint={self._endpoint[:30]}...")
         logger.info(
-            f"LLMService tiered models — quality: {self._model_quality}, fast: {self._model_fast}"
+            f"LLMService 3-tier models — premium: {self._model_premium}, "
+            f"quality: {self._model_quality}, fast: {self._model_fast}"
         )
-        logger.info("LLMService semaphore: max 3 concurrent LLM calls")
+        logger.info("LLMService semaphore: max 5 concurrent LLM calls")
         if self._single_call_mode:
             logger.info("SINGLE_CALL_MODE enabled — all analysis in one mega-call")
 
@@ -107,19 +111,27 @@ class LLMService:
         max_tokens: int = MAX_TOKENS_DEFAULT,
         temperature: float = 0.1,
         fast: bool = False,
+        tier: str = "quality",
     ) -> str:
         """
         Send a completion request to Fireworks AI with automatic rate-limit retry.
 
         Args:
-            fast: If True, uses MODEL_FAST (gpt-oss-120b) for structured/speed tasks.
-                  If False (default), uses MODEL_QUALITY (deepseek-v4-flash) for reasoning.
+            fast: Legacy param. If True, uses FAST tier. Overridden by `tier`.
+            tier: Model tier to use — "premium", "quality", or "fast".
+                  - premium: deepseek-v4-pro (deepest reasoning — summaries, risks)
+                  - quality: kimi-k2p6 (balanced — chat, conflicts)
+                  - fast: deepseek-v4-flash (speed — matrix, quick scan)
         """
+        # Legacy compat: if fast=True and tier wasn't explicitly changed, use fast
+        if fast and tier == "quality":
+            tier = "fast"
+
         async with self._semaphore:
             for attempt in range(3):
                 try:
                     return await self._call_fireworks(
-                        system_prompt, user_prompt, max_tokens, temperature, fast=fast
+                        system_prompt, user_prompt, max_tokens, temperature, tier=tier
                     )
                 except LLMRateLimitError:
                     if attempt < 2:
@@ -274,9 +286,19 @@ Return ONLY valid JSON with ALL these keys:
         max_tokens: int,
         temperature: float,
         fast: bool = False,
+        tier: str = "quality",
     ) -> str:
         """Execute a single Fireworks AI completion request using the persistent client."""
-        model = self._model_fast if fast else self._model_quality
+        # Resolve model from tier
+        if fast and tier == "quality":
+            tier = "fast"
+        if tier == "premium":
+            model = self._model_premium
+        elif tier == "fast":
+            model = self._model_fast
+        else:
+            model = self._model_quality
+
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
@@ -311,7 +333,7 @@ Return ONLY valid JSON with ALL these keys:
         content = data["choices"][0]["message"]["content"]
         content = _sanitize_unicode(content)
         logger.info(
-            f"[Fireworks/AMD] Response received ({len(content)} chars) model={'fast' if fast else 'quality'}"
+            f"[Fireworks/AMD] Response received ({len(content)} chars) tier={tier}"
         )
         return content
 

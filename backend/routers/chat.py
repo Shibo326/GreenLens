@@ -132,7 +132,7 @@ async def chat(request: ChatRequest):
     user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance, simplify=request.simplify, web_context=web_context_str)
 
     try:
-        raw = await llm_service.complete(system_prompt, user_prompt, max_tokens=6144)
+        raw = await llm_service.complete(system_prompt, user_prompt, max_tokens=6144, tier="quality")
         logger.info(f"[chat] raw LLM response: {len(raw)} chars, first 200: {raw[:200]!r}")
         raw = _strip_json_fences(raw)
         logger.info(f"[chat] after strip_json_fences, first 200: {raw[:200]!r}")
@@ -424,7 +424,7 @@ async def chat_stream(request: ChatRequest):
     async def generate():
         try:
             # Get full LLM response
-            raw = await llm_service.complete(system_prompt, user_prompt, max_tokens=6144)
+            raw = await llm_service.complete(system_prompt, user_prompt, max_tokens=6144, tier="quality")
             logger.info(f"[chat/stream] raw LLM response: {len(raw)} chars, first 200: {raw[:200]!r}")
             raw = _strip_json_fences(raw)
 

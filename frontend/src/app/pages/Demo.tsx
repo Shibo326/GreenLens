@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavigationBar, AMDBadge } from "../components/NavigationBar";
+import { NavigationBar } from "../components/NavigationBar";
 import { Card } from "../components/Card";
 import { RiskBadge, EvidenceTag, EvidenceBox } from "../components/Badges";
 import { PrimaryButton, GhostButton } from "../components/Buttons";
@@ -11,10 +11,9 @@ import {
   Scale,
   Lightbulb,
   ArrowRight,
-  Cpu,
   PanelLeft,
   X,
-  Zap,
+  Leaf,
 } from "lucide-react";
 import { getDemoData } from "../../lib/api";
 import { motion } from "framer-motion";
@@ -22,180 +21,249 @@ import type { Analysis, PreSeededMessage, UploadedDocument } from "../../lib/typ
 import { GreenwashScoreGauge } from "../components/GreenwashScoreGauge";
 import { ClaimVsRealityRow } from "../components/ClaimVsRealityRow";
 
-// ─── Offline fallback data ────────────────────────────────────────────────────
+// ─── Offline fallback data (mirrors backend/routers/demo.py DEMO_DATA) ─────────
 const FALLBACK_DOCUMENTS: UploadedDocument[] = [
-  { id: "d1", filename: "Demo_Contract_TechCorp.pdf", fileType: "pdf", fileSize: 3800, processingStatus: "completed", uploadedAt: new Date().toISOString() },
-  { id: "d2", filename: "Demo_Invoice_TechCorp.pdf", fileType: "pdf", fileSize: 10700, processingStatus: "completed", uploadedAt: new Date().toISOString() },
-  { id: "d3", filename: "Demo_Quotation_TechCorp.pdf", fileType: "pdf", fileSize: 5500, processingStatus: "completed", uploadedAt: new Date().toISOString() },
-  { id: "d4", filename: "Demo_PurchaseOrder_GlobalDynamics.pdf", fileType: "pdf", fileSize: 6200, processingStatus: "completed", uploadedAt: new Date().toISOString() },
-  { id: "d5", filename: "Demo_VendorConfirmation_TechCorp.pdf", fileType: "pdf", fileSize: 7100, processingStatus: "completed", uploadedAt: new Date().toISOString() },
+  { id: "doc-1", filename: "EcoTech_SustainabilityReport_2025.pdf", fileType: "pdf", fileSize: 3456789, processingStatus: "completed", uploadedAt: "2025-11-15T10:00:00.000Z" },
+  { id: "doc-2", filename: "EcoTech_PackagingClaims_Q4Campaign.pdf", fileType: "pdf", fileSize: 1234567, processingStatus: "completed", uploadedAt: "2025-11-15T10:00:00.000Z" },
 ];
 
 const FALLBACK_ANALYSIS: Analysis = {
-  analyzedAt: new Date().toISOString(),
+  analyzedAt: "2025-11-15T10:30:00.000Z",
+  greenwashScore: 24,
   executiveSummary:
-    "TechCorp's invoice (INV-2026-0847) charges $112,297.50 against a contracted value of $95,000/yr — a $17,297 overcharge driven by unit price inflation ($525 vs $425 quoted) and removal of the agreed 5% volume discount. The Vendor Confirmation explicitly overrides the Purchase Order's Net 60 payment terms with Net 30, creating a 30-day cash flow exposure of ~$112K. Three compounding risks require immediate action: the contract auto-renews July 17 (39 days away), warranty terms conflict between 24 months (PO) and 12 months (vendor), and jurisdiction clauses are irreconcilable (Texas vs California). Immediate legal review and price reconciliation are required before any payment is processed.",
+    "GreenLens analysis of EcoTech Corporation's sustainability report and marketing materials reveals significant greenwashing across multiple claims. The company's 'carbon neutral' marketing implies zero total emissions, but their report confirms only Scope 1 emissions (3.9% of total footprint) are offset. Marketing materials claim '100% recycled packaging' while the sustainability report confirms only the outer box (45% by weight) uses recycled content — inner trays, plastic wrap, and blister packs are virgin materials. The '15% water reduction' claim omits that water-intensive processes were relocated to Mexico, increasing total usage by 8%. These discrepancies represent HIGH-severity greenwashing that would likely attract regulatory scrutiny under FTC Green Guides and the EU Green Claims Directive.",
   risks: [
     {
       id: "r1",
       level: "HIGH",
       description:
-        "Invoice overcharge of $13,144.95 (13.2% above PO value): AI License billed at $525/unit vs $425 quoted; 5% volume discount ($4,810) not applied. If paid as invoiced, Global Dynamics overpays by $13,144.95 with no contractual basis for the difference.",
-      sourceDocument: "Demo_Invoice_TechCorp.pdf",
-      category: "Financial",
+        "Marketing claims 'zero carbon footprint' and 'ZERO emissions' but only Scope 1 (17,400 tCO2e = 3.9% of total 448,400 tCO2e) is offset. Unqualified 'carbon neutral' claims covering less than 4% of actual emissions violate FTC Green Guides Section 260.5.",
+      sourceDocument: "EcoTech_PackagingClaims_Q4Campaign.pdf",
+      category: "Misleading Claims",
     },
     {
       id: "r2",
       level: "HIGH",
       description:
-        "Payment terms conflict: PO specifies Net 60; Vendor Confirmation enforces Net 30. Invoice due July 31, 2026. If Net 30 prevails, $112,297.50 is due 30 days earlier than budgeted — a material working capital impact. Late fee disparity (1.5% PO vs 2.5% vendor) compounds exposure.",
-      sourceDocument: "Demo_VendorConfirmation_TechCorp.pdf",
-      category: "Legal",
+        "'100% recycled packaging' claim is deceptive — sustainability report reveals only the outer box uses recycled content (153g of 340g = 45% by weight). Inner trays are virgin polystyrene, wrap is non-recyclable LDPE, accessories use PVC blister packs.",
+      sourceDocument: "EcoTech_SustainabilityReport_2025.pdf",
+      category: "Packaging Deception",
     },
     {
       id: "r3",
       level: "HIGH",
       description:
-        "Contract auto-renewal deadline is July 17, 2026 — 39 days away. Missing the 60-day notice window locks Global Dynamics into another $95,000 annual term. With unresolved pricing disputes, renewing without renegotiation is financially imprudent.",
-      sourceDocument: "Demo_Contract_TechCorp.pdf",
-      category: "Strategic",
+        "Water reduction claim (15%) achieved by relocating processes to Mexico, not by actual conservation. Combined water usage increased 8% YoY. Marketing presents this as a genuine environmental improvement ('every drop counts').",
+      sourceDocument: "EcoTech_SustainabilityReport_2025.pdf",
+      category: "Hidden Trade-off",
     },
     {
       id: "r4",
       level: "MEDIUM",
       description:
-        "Warranty conflict: PO requires 24 months as condition of award; Vendor Confirmation provides only 12 months standard. TechCorp charges $8,500/year for extended warranty. Accepting delivery without resolving this forfeits $8,500 in contractual protection.",
-      sourceDocument: "Demo_PurchaseOrder_GlobalDynamics.pdf",
-      category: "Legal",
+        "'Clean supply chain' and 'all suppliers meet rigorous standards' claims contradicted by report data: only 30% of suppliers audited, 6 found non-compliant with wastewater standards, 3 using banned substances, and 33 suppliers never audited.",
+      sourceDocument: "EcoTech_SustainabilityReport_2025.pdf",
+      category: "Unverified Claims",
     },
     {
       id: "r5",
       level: "MEDIUM",
       description:
-        "Jurisdiction conflict: PO specifies Texas law and Austin arbitration; Vendor Confirmation specifies California law and San Francisco litigation. In a dispute, choice of law could shift forum costs by $50K–$200K and alter applicable statutes.",
-      sourceDocument: "Demo_VendorConfirmation_TechCorp.pdf",
-      category: "Legal",
+        "'Eco-friendly manufacturing' and 'sustainable manufacturing' used without definition or certification. ISO 14001 covers Austin facility only. No cradle-to-cradle, B Corp, or equivalent whole-company environmental certification exists.",
+      sourceDocument: "EcoTech_PackagingClaims_Q4Campaign.pdf",
+      category: "Vague Claims",
+    },
+    {
+      id: "r6",
+      level: "LOW",
+      description:
+        "Press release states EcoTech is 'one of the first major consumer electronics companies to reach net-zero emissions' — conflating carbon offsetting (credits) with actual emission elimination. This distinction matters for investor and consumer trust.",
+      sourceDocument: "EcoTech_PackagingClaims_Q4Campaign.pdf",
+      category: "Misleading Framing",
     },
   ],
   comparisonMatrix: [
     {
-      field: "AI Platform License Unit Price",
-      values: { "Purchase Order (PO)": "$425.00/unit", "Vendor Confirmation": "$525.00/unit" },
-      winner: "Purchase Order — $100/unit cheaper, consistent with Quotation QT-2026-0392",
+      field: "Carbon Neutrality Scope",
+      values: { "Marketing Claim": "Full carbon neutrality, zero emissions", "Actual (Report)": "Scope 1 only — 3.9% of total footprint" },
+      winner: "",
     },
     {
-      field: "Total Billed Amount",
-      values: { "Purchase Order (PO)": "$99,152.55", "Vendor Confirmation": "$112,297.50" },
-      winner: "Purchase Order — $13,144.95 lower; vendor has no contractual basis for higher amount",
+      field: "Recycled Packaging",
+      values: { "Marketing Claim": "100% recycled packaging", "Actual (Report)": "45% by weight (outer box only)" },
+      winner: "",
     },
     {
-      field: "Payment Terms",
-      values: { "Purchase Order (PO)": "Net 60 days", "Vendor Confirmation": "Net 30 days" },
-      winner: "Purchase Order — 30 extra days of working capital retention",
+      field: "Water Reduction",
+      values: { "Marketing Claim": "15% less water, 'every drop counts'", "Actual (Report)": "Relocated to Mexico; total usage up 8%" },
+      winner: "",
     },
     {
-      field: "Warranty Period",
-      values: { "Purchase Order (PO)": "24 months", "Vendor Confirmation": "12 months" },
-      winner: "Purchase Order — double the coverage at no additional cost per agreed terms",
+      field: "Supply Chain Standards",
+      values: { "Marketing Claim": "All suppliers meet rigorous standards", "Actual (Report)": "30% audited; 9 non-compliant findings" },
+      winner: "",
     },
     {
-      field: "Consulting Rate",
-      values: { "Purchase Order (PO)": "$175/hour", "Vendor Confirmation": "$200/hour" },
-      winner: "Purchase Order — $25/hr savings = $1,000 on 40-hour engagement",
-    },
-    {
-      field: "Late Payment Penalty",
-      values: { "Purchase Order (PO)": "1.5%/month", "Vendor Confirmation": "2.5%/month (compounding)" },
-      winner: "Purchase Order — 1% lower penalty, non-compounding",
+      field: "Renewable Energy",
+      values: { "Marketing Claim": "Implied green/sustainable operations", "Actual (Report)": "12% renewable; 88% fossil grid" },
+      winner: "",
     },
   ],
   conflicts: [
     {
       id: "c1",
-      type: "Unit Price Discrepancy ($100/unit delta)",
+      type: "Carbon Claim vs. Actual Data",
       severity: "HIGH",
       documentA: {
-        name: "Demo_PurchaseOrder_GlobalDynamics.pdf",
-        excerpt: "AI Platform License (Annual) — Enterprise Plus | $425.00 | $45,200.00",
+        name: "EcoTech_PackagingClaims_Q4Campaign.pdf",
+        excerpt:
+          "We've eliminated our carbon footprint entirely. Every EcoTech product is made with net-zero emissions, meaning you can feel good about your purchase knowing it had zero climate impact.",
       },
       documentB: {
-        name: "Demo_VendorConfirmation_TechCorp.pdf",
-        excerpt: "AI Platform License (Annual) — Enterprise Plus | $525.00 | $48,500.00",
+        name: "EcoTech_SustainabilityReport_2025.pdf",
+        excerpt:
+          "Scope 2 (purchased electricity) and Scope 3 (supply chain, product use, end-of-life) emissions are tracked but not included in our carbon neutrality claim. Total actual footprint: 448,400 tCO2e. Percentage offset: 3.9%.",
       },
       explanation:
-        "The PO locks the unit price at $425 based on Quotation QT-2026-0392. The Vendor Confirmation bills $525 and explicitly states this 'supersedes' the quotation. The $100/unit delta generates a $3,300 overcharge on this line alone. TechCorp's claim that the quoted price was 'preliminary' contradicts the quotation's price guarantee clause.",
+        "Marketing claims 'zero climate impact' and 'eliminated carbon footprint entirely' while the sustainability report explicitly states only Scope 1 (3.9% of total emissions) is offset. The remaining 96.1% (430,600 tCO2e) is unaddressed. This is a textbook example of scope manipulation — the most common corporate greenwashing tactic identified by the EU Green Claims Directive.",
       recommendedAction:
-        "Finance team to formally dispute the unit price variance in writing within 5 business days. Reference Quotation QT-2026-0392 and its price guarantee clause. Withhold payment on the $13,144.95 disputed amount pending written resolution from TechCorp VP Sales.",
+        "Immediately qualify all carbon neutrality claims to specify 'Scope 1 only' or face potential FTC enforcement action. Remove unqualified 'zero emissions' language from all marketing channels. Consider ACCC v. Clorox precedent ($5.5M fine for misleading 'eco-friendly' claims).",
     },
     {
       id: "c2",
-      type: "Payment Terms Contradiction (Net 60 vs Net 30)",
+      type: "Packaging Claim vs. Actual Composition",
       severity: "HIGH",
       documentA: {
-        name: "Demo_PurchaseOrder_GlobalDynamics.pdf",
-        excerpt: "Payment Terms: Net 60 days from invoice receipt date",
+        name: "EcoTech_PackagingClaims_Q4Campaign.pdf",
+        excerpt:
+          "This box? It's made entirely from recycled materials. We've eliminated virgin materials from our packaging supply chain completely.",
       },
       documentB: {
-        name: "Demo_VendorConfirmation_TechCorp.pdf",
-        excerpt: "Payment Terms: Net 30 days from invoice date — STANDARD TERMS APPLY",
+        name: "EcoTech_SustainabilityReport_2025.pdf",
+        excerpt:
+          "Inner product tray: Virgin polystyrene foam. Plastic wrap: Standard LDPE film (not recyclable). Accessories packaging: PVC blister packs. Recycled content by weight: 45% (outer box only = 153g of 340g).",
       },
       explanation:
-        "PO GD-PROC-2024-11 policy mandates Net 60 for all vendor payments. Vendor Confirmation overrides this with Net 30, making Invoice INV-2026-0847 due July 31 rather than August 30. Paying Net 30 on a $112K invoice represents a 30-day early payment worth approximately $470 in opportunity cost at current rates.",
+        "The '100% recycled' claim applies only to the outer shipping box but is presented as covering all packaging. The sustainability report reveals 55% of packaging weight consists of virgin polystyrene, non-recyclable LDPE, and PVC — materials with significant environmental impact that directly contradict the 'eliminated virgin materials' claim.",
       recommendedAction:
-        "Legal to issue a written notice asserting Net 60 terms per procurement policy GD-PROC-2024-11. Process payment by August 30, 2026. If TechCorp insists on Net 30, escalate to CFO for written approval before any early payment.",
+        "Revise packaging claims to specify 'outer box made from 100% recycled cardboard' and disclose that inner packaging uses virgin materials. Under FTC Green Guides Section 260.13, unqualified '100% recycled' claims must apply to the entire product or package, not just one component.",
+    },
+    {
+      id: "c3",
+      type: "Supply Chain Claim vs. Audit Reality",
+      severity: "MEDIUM",
+      documentA: {
+        name: "EcoTech_PackagingClaims_Q4Campaign.pdf",
+        excerpt:
+          "We work closely with all our suppliers to reduce environmental impact. All suppliers sign our environmental code of conduct and undergo regular audits.",
+      },
+      documentB: {
+        name: "EcoTech_SustainabilityReport_2025.pdf",
+        excerpt:
+          "Environmental audits conducted on suppliers representing 30% of procurement spend. 14 of 47 suppliers audited. 6 found non-compliant with wastewater standards. 3 identified as using banned substances. 33 suppliers not yet audited.",
+      },
+      explanation:
+        "Marketing implies all 47 suppliers undergo environmental audits, but only 14 (30%) have been audited. Of those audited, 64% (9 of 14) had compliance failures. The claim of 'rigorous standards' is undermined by the fact that 70% of the supply chain has never been assessed.",
+      recommendedAction:
+        "Remove 'all suppliers' language and replace with factual '30% of suppliers audited to date, with a target of 100% by [year]'. Disclose non-compliance findings and remediation status per GRI Standards 308 (Supplier Environmental Assessment).",
     },
   ],
   recommendation: {
-    title: "Dispute Invoice — Withhold $13,144.95 Pending Price Reconciliation",
+    title: "High Greenwashing Risk — Immediate Claim Revision Required",
     summary:
-      "The Vendor Confirmation unlawfully overrides three material terms from the Purchase Order: unit price ($100/unit markup), payment terms (Net 30 vs Net 60), and warranty (12 vs 24 months). The $13,144.95 billing gap has no contractual basis. Industry standard in SaaS procurement is to honor the last signed quotation; TechCorp's claim that prices were 'preliminary' is contradicted by QT-2026-0392's explicit price guarantee. Act before July 17 to avoid auto-renewal on disputed terms.",
+      "EcoTech's marketing materials contain multiple HIGH-severity greenwashing violations that directly contradict their own sustainability report data. The gap between claims and evidence is substantial and systemic, not incidental. Regulatory action is likely if these claims reach enforcement bodies.",
     nextSteps: [
-      "Procurement to send formal price dispute letter citing QT-2026-0392 | Legal team | Within 5 business days",
-      "Finance to withhold the $13,144.95 disputed amount from payment | CFO approval required | Before July 31",
-      "Legal to send contract non-renewal notice before July 17 deadline | General Counsel | Within 7 days",
-      "Schedule renegotiation meeting with TechCorp to align pricing, payment terms, and warranty | Procurement lead | Within 2 weeks",
+      "Immediately qualify carbon neutrality claims to 'Scope 1 only (3.9% of total footprint)' across all channels",
+      "Revise packaging claims to disclose actual recycled content by weight (45%) and virgin materials used",
+      "Remove unqualified absolute claims ('zero emissions', 'entirely recycled', 'all suppliers') from all marketing",
+      "Engage external legal review of all environmental marketing against FTC Green Guides and EU Green Claims Directive",
+      "Develop a substantiation file for each environmental claim with supporting third-party evidence",
     ],
-    confidence: 0.91,
+    confidence: 0.92,
   },
   suggestedQuestions: [
-    "What is the exact dollar amount of the overcharge?",
-    "When is the contract auto-renewal deadline?",
-    "Which payment terms should we follow?",
-    "How does the warranty conflict affect our position?",
-    "What should we do before processing payment?",
+    "What percentage of EcoTech's total emissions are actually offset?",
+    "How does the '100% recycled packaging' claim hold up against the actual packaging composition?",
+    "What are the regulatory risks of EcoTech's current carbon neutrality marketing?",
+    "Which specific claims would trigger FTC or EU Green Claims Directive enforcement?",
+    "How does the water reduction claim mask the actual increase in total water usage?",
+    "What would EcoTech need to do to make their sustainability claims substantiatable?",
   ],
 };
 
 const FALLBACK_MESSAGES: PreSeededMessage[] = [
   {
-    id: "pm1",
+    id: "m1",
     role: "user",
-    content: "Which vendor document should we trust for pricing?",
-    timestamp: new Date().toISOString(),
+    content: "Is EcoTech really carbon neutral?",
+    timestamp: "2025-11-15T10:32:00.000Z",
   },
   {
-    id: "pm2",
+    id: "m2",
     role: "assistant",
-    content:
-      "Trust the Purchase Order pricing backed by Quotation QT-2026-0392. The quotation's price guarantee clause locks the AI License at $425/unit. The Vendor Confirmation's claim that this was 'preliminary' is legally weak — the quotation explicitly states prices are guaranteed for 60 days and supersede prior communications. The $525/unit in the Vendor Confirmation represents a 23.5% markup with no contractual basis.",
-    timestamp: new Date().toISOString(),
+    content: "",
+    timestamp: "2025-11-15T10:32:02.000Z",
     structuredResponse: {
       answer:
-        "Trust the Purchase Order pricing backed by Quotation QT-2026-0392. The quotation's price guarantee clause locks the AI License at $425/unit. The Vendor Confirmation's claim that this was 'preliminary' is legally weak — the quotation explicitly states prices are guaranteed for 60 days and supersede prior communications. The $525/unit in the Vendor Confirmation represents a 23.5% markup with no contractual basis.",
+        "No. EcoTech's carbon neutrality claim is severely misleading. Their sustainability report explicitly states that only Scope 1 emissions are offset — that's 17,400 tCO2e out of a total footprint of 448,400 tCO2e. In other words, they've offset 3.9% of their actual carbon footprint and called it 'carbon neutral'. Their marketing says 'zero climate impact' and 'eliminated our carbon footprint entirely' — this is demonstrably false by their own data. Scope 2 (89,000 tCO2e from purchased electricity) and Scope 3 (342,000 tCO2e from supply chain, product use, and end-of-life) are completely unaddressed. Under FTC Green Guides Section 260.5, an unqualified 'carbon neutral' claim must account for all material emission sources unless clearly qualified. EcoTech's claim does neither — it implies total neutrality while covering less than 4% of actual emissions. This is the type of scope manipulation that resulted in regulatory action against Shell, TotalEnergies, and Santos in recent years.",
       evidence: [
         {
-          quote: "PRICE GUARANTEE: This quotation is valid for 60 days from issue date. Prices are guaranteed and will not increase during the validity period.",
-          sourceDocument: "Demo_Quotation_TechCorp.pdf",
+          quote: "Total actual footprint: 448,400 tCO2e. Percentage offset: 3.9% (Scope 1 only)",
+          sourceDocument: "EcoTech_SustainabilityReport_2025.pdf",
+          documentType: "pdf",
+        },
+        {
+          quote: "We've eliminated our carbon footprint entirely. Every EcoTech product is made with net-zero emissions, meaning zero climate impact.",
+          sourceDocument: "EcoTech_PackagingClaims_Q4Campaign.pdf",
+          documentType: "pdf",
+        },
+        {
+          quote: "Scope 2 and Scope 3 emissions are tracked but not included in our carbon neutrality claim at this time.",
+          sourceDocument: "EcoTech_SustainabilityReport_2025.pdf",
           documentType: "pdf",
         },
       ],
-      risks: "HIGH: If the Vendor Confirmation's pricing is accepted without dispute, Global Dynamics overpays $13,144.95 with no path to recovery.",
-      recommendation: "Procurement to formally reject the Vendor Confirmation pricing and invoke the price guarantee in QT-2026-0392 within 5 business days.",
+      risks:
+        "HIGH — Unqualified carbon neutrality claims covering only 3.9% of actual emissions constitute misleading environmental marketing under multiple jurisdictions. FTC Green Guides require material qualification. The EU Green Claims Directive (effective 2026) will make such unsubstantiated claims explicitly illegal. ACCC has fined companies $5.5M+ for similar overstatements.",
+      recommendation:
+        "Consumers should disregard EcoTech's 'carbon neutral' marketing as materially misleading. The company should immediately qualify all claims to state 'Scope 1 carbon neutral (3.9% of total footprint)' or face regulatory risk. Look for SBTi-validated targets covering all scopes as a credible alternative.",
+    },
+  },
+  {
+    id: "m3",
+    role: "user",
+    content: "What about their recycled packaging claim?",
+    timestamp: "2025-11-15T10:34:00.000Z",
+  },
+  {
+    id: "m4",
+    role: "assistant",
+    content: "",
+    timestamp: "2025-11-15T10:34:02.000Z",
+    structuredResponse: {
+      answer:
+        "The '100% recycled packaging' claim is another clear case of deceptive marketing. EcoTech's own sustainability report breaks down packaging composition: the outer shipping box (153g) uses post-consumer recycled cardboard, but the inner product tray is virgin polystyrene foam, the plastic wrap is non-recyclable LDPE film, and accessories come in PVC blister packs. By weight, recycled content accounts for only 45% of total packaging (153g out of 340g). The marketing claim that they've 'eliminated virgin materials from our packaging supply chain completely' is directly contradicted by their own data showing 55% virgin material content. Under FTC Green Guides Section 260.13, an unqualified 'recycled' claim must apply to the entire product. Claiming '100% recycled' when only the outer box qualifies is textbook deception — it's the packaging equivalent of claiming your car is 'electric' because the clock runs on a battery. PVC blister packs are particularly problematic as PVC is considered one of the most environmentally harmful plastics in terms of production and end-of-life toxicity.",
+      evidence: [
+        {
+          quote: "Recycled content by weight: 45% (outer box only = 153g of 340g). Inner product tray: Virgin polystyrene foam. Plastic wrap: Standard LDPE film (not recyclable).",
+          sourceDocument: "EcoTech_SustainabilityReport_2025.pdf",
+          documentType: "pdf",
+        },
+        {
+          quote: "This box? It's made entirely from recycled materials. We've eliminated virgin materials from our packaging supply chain completely.",
+          sourceDocument: "EcoTech_PackagingClaims_Q4Campaign.pdf",
+          documentType: "pdf",
+        },
+      ],
+      risks:
+        "HIGH — Unqualified '100% recycled' claims that apply only to one component violate FTC Green Guides Section 260.13. The explicit statement about eliminating virgin materials is directly contradicted by reported data (55% virgin content by weight). This creates both regulatory liability and consumer trust risk.",
+      recommendation:
+        "Consumers should verify what 'recycled packaging' actually means before trusting such claims. Look for specific percentages and which components are covered. EcoTech should revise claims to state 'outer box made from 100% recycled cardboard' and develop a roadmap to eliminate virgin polystyrene, LDPE, and PVC from their packaging entirely.",
     },
   },
 ];
 
-// AMD-branded loading screen with premium animations
+// GreenLens loading screen with premium animations
 function DemoLoader() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--ink)" }}>
@@ -205,12 +273,12 @@ function DemoLoader() {
           className="flex flex-col items-center gap-6 animate-fadeIn"
           style={{
             background: "var(--lead)",
-            border: "1px solid var(--volt-border)",
+            border: "1px solid var(--leaf-border)",
             borderRadius: "16px",
             padding: "clamp(24px, 6vw, 48px) clamp(24px, 8vw, 64px)",
             maxWidth: "400px",
             width: "100%",
-            boxShadow: "0 0 40px rgba(59,123,246,0.08)",
+            boxShadow: "0 0 40px rgba(61,220,132,0.08)",
             position: "relative",
             overflow: "hidden",
           }}
@@ -218,10 +286,10 @@ function DemoLoader() {
           {/* Scan line effect */}
           <div className="scan-line" />
 
-          {/* AMD logo area with conic-gradient spinner ring */}
+          {/* GreenLens logo area with conic-gradient spinner ring */}
           <div style={{ position: "relative" }}>
-            <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "rgba(237,28,36,0.1)", border: "1px solid rgba(237,28,36,0.25)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
-              <Zap size={28} style={{ color: "var(--amd-signal)" }} />
+            <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
+              <Leaf size={28} style={{ color: "var(--leaf)" }} />
             </div>
             {/* Animated rotating border */}
             <motion.div
@@ -231,7 +299,7 @@ function DemoLoader() {
                 position: "absolute",
                 inset: "-6px",
                 borderRadius: "20px",
-                background: "conic-gradient(from 0deg, transparent 0%, rgba(237,28,36,0.6) 25%, transparent 50%)",
+                background: "conic-gradient(from 0deg, transparent 0%, rgba(61,220,132,0.6) 25%, transparent 50%)",
                 zIndex: 0,
               }}
             />
@@ -252,7 +320,7 @@ function DemoLoader() {
                 inset: "-6px",
                 borderRadius: "20px",
                 border: "2px solid transparent",
-                backgroundImage: "conic-gradient(from 0deg, transparent 60%, rgba(237,28,36,0.7) 80%, transparent 100%)",
+                backgroundImage: "conic-gradient(from 0deg, transparent 60%, rgba(61,220,132,0.7) 80%, transparent 100%)",
                 backgroundOrigin: "border-box",
                 backgroundClip: "border-box",
                 WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
@@ -270,7 +338,7 @@ function DemoLoader() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px" }}
+              style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px" }}
             >
               Loading Demo
             </motion.div>
@@ -278,9 +346,9 @@ function DemoLoader() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
-              style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)" }}
+              style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)" }}
             >
-              Initializing AMD MI300X inference…
+              Loading GreenLens analysis…
             </motion.div>
           </div>
 
@@ -294,7 +362,7 @@ function DemoLoader() {
                   width: "10px",
                   height: "10px",
                   borderRadius: "50%",
-                  background: "var(--volt)",
+                  background: "var(--leaf)",
                   animationDelay: `${i * 0.15}s`,
                 }}
               />
@@ -366,18 +434,18 @@ export default function Demo() {
               key={doc.id}
               className="px-4 py-3"
               style={{ borderBottom: "1px solid rgba(42,45,62,0.5)", borderLeft: "2px solid transparent", transition: "background 0.15s, border-left-color 0.15s", cursor: "default" }}
-              onMouseOver={(e) => { e.currentTarget.style.background = "var(--graphite)"; e.currentTarget.style.borderLeftColor = "var(--volt)"; }}
+              onMouseOver={(e) => { e.currentTarget.style.background = "var(--graphite)"; e.currentTarget.style.borderLeftColor = "var(--leaf)"; }}
               onMouseOut={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderLeftColor = "transparent"; }}
             >
               <div className="flex items-start gap-3">
-                <div className="flex items-center justify-center rounded-md shrink-0" style={{ width: "24px", height: "24px", background: isImage ? "rgba(59,123,246,0.1)" : "rgba(237,28,36,0.1)", border: `1px solid ${isImage ? "rgba(59,123,246,0.3)" : "rgba(237,28,36,0.3)"}` }}>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", fontWeight: 600, color: isImage ? "var(--volt)" : "var(--conflict)" }}>
+                <div className="flex items-center justify-center rounded-md shrink-0" style={{ width: "24px", height: "24px", background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
+                  <span style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "9px", fontWeight: 600, color: "var(--leaf)" }}>
                     {isImage ? "IMG" : "PDF"}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="truncate" style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--paper)" }}>{doc.filename}</div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "var(--cleared)" }}>
+                  <div className="truncate" style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--paper)" }}>{doc.filename}</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "11px", color: "var(--leaf)" }}>
                     {isImage ? "Image · OCR Complete" : "Processed"}
                   </div>
                 </div>
@@ -392,31 +460,30 @@ export default function Demo() {
           <Link to="/" style={{ display: "block" }}>
             <PrimaryButton style={{ width: "100%" }}>Upload Your Documents</PrimaryButton>
           </Link>
-          <div className="flex justify-center pt-1"><AMDBadge /></div>
         </div>
       </div>
     </>
   );
 
   return (
-    <div className="min-h-screen animate-fadeIn" style={{ background: "var(--ink)" }}>
+    <div className="min-h-screen page-enter" style={{ background: "var(--ink)" }}>
       <NavigationBar showDemo={false} />
 
       {/* Demo Banner */}
       <div
         className="flex flex-wrap items-center justify-between px-4 sm:px-8 py-3 gap-3"
-        style={{ background: "rgba(245,166,35,0.08)", borderBottom: "1px solid rgba(245,166,35,0.25)" }}
+        style={{ background: "var(--flag-amber-dim)", borderBottom: "1px solid rgba(240,169,55,0.25)" }}
       >
         <div className="flex items-center gap-2">
-          <Target size={15} style={{ color: "var(--caution)", flexShrink: 0 }} />
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "13px", fontWeight: 600, color: "var(--caution)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <Target size={15} style={{ color: "var(--flag-amber)", flexShrink: 0 }} />
+          <span style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "13px", fontWeight: 600, color: "var(--flag-amber)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
             Demo Mode
           </span>
-          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", fontWeight: 500, color: "var(--caution)" }}>
-            — Pre-loaded sample procurement documents
+          <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", fontWeight: 500, color: "var(--flag-amber)" }}>
+            — Pre-loaded sample sustainability claims
           </span>
         </div>
-        <Link to="/" style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", fontWeight: 500, color: "var(--volt)", textDecoration: "none", whiteSpace: "nowrap" }}>
+        <Link to="/" style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", fontWeight: 500, color: "var(--leaf)", textDecoration: "none", whiteSpace: "nowrap" }}>
           Try with your own →
         </Link>
       </div>
@@ -425,7 +492,7 @@ export default function Demo() {
         {/* Desktop sidebar */}
         <div
           className="hidden md:block shrink-0"
-          style={{ width: "300px", minHeight: "calc(100vh - 120px)", background: "var(--lead)", borderRight: "1px solid var(--rule)" }}
+          style={{ width: "300px", minHeight: "calc(100vh - 112px)", background: "var(--lead)", borderRight: "1px solid var(--rule)" }}
         >
           <SidebarContent />
         </div>
@@ -466,32 +533,31 @@ export default function Demo() {
                 <PanelLeft size={18} />
               </button>
               <div>
-                <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 700, color: "var(--paper)" }}>
-                  Sample Procurement Analysis
+                <h2 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 700, color: "var(--paper)" }}>
+                  Sample Greenwashing Analysis
                 </h2>
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)" }}>
+                <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)" }}>
                   {documents.length} documents · Demo data
                 </span>
               </div>
             </div>
-            <AMDBadge />
           </div>
 
           <div className="p-4 sm:p-6 md:p-8 space-y-5">
             {/* Guided Tour Intro */}
-            <div className="rounded-xl p-5" style={{ background: "linear-gradient(135deg, rgba(59,123,246,0.06) 0%, rgba(0,212,255,0.04) 100%)", border: "1px solid var(--volt-border)" }}>
+            <div className="rounded-xl p-5" style={{ background: "linear-gradient(135deg, rgba(61,220,132,0.06) 0%, rgba(61,220,132,0.03) 100%)", border: "1px solid var(--leaf-border)" }}>
               <div className="flex items-start gap-3">
-                <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "var(--volt-dim)", border: "1px solid var(--volt-border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Lightbulb size={18} style={{ color: "var(--volt)" }} />
+                <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Lightbulb size={18} style={{ color: "var(--leaf)" }} />
                 </div>
                 <div>
-                  <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "16px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px" }}>
+                  <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "16px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px" }}>
                     What you're seeing
                   </h3>
-                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--ash)", margin: 0 }}>
-                    This demo shows a complete AI analysis of {documents.length} sample procurement documents — processed in under 90 seconds using AMD Instinct MI300X. 
-                    Below you'll see: <strong style={{ color: "var(--paper)" }}>cross-document conflict detection</strong>, an <strong style={{ color: "var(--paper)" }}>executive summary</strong>, <strong style={{ color: "var(--paper)" }}>risk assessment</strong> with severity ratings, 
-                    a <strong style={{ color: "var(--paper)" }}>side-by-side comparison matrix</strong>, and an <strong style={{ color: "var(--paper)" }}>AI recommendation</strong> with actionable next steps. 
+                  <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--ash)", margin: 0 }}>
+                    This demo shows a complete greenwashing analysis of {documents.length} sample sustainability documents — cross-referencing marketing claims against reported data. 
+                    Below you'll see: <strong style={{ color: "var(--paper)" }}>cross-document contradiction detection</strong>, an <strong style={{ color: "var(--paper)" }}>executive summary</strong>, <strong style={{ color: "var(--paper)" }}>greenwash flag assessment</strong> with severity ratings, 
+                    a <strong style={{ color: "var(--paper)" }}>claim vs. reality comparison</strong>, and an <strong style={{ color: "var(--paper)" }}>AI recommendation</strong> with actionable next steps. 
                     Scroll down to see the AI chat copilot in action.
                   </p>
                 </div>
@@ -505,8 +571,8 @@ export default function Demo() {
                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ghost)", background: "var(--graphite)", padding: "3px 8px", borderRadius: "4px" }}>
                     FEATURE 1
                   </span>
-                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "var(--ash)" }}>
-                    Cross-Document Conflict Detection — automatically finds contradictions between documents
+                  <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ash)" }}>
+                    Cross-Document Contradiction Detection — automatically finds claims that contradict the reported data
                   </span>
                 </div>
                 <div className="rounded-lg p-4 animate-slideDown" style={{ background: "var(--flag-red-dim)", border: "1px solid rgba(240,68,82,0.25)", borderLeft: "4px solid var(--flag-red)" }}>
@@ -518,23 +584,23 @@ export default function Demo() {
                   </span>
                 </div>
 
-                <div style={{ paddingTop: "16px", borderTop: "1px solid rgba(237,28,36,0.15)" }}>
-                  <div className="rounded-lg p-4" style={{ background: "rgba(237,28,36,0.04)" }}>
+                <div style={{ paddingTop: "16px", borderTop: "1px solid rgba(240,68,82,0.15)" }}>
+                  <div className="rounded-lg p-4" style={{ background: "rgba(240,68,82,0.04)" }}>
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
-                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", color: "var(--amd-signal)", textTransform: "uppercase" }}>
+                      <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", color: "var(--flag-red)", textTransform: "uppercase" }}>
                         {primaryConflict.type}
                       </span>
                       <RiskBadge variant={primaryConflict.severity} />
                     </div>
                     <div className="grid gap-3 mb-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(200px, 100%), 1fr))" }}>
                       {[primaryConflict.documentA, primaryConflict.documentB].map((doc, i) => (
-                        <div key={i} className="rounded-lg p-3" style={{ background: "rgba(237,28,36,0.06)", border: "1px solid rgba(237,28,36,0.15)" }}>
+                        <div key={i} className="rounded-lg p-3" style={{ background: "rgba(240,68,82,0.06)", border: "1px solid rgba(240,68,82,0.15)" }}>
                           <div className="mb-2"><EvidenceTag filename={doc.name} /></div>
                           <EvidenceBox quote={doc.excerpt} style={{ background: "var(--paper)" }} />
                         </div>
                       ))}
                     </div>
-                    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--ash)" }}>{primaryConflict.recommendedAction}</p>
+                    <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--ash)" }}>{primaryConflict.recommendedAction}</p>
                   </div>
                 </div>
               </div>
@@ -547,8 +613,8 @@ export default function Demo() {
                 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ghost)", background: "var(--graphite)", padding: "3px 8px", borderRadius: "4px" }}>
                   FEATURE 2-5
                 </span>
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "var(--ash)" }}>
-                  AI-Generated Analysis — executive summary, risk scoring, document comparison, and recommendation
+                <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ash)" }}>
+                  AI-Generated Analysis — executive summary, greenwash scoring, claim vs. reality comparison, and recommendation
                 </span>
               </div>
             {/* Greenwash Score Gauge */}
@@ -565,12 +631,9 @@ export default function Demo() {
                 <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "15px", lineHeight: 1.6, color: "var(--ash)", marginBottom: "16px" }}>
                   {analysis.executiveSummary}
                 </p>
-                <div style={{ borderTop: "1px solid var(--rule)", paddingTop: "12px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
-                  <div className="flex items-center gap-1.5">
-                    <Cpu size={12} style={{ color: "var(--ghost)" }} />
-                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)" }}>Generated by AMD Llama 3.2 Vision</span>
-                  </div>
-                  <AMDBadge />
+                <div style={{ borderTop: "1px solid var(--rule)", paddingTop: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Leaf size={12} style={{ color: "var(--ghost)" }} />
+                  <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)" }}>Generated by GreenLens AI</span>
                 </div>
               </Card>
 
@@ -629,8 +692,8 @@ export default function Demo() {
                 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ghost)", background: "var(--graphite)", padding: "3px 8px", borderRadius: "4px" }}>
                   FEATURE 6
                 </span>
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "var(--ash)" }}>
-                  AI Chat Copilot — ask follow-up questions in plain language, get answers grounded in your documents
+                <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ash)" }}>
+                  AI Chat Copilot — ask follow-up questions in plain language, get answers grounded in the documents
                 </span>
               </div>
             <div className="rounded-xl p-5 sm:p-6" style={{ background: "var(--lead)", border: "1px solid var(--rule)" }}>
@@ -661,13 +724,13 @@ export default function Demo() {
                               : {
                                   background: "var(--lead)",
                                   border: "1px solid var(--rule)",
-                                  borderLeft: "3px solid var(--volt)",
+                                  borderLeft: "3px solid var(--leaf)",
                                   maxWidth: "min(500px, 100%)",
                                   padding: "12px",
                                 }
                           }
                         >
-                          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--paper)" }}>
+                          <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--paper)" }}>
                             {displayText}
                           </p>
                           {!isUser && msg.structuredResponse?.evidence && msg.structuredResponse.evidence.length > 0 && (
@@ -685,17 +748,13 @@ export default function Demo() {
                   <>
                     <div className="flex justify-end">
                       <div className="rounded-xl px-3 py-2" style={{ background: "var(--graphite)", maxWidth: "min(400px, 90%)" }}>
-                        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "var(--paper)" }}>Which supplier is cheapest?</p>
+                        <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--paper)" }}>Is EcoTech really carbon neutral?</p>
                       </div>
                     </div>
                     <div className="flex justify-start">
-                      <div className="rounded-xl p-3" style={{ background: "var(--lead)", border: "1px solid var(--rule)", borderLeft: "3px solid var(--volt)", maxWidth: "min(500px, 100%)" }}>
-                        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--paper)" }}>
-                          {(() => {
-                            const priceRow = analysis.comparisonMatrix.find((r) => r.field.toLowerCase().includes("price"));
-                            if (!priceRow) return analysis.recommendation.summary;
-                            return `${priceRow.winner} is the most competitive at ${priceRow.values[priceRow.winner]} total value.`;
-                          })()}
+                      <div className="rounded-xl p-3" style={{ background: "var(--lead)", border: "1px solid var(--rule)", borderLeft: "3px solid var(--leaf)", maxWidth: "min(500px, 100%)" }}>
+                        <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--paper)" }}>
+                          {analysis.recommendation.summary}
                         </p>
                       </div>
                     </div>
@@ -703,8 +762,8 @@ export default function Demo() {
                 )}
               </div>
 
-              <div className="rounded-lg p-4 sm:p-5" style={{ background: "var(--volt-dim)", border: "1px solid var(--volt-border)" }}>
-                <h4 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "14px" }}>
+              <div className="rounded-lg p-4 sm:p-5" style={{ background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
+                <h4 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "14px" }}>
                   Ready to analyze your own documents?
                 </h4>
                 <div className="flex flex-wrap gap-3">

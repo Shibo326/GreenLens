@@ -120,10 +120,15 @@ def _sanitize(text: str) -> str:
 # Register fonts at module load time
 _register_unicode_fonts()
 
-# ─── Color Palette ───────────────────────────────────────────────────────────
-# Primary
-AMD_RED = colors.HexColor("#ED1C24")
-AMD_DARK = colors.HexColor("#0f1923")
+# ─── Color Palette (GreenLens) ────────────────────────────────────────────────
+# Brand
+LEAF = colors.HexColor("#3DDC84")           # primary green accent (leaf)
+FOREST_DARK = colors.HexColor("#0A120E")    # deep forest header background
+FOREST_HEADER = colors.HexColor("#131F19")  # secondary dark surface
+# Greenwashing severity colors
+SEV_HIGH = colors.HexColor("#F04452")   # MISLEADING (red)
+SEV_MED = colors.HexColor("#F0A937")    # VAGUE (amber)
+SEV_LOW = colors.HexColor("#5FA8D3")    # UNVERIFIED (blue)
 # Neutrals
 SLATE_900 = colors.HexColor("#1e293b")
 SLATE_700 = colors.HexColor("#334155")
@@ -139,8 +144,12 @@ GREEN_50 = colors.HexColor("#f0fdf4")
 AMBER_600 = colors.HexColor("#d97706")
 AMBER_50 = colors.HexColor("#fffbeb")
 RED_50 = colors.HexColor("#fef2f2")
+BLUE_50 = colors.HexColor("#eff6ff")
 BLUE_700 = colors.HexColor("#1d4ed8")
 CYAN_500 = colors.HexColor("#06b6d4")
+
+# Greenwash severity display labels (mapped from Risk.level)
+SEVERITY_LABEL = {"HIGH": "MISLEADING", "MEDIUM": "VAGUE", "LOW": "UNVERIFIED"}
 
 
 def _hex(color) -> str:
@@ -150,11 +159,12 @@ def _hex(color) -> str:
 
 class PDFGenerator:
     """
-    Generates modern, professionally-designed PDF reports from AnalysisResult data.
-    Uses a clean slate/dark color palette with AMD red accents.
+    Generates modern, professionally-designed greenwashing analysis reports
+    from AnalysisResult data.
+    Uses a clean slate/forest color palette with GreenLens green accents.
     """
 
-    AMD_RED = "#ED1C24"
+    LEAF = "#3DDC84"
 
     def __init__(self):
         self.styles = getSampleStyleSheet()
@@ -218,7 +228,7 @@ class PDFGenerator:
             buffer, pagesize=A4,
             rightMargin=2 * cm, leftMargin=2 * cm,
             topMargin=2 * cm, bottomMargin=2 * cm,
-            title="GreenLens AI - Document Intelligence Report",
+            title="GreenLens AI - Greenwashing Analysis Report",
             author="GreenLens AI",
         )
 
@@ -226,6 +236,7 @@ class PDFGenerator:
         story.extend(self._title_page(today, session_id))
         story.append(PageBreak())
         story.extend(self._analytics_dashboard(analysis))
+        story.extend(self._greenwash_score(analysis))
         story.extend(self._executive_summary(analysis))
         story.extend(self._risk_analysis(analysis))
         if analysis.comparisonMatrix:
@@ -252,21 +263,21 @@ class PDFGenerator:
             [Paragraph("GREENLENS AI", ParagraphStyle(
                 "BigTitle", parent=self.title, fontSize=38, leading=44, spaceAfter=4,
             ))],
-            [Paragraph("Document Intelligence Report", ParagraphStyle(
+            [Paragraph("GreenLens — Greenwashing Analysis Report", ParagraphStyle(
                 "SubTitle2", parent=self.subtitle, fontSize=14, spaceAfter=12,
             ))],
-            [HRFlowable(width="40%", thickness=1, color=AMD_RED)],
+            [HRFlowable(width="40%", thickness=1, color=LEAF)],
             [Spacer(1, 0.3 * cm)],
             [Paragraph(
-                f'<font color="#{_hex(AMD_RED)}">Powered by AMD Instinct MI300X</font>',
+                f'<font color="#{_hex(LEAF)}">GreenLens AI — Greenwashing Detection</font>',
                 ParagraphStyle("Badge", parent=self.subtitle, fontSize=11,
-                               fontName=_F(bold=True), textColor=AMD_RED),
+                               fontName=_F(bold=True), textColor=LEAF),
             )],
             [Spacer(1, 0.3 * cm)],
         ]
         title_table = Table(title_data, colWidths=[16 * cm])
         title_table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, -1), AMD_DARK),
+            ("BACKGROUND", (0, 0), (-1, -1), FOREST_DARK),
             ("TOPPADDING", (0, 0), (0, 0), 40),
             ("BOTTOMPADDING", (0, -1), (-1, -1), 32),
             ("LEFTPADDING", (0, 0), (-1, -1), 24),
@@ -286,6 +297,7 @@ class PDFGenerator:
             [Paragraph(today, self.body),
              Paragraph(sid_display, self.body),
              Paragraph("GreenLens AI v1.0", self.body)],
+
         ]
         meta_table = Table(meta_data, colWidths=[5.3 * cm, 5.3 * cm, 5.4 * cm])
         meta_table.setStyle(TableStyle([
@@ -314,7 +326,7 @@ class PDFGenerator:
         """Build analytics dashboard with colored metric cards."""
         elements = []
         elements.append(Paragraph("Analytics Dashboard", self.section))
-        elements.append(HRFlowable(width="100%", thickness=1.5, color=AMD_RED))
+        elements.append(HRFlowable(width="100%", thickness=1.5, color=LEAF))
         elements.append(Spacer(1, 0.5 * cm))
 
         # Calculate metrics
@@ -326,20 +338,20 @@ class PDFGenerator:
         confidence = int(analysis.recommendation.confidence * 100)
 
         # Determine colors for values
-        risk_color = AMD_RED if high > 0 else AMBER_600 if med > 0 else GREEN_600
-        conf_color = GREEN_600 if confidence >= 70 else AMBER_600 if confidence >= 40 else AMD_RED
-        conflict_color = AMD_RED if conflicts > 0 else GREEN_600
+        flag_color = SEV_HIGH if high > 0 else SEV_MED if med > 0 else GREEN_600
+        conf_color = GREEN_600 if confidence >= 70 else AMBER_600 if confidence >= 40 else SEV_HIGH
+        conflict_color = SEV_HIGH if conflicts > 0 else GREEN_600
 
         # Metric cards - 4 columns
         labels_row = [
-            Paragraph("TOTAL RISKS", self.metric_label),
-            Paragraph("HIGH SEVERITY", self.metric_label),
-            Paragraph("CONFLICTS", self.metric_label),
+            Paragraph("GREENWASH FLAGS", self.metric_label),
+            Paragraph("MISLEADING", self.metric_label),
+            Paragraph("CONTRADICTIONS", self.metric_label),
             Paragraph("AI CONFIDENCE", self.metric_label),
         ]
         values_row = [
-            Paragraph(f"<b>{total_risks}</b>", ParagraphStyle("V1", parent=self.metric_value, textColor=risk_color)),
-            Paragraph(f"<b>{high}</b>", ParagraphStyle("V2", parent=self.metric_value, textColor=AMD_RED if high > 0 else GREEN_600)),
+            Paragraph(f"<b>{total_risks}</b>", ParagraphStyle("V1", parent=self.metric_value, textColor=flag_color)),
+            Paragraph(f"<b>{high}</b>", ParagraphStyle("V2", parent=self.metric_value, textColor=SEV_HIGH if high > 0 else GREEN_600)),
             Paragraph(f"<b>{conflicts}</b>", ParagraphStyle("V3", parent=self.metric_value, textColor=conflict_color)),
             Paragraph(f"<b>{confidence}%</b>", ParagraphStyle("V4", parent=self.metric_value, textColor=conf_color)),
         ]
@@ -359,17 +371,17 @@ class PDFGenerator:
         elements.append(metric_table)
         elements.append(Spacer(1, 0.5 * cm))
 
-        # Risk breakdown visual bar
+        # Greenwash flag breakdown visual bar
         if total_risks > 0:
             breakdown_parts = []
             if high > 0:
-                breakdown_parts.append(f'<font color="#{_hex(AMD_RED)}"><b>{high} HIGH</b></font>')
+                breakdown_parts.append(f'<font color="#{_hex(SEV_HIGH)}"><b>{high} MISLEADING</b></font>')
             if med > 0:
-                breakdown_parts.append(f'<font color="#{_hex(AMBER_600)}"><b>{med} MEDIUM</b></font>')
+                breakdown_parts.append(f'<font color="#{_hex(SEV_MED)}"><b>{med} VAGUE</b></font>')
             if low > 0:
-                breakdown_parts.append(f'<font color="#{_hex(GREEN_600)}"><b>{low} LOW</b></font>')
+                breakdown_parts.append(f'<font color="#{_hex(SEV_LOW)}"><b>{low} UNVERIFIED</b></font>')
             elements.append(Paragraph(
-                f"Risk Breakdown:  {'  |  '.join(breakdown_parts)}", self.body
+                f"Flag Breakdown:  {'  |  '.join(breakdown_parts)}", self.body
             ))
 
         # Categories
@@ -402,22 +414,93 @@ class PDFGenerator:
             ("TOPPADDING", (0, 0), (-1, -1), 16),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 16),
             # Left accent border
-            ("LINEBEFOREDECOR", (0, 0), (0, -1), 3, BLUE_700),
+            ("LINEBEFOREDECOR", (0, 0), (0, -1), 3, LEAF),
         ]))
         elements.append(summary_table)
         elements.append(Spacer(1, 1 * cm))
         return elements
 
+    def _greenwash_score(self, analysis: AnalysisResult) -> list:
+        """Build a prominent Greenwash Score callout card near the top of the report.
+
+        Score bands (0-100):
+          0-30   -> "Mostly Greenwashing"
+          31-60  -> "Vague / Mixed Signals"
+          61-100 -> "Credible"
+        None is handled gracefully by showing "N/A".
+        """
+        elements = []
+        elements.append(Paragraph("Greenwash Score", self.section))
+        elements.append(HRFlowable(width="100%", thickness=1.5, color=LEAF))
+        elements.append(Spacer(1, 0.5 * cm))
+
+        score = analysis.greenwashScore
+
+        if score is None:
+            score_display = "N/A"
+            band_label = "Not yet computed"
+            band_color = SLATE_500
+        else:
+            score_display = f"{score}/100"
+            if score <= 30:
+                band_label = "Mostly Greenwashing"
+                band_color = SEV_HIGH
+            elif score <= 60:
+                band_label = "Vague / Mixed Signals"
+                band_color = SEV_MED
+            else:
+                band_label = "Credible"
+                band_color = GREEN_600
+
+        score_style = ParagraphStyle(
+            "GwScore", parent=self.metric_value, fontSize=30, leading=34,
+            textColor=band_color, alignment=TA_CENTER,
+        )
+        band_style = ParagraphStyle(
+            "GwBand", parent=self.body, fontSize=13, leading=17,
+            textColor=WHITE, fontName=_F(bold=True), alignment=TA_CENTER,
+        )
+        hint_style = ParagraphStyle(
+            "GwHint", parent=self.small, textColor=SLATE_300, alignment=TA_CENTER,
+        )
+
+        card_data = [
+            [Paragraph(f"<b>{score_display}</b>", score_style)],
+            [Paragraph(band_label, band_style)],
+            [Paragraph(
+                "0-30 Mostly Greenwashing  |  31-60 Vague / Mixed Signals  |  61-100 Credible",
+                hint_style,
+            )],
+        ]
+        card = Table(card_data, colWidths=[16 * cm])
+        card.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), FOREST_HEADER),
+            ("TOPPADDING", (0, 0), (-1, 0), 18),
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 4),
+            ("TOPPADDING", (0, 1), (-1, 1), 2),
+            ("BOTTOMPADDING", (0, 1), (-1, 1), 10),
+            ("TOPPADDING", (0, 2), (-1, 2), 2),
+            ("BOTTOMPADDING", (0, 2), (-1, 2), 14),
+            ("LEFTPADDING", (0, 0), (-1, -1), 20),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 20),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("ROUNDEDCORNERS", [8, 8, 8, 8]),
+        ]))
+        elements.append(card)
+        elements.append(Spacer(1, 0.9 * cm))
+        return elements
+
     def _risk_analysis(self, analysis: AnalysisResult) -> list:
         """Build the risk analysis table with clean styling."""
         elements = []
-        elements.append(Paragraph("Risk Analysis", self.section))
+        elements.append(Paragraph("Greenwash Flags", self.section))
         elements.append(HRFlowable(width="100%", thickness=0.5, color=SLATE_300))
         elements.append(Spacer(1, 0.3 * cm))
 
         if not analysis.risks:
             elements.append(Paragraph(
-                "No risks identified — all documents passed analysis.",
+                "No greenwashing flags identified — claims appear substantiated.",
                 ParagraphStyle("NoRisk", parent=self.body, textColor=GREEN_600),
             ))
             elements.append(Spacer(1, 0.5 * cm))
@@ -430,20 +513,21 @@ class PDFGenerator:
                                     textColor=SLATE_700, leading=13)
 
         table_data = [[
-            Paragraph("SEVERITY", hdr_style),
+            Paragraph("FLAG", hdr_style),
             Paragraph("CATEGORY", hdr_style),
             Paragraph("DESCRIPTION", hdr_style),
             Paragraph("SOURCE", hdr_style),
         ]]
 
-        level_text_color = {"HIGH": AMD_RED, "MEDIUM": AMBER_600, "LOW": GREEN_600}
-        level_bg = {"HIGH": RED_50, "MEDIUM": AMBER_50, "LOW": GREEN_50}
+        level_text_color = {"HIGH": SEV_HIGH, "MEDIUM": SEV_MED, "LOW": SEV_LOW}
+        level_bg = {"HIGH": RED_50, "MEDIUM": AMBER_50, "LOW": BLUE_50}
 
         row_styles = []
         for i, risk in enumerate(analysis.risks, start=1):
             tc = level_text_color.get(risk.level, BLACK)
+            flag_label = SEVERITY_LABEL.get(risk.level, risk.level)
             table_data.append([
-                Paragraph(f"<b>{risk.level}</b>", ParagraphStyle(
+                Paragraph(f"<b>{flag_label}</b>", ParagraphStyle(
                     f"Lv{i}", parent=cell_style, textColor=tc, fontName="Helvetica-Bold")),
                 Paragraph(risk.category, cell_style),
                 Paragraph(_sanitize(risk.description), cell_style),
@@ -474,7 +558,7 @@ class PDFGenerator:
     def _comparison_matrix(self, analysis: AnalysisResult) -> list:
         """Build comparison matrix — only called when data exists."""
         elements = []
-        elements.append(Paragraph("Document Comparison", self.section))
+        elements.append(Paragraph("Claim vs. Reality", self.section))
         elements.append(HRFlowable(width="100%", thickness=0.5, color=SLATE_300))
         elements.append(Spacer(1, 0.3 * cm))
 
@@ -490,10 +574,10 @@ class PDFGenerator:
         cell_style = ParagraphStyle("CMC", parent=self.body, fontSize=9, leading=13)
 
         # Header
-        header = [Paragraph("CRITERIA", hdr_style)]
+        header = [Paragraph("ASPECT", hdr_style)]
         for col in all_cols:
             header.append(Paragraph(col.upper(), hdr_style))
-        header.append(Paragraph("BEST", hdr_style))
+        header.append(Paragraph("VERDICT", hdr_style))
         table_data = [header]
 
         for i, row in enumerate(analysis.comparisonMatrix):
@@ -532,11 +616,11 @@ class PDFGenerator:
     def _conflicts(self, analysis: AnalysisResult) -> list:
         """Build conflicts section — only called when conflicts exist."""
         elements = []
-        elements.append(Paragraph("Detected Conflicts", self.section))
+        elements.append(Paragraph("Contradictions Detected", self.section))
         elements.append(HRFlowable(width="100%", thickness=0.5, color=SLATE_300))
         elements.append(Spacer(1, 0.3 * cm))
 
-        sev_color = {"HIGH": AMD_RED, "MEDIUM": AMBER_600, "LOW": GREEN_600}
+        sev_color = {"HIGH": SEV_HIGH, "MEDIUM": SEV_MED, "LOW": SEV_LOW}
 
         for i, conflict in enumerate(analysis.conflicts, 1):
             sc = sev_color.get(conflict.severity, BLACK)
@@ -594,8 +678,8 @@ class PDFGenerator:
         elements = []
         rec = analysis.recommendation
 
-        elements.append(Paragraph("AI Recommendation", self.section))
-        elements.append(HRFlowable(width="100%", thickness=1.5, color=BLUE_700))
+        elements.append(Paragraph("Recommendation", self.section))
+        elements.append(HRFlowable(width="100%", thickness=1.5, color=LEAF))
         elements.append(Spacer(1, 0.4 * cm))
 
         # Recommendation title in a bold accent card
@@ -617,7 +701,7 @@ class PDFGenerator:
 
         # Confidence indicator
         confidence_pct = int(rec.confidence * 100)
-        conf_color = GREEN_600 if confidence_pct >= 70 else AMBER_600 if confidence_pct >= 40 else AMD_RED
+        conf_color = GREEN_600 if confidence_pct >= 70 else AMBER_600 if confidence_pct >= 40 else SEV_HIGH
         elements.append(Paragraph(
             f'<b>AI Confidence:</b>  '
             f'<font color="#{_hex(conf_color)}"><b>{confidence_pct}%</b></font>',
@@ -662,7 +746,7 @@ class PDFGenerator:
             ]
             # Color the number cells
             for idx in range(len(rec.nextSteps)):
-                step_styles.append(("BACKGROUND", (0, idx), (0, idx), BLUE_700))
+                step_styles.append(("BACKGROUND", (0, idx), (0, idx), FOREST_HEADER))
 
             step_table.setStyle(TableStyle(step_styles))
             elements.append(step_table)
@@ -674,15 +758,15 @@ class PDFGenerator:
         """Build a professional document footer with branding."""
         elements = []
         elements.append(Spacer(1, 0.5 * cm))
-        elements.append(HRFlowable(width="100%", thickness=1.5, color=AMD_RED))
+        elements.append(HRFlowable(width="100%", thickness=1.5, color=LEAF))
         elements.append(Spacer(1, 0.4 * cm))
         elements.append(Paragraph(
-            "Generated by GreenLens AI  |  Powered by AMD Instinct MI300X  |  greenlens.app",
+            "Generated by GreenLens AI  |  GreenLens AI — Greenwashing Detection  |  greenlens.app",
             self.footer,
         ))
         elements.append(Spacer(1, 0.2 * cm))
         elements.append(Paragraph(
-            "This report was generated automatically using AI-powered document analysis. "
+            "This report was generated automatically using AI-powered greenwashing analysis. "
             "All findings are sourced directly from the uploaded documents.",
             ParagraphStyle("Disc", parent=self.footer, fontSize=7, textColor=SLATE_500),
         ))

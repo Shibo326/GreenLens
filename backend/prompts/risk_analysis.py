@@ -2,8 +2,9 @@ import re
 from models.document import Chunk
 
 
-def build_risk_prompt(chunks: list[Chunk]) -> str:
+def build_risk_prompt(chunks: list[Chunk], web_context: str = "") -> str:
     context = _format_chunks_for_risk(chunks)
+    web_block = f"\n{web_context}\n" if web_context else ""
 
     return f"""You are a senior sustainability claims analyst specializing in greenwashing detection. Analyze the documents below and identify ALL greenwash flags — claims that are misleading, vague, or unverified.
 
@@ -11,6 +12,8 @@ CRITICAL INSTRUCTION: For sustainability claims, marketing materials, and corpor
 
 DOCUMENTS:
 {context}
+{web_block}
+If the real-time web research above reveals that a claim has been fact-checked, disputed, or flagged by watchdogs/regulators, treat that as strong evidence and reference it in the relevant flag description.
 
 GREENWASH FLAG CHECKLIST — check every one:
 1. MISLEADING CLAIMS (HIGH): Claims that directly contradict available data, overstate environmental benefit, misrepresent scope/coverage, or use false/expired certifications

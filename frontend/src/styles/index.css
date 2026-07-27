@@ -40,8 +40,8 @@
 }
 
 @keyframes borderPulse {
-  0%, 100% { border-color: rgba(59, 123, 246, 0.3); box-shadow: 0 0 40px rgba(59,123,246,0.1); }
-  50%       { border-color: rgba(59, 123, 246, 0.8); box-shadow: 0 0 40px rgba(59,123,246,0.25); }
+  0%, 100% { border-color: rgba(61, 220, 132, 0.3); box-shadow: 0 0 40px rgba(61,220,132,0.1); }
+  50%       { border-color: rgba(61, 220, 132, 0.8); box-shadow: 0 0 40px rgba(61,220,132,0.25); }
 }
 
 @keyframes orbit {
@@ -107,13 +107,13 @@ button:active:not(:disabled) {
 .animate-voltPulse { animation: voltPulse 2s ease-in-out infinite; }
 
 .shimmer-bar {
-  background: linear-gradient(90deg, #3B7BF6, #6BA0FF, #3B7BF6);
+  background: linear-gradient(90deg, var(--leaf), #6BFFB0, var(--leaf));
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
 }
 
 .progress-bar-premium {
-  background: linear-gradient(90deg, rgba(59,123,246,0.2), rgba(59,123,246,0.8), rgba(107,160,255,1), rgba(59,123,246,0.8), rgba(59,123,246,0.2));
+  background: linear-gradient(90deg, rgba(61,220,132,0.2), rgba(61,220,132,0.8), rgba(100,240,160,1), rgba(61,220,132,0.8), rgba(61,220,132,0.2));
   background-size: 200% 100%;
   animation: progressGlow 2s linear infinite;
   position: relative;
@@ -130,7 +130,7 @@ button:active:not(:disabled) {
   height: 8px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 10px rgba(59,123,246,0.9), 0 0 20px rgba(59,123,246,0.5);
+  box-shadow: 0 0 10px rgba(61,220,132,0.9), 0 0 20px rgba(61,220,132,0.5);
 }
 
 .orbit-particle {
@@ -138,14 +138,14 @@ button:active:not(:disabled) {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--volt);
+  background: var(--leaf);
   animation: orbit linear infinite;
-  box-shadow: 0 0 6px rgba(59,123,246,0.6);
+  box-shadow: 0 0 6px rgba(61,220,132,0.6);
 }
 
 .wave-dot {
   animation: waveDot 1.2s ease-in-out infinite;
-  box-shadow: 0 0 8px rgba(59,123,246,0.5);
+  box-shadow: 0 0 8px rgba(61,220,132,0.5);
 }
 
 .conic-spinner {
@@ -157,9 +157,110 @@ button:active:not(:disabled) {
 .scan-line {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent 40%, rgba(59,123,246,0.12) 50%, transparent 60%);
+  background: linear-gradient(to bottom, transparent 40%, rgba(61,220,132,0.1) 50%, transparent 60%);
   animation: scanLine 2s ease-in-out infinite;
   pointer-events: none;
+}
+
+/* ── Glass-morphism utility ────────────────────────────────────────────────── */
+.glass-card {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(19, 31, 25, 0.7);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+}
+
+/* ── Section header utility ───────────────────────────────────────────────── */
+.section-header {
+  font-family: 'Syne', 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--paper);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-header::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--leaf);
+  flex-shrink: 0;
+}
+
+/* ── Hover lift utility ───────────────────────────────────────────────────── */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(61, 220, 132, 0.08);
+}
+
+/* ── Text selection ───────────────────────────────────────────────────────── */
+::selection {
+  background: var(--leaf);
+  color: var(--ink);
+}
+
+::-moz-selection {
+  background: var(--leaf);
+  color: var(--ink);
+}
+
+/* ── Focus visible ring ───────────────────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid var(--leaf);
+  outline-offset: 2px;
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Custom scrollbar (global) ────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--rule);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ghost);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ash);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ghost) var(--rule);
+}
+
+/* ── Smooth page transitions ──────────────────────────────────────────────── */
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: pageFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 /* ── Responsive viewport fix (for iOS safari bounce) ──────────────────────── */
