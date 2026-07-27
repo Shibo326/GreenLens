@@ -7,7 +7,7 @@
 - [x] 1.4 Add unit tests in `backend/tests/test_training_pipeline.py` verifying schema validation rejects invalid examples and accepts valid ones (Properties 1, 2, 3)
 
 ## Task 2: Implement Knowledge Base Service
-- [-] 2.1 Create `backend/models/knowledge_base.py` with RegulatoryDocument, EnforcementAction, RetrievedPrecedent, KnowledgeBaseStats models
+- [ ] 2.1 Create `backend/models/knowledge_base.py` with RegulatoryDocument, EnforcementAction, RetrievedPrecedent, KnowledgeBaseStats models
 - [~] 2.2 Create `backend/services/knowledge_base.py` implementing KnowledgeBaseService with add_regulatory_document(), add_enforcement_action(), query_precedents(), get_stats()
 - [~] 2.3 Use ChromaDB collection "knowledge_base" separate from document uploads, with metadata for jurisdiction and document type
 - [~] 2.4 Add unit tests in `backend/tests/test_knowledge_base.py` verifying storage and retrieval of regulatory documents and enforcement actions
