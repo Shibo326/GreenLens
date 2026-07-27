@@ -620,7 +620,7 @@ export default function Demo() {
             {/* Greenwash Score Gauge */}
             <GreenwashScoreGauge score={analysis.greenwashScore} />
 
-            <div className="grid gap-4 sm:gap-5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))" }}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Executive Summary */}
               <Card>
                 <div className="flex items-center justify-between mb-3">
