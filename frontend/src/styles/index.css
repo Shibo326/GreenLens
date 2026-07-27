@@ -149,7 +149,7 @@ button:active:not(:disabled) {
 }
 
 .conic-spinner {
-  background: conic-gradient(from 0deg, transparent, var(--amd-signal), transparent);
+  background: conic-gradient(from 0deg, transparent, var(--leaf), transparent);
   animation: conicSpin 1.5s linear infinite;
   border-radius: 50%;
 }

@@ -11,7 +11,7 @@ import type { Analysis, PersistedChatMessage, UploadedDocument } from './types';
 const MAX_PERSISTED_MESSAGES = 100;
 
 // The demo session ID used by the backend demo endpoint
-export const DEMO_SESSION_ID = 'demo-session-amd-mi300x-2026';
+export const DEMO_SESSION_ID = 'demo-session-greenlens-ecotech-2025';
 
 const STORAGE_KEY = 'greenlens_session';
 

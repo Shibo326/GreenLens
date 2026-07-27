@@ -30,8 +30,8 @@ function PaperCard({ file, index, onRemove }: PaperCardProps) {
   const stamp = getFileStamp(file.type);
   const stampStyle =
     stamp === "PDF"
-      ? { background: "rgba(237, 28, 36, 0.12)", border: "1px solid rgba(237, 28, 36, 0.25)", color: "var(--amd-signal)" }
-      : { background: "rgba(0, 212, 255, 0.12)", border: "1px solid rgba(0, 212, 255, 0.25)", color: "var(--volt)" };
+      ? { background: "var(--flag-red-dim)", border: "1px solid rgba(240, 68, 82, 0.25)", color: "var(--flag-red)" }
+      : { background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)", color: "var(--leaf)" };
 
   return (
     <motion.div

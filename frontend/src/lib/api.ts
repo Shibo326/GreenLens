@@ -8,7 +8,7 @@ import type {
 
 export const API_BASE_URL: string =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ??
-  'https://amdhackthon-production.up.railway.app';
+  'http://localhost:8000';
 
 /**
  * fetch() wrapper with a configurable timeout.
@@ -327,7 +327,7 @@ let _benchmarkCache: { ratio: number; fetchedAt: number } | null = null;
 const BENCHMARK_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Fetch AMD benchmark speedup ratio with caching.
+ * Fetch benchmark speedup ratio with caching.
  * Returns the speedup ratio (e.g. 5.6) or null if unavailable.
  */
 export async function getBenchmarkSpeedup(signal?: AbortSignal): Promise<number | null> {
