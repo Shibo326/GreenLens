@@ -91,6 +91,7 @@ class AnalysisResult(BaseModel):
 
     analyzedAt: datetime  # serialized as ISO 8601
     executiveSummary: str
+    greenwashScore: int | None = None  # 0-100, None if not yet computed
     risks: list[Risk]
     comparisonMatrix: list[ComparisonRow]
     conflicts: list[Conflict]
@@ -174,6 +175,7 @@ class ChatRequest(BaseModel):
     sessionId: str
     question: str
     history: list[ChatHistoryMessage] = []
+    simplify: bool = False  # ELI15 mode — simplified language output
 
 
 class ChatResponse(BaseModel):
@@ -208,3 +210,22 @@ class ErrorResponse(BaseModel):
     error: str
     code: str
     details: dict | None = None
+
+
+# ---------------------------------------------------------------------------
+# Quick Scan models
+# ---------------------------------------------------------------------------
+
+
+class QuickScanRequest(BaseModel):
+    """Request body for POST /api/quick-scan."""
+
+    claim: str
+
+
+class QuickScanResponse(BaseModel):
+    """Response body for POST /api/quick-scan — instant single-claim verdict."""
+
+    verdict: str
+    whatToLookFor: list[str]
+    confidence: Literal["LOW", "MEDIUM", "HIGH"]

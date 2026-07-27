@@ -1,6 +1,6 @@
 # Sample Documents - NovaTech AI Series A Investment
 
-These documents represent a **complete startup Series A investment package** for demonstrating Clausify AI's capabilities.
+These documents represent a **complete startup Series A investment package** for demonstrating GreenLens's capabilities.
 
 ## Documents
 
@@ -15,7 +15,7 @@ These documents represent a **complete startup Series A investment package** for
 | 07 | Employment Agreement (CEO) | Executive compensation, vesting, termination |
 | 08 | Due Diligence Checklist | Investor counsel's DD status report |
 
-## Built-in Conflicts & Issues (for Clausify to Detect)
+## Built-in Conflicts & Issues (for GreenLens to Detect)
 
 These documents intentionally contain **cross-document conflicts** and **internal inconsistencies**:
 
@@ -39,7 +39,7 @@ These documents intentionally contain **cross-document conflicts** and **interna
 
 ## How to Demo
 
-1. Upload all 8 documents to Clausify
+1. Upload all 8 documents to GreenLens
 2. Run full analysis — the system should detect cross-document conflicts
 3. Ask questions like:
    - "What is the debt threshold across all documents?"

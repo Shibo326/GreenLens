@@ -1,4 +1,6 @@
-# Design Document — Clausify UI Redesign
+# Design Document — Base UI Redesign (Pre-GreenLens, "Clausify" naming)
+
+> **NOTE:** This spec was written and implemented before the rebrand to "GreenLens." It accurately documents the base UI architecture already built into the codebase. See `.kiro/steering/greenlens-design-system.md` for the current GreenLens brand layer on top of this architecture.
 
 ## Overview
 

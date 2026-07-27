@@ -13,7 +13,7 @@ const MAX_PERSISTED_MESSAGES = 100;
 // The demo session ID used by the backend demo endpoint
 export const DEMO_SESSION_ID = 'demo-session-amd-mi300x-2026';
 
-const STORAGE_KEY = 'clausify_session';
+const STORAGE_KEY = 'greenlens_session';
 
 // ── State shape ────────────────────────────────────────────────────────────────
 

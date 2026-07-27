@@ -24,43 +24,49 @@ logger = logging.getLogger(__name__)
 # deepseek-v4-flash reasoning model may need a bit more time than gpt-oss-120b
 LLM_CALL_TIMEOUT = 80
 
-# Prompt for comparison matrix — adapts to any document type with deep analytical reasoning
-COMPARISON_MATRIX_PROMPT = """Based on the document content above, create a detailed comparison matrix that a decision-maker can use to make an immediate choice.
+# Prompt for comparison matrix — Claim vs Reality analysis for greenwashing detection
+COMPARISON_MATRIX_PROMPT = """Based on the document content above, create a Claim vs. Reality comparison matrix that exposes gaps between what the company SAYS and what the DATA SHOWS.
 
 REASONING STEPS (follow internally):
-1. What entities, options, or subjects in these documents can be meaningfully compared?
-2. What are the CRITICAL differentiators that would actually influence a decision?
-3. For each comparison field, which option is objectively superior and WHY?
+1. What sustainability/environmental CLAIMS are made in marketing, packaging, or public communications?
+2. What does the actual DATA (sustainability reports, audit results, emissions figures) show for each claim?
+3. For each row, which side — the claim or the data — is more credible, and what's the gap?
 
-ADAPT TO DOCUMENT TYPE:
-- Multiple suppliers/vendors: Compare price, payment terms, delivery timeline, warranty, SLA, penalties, hidden costs, and strategic fit
-- Academic/research: Compare methodology rigor, sample size, statistical validity, recency, applicability, and limitations
-- Multiple contracts: Compare obligations, risk allocation, termination flexibility, IP terms, and commercial structure
-- Policy documents: Compare coverage, thresholds, approval requirements, and compliance gaps
-- Financial documents: Compare cost structures, margins, trends, anomalies, and benchmarks
+HOW TO BUILD EACH ROW:
+- "field": The sustainability topic being examined (e.g., "Carbon Neutrality Claim", "Recycled Content", "Water Usage Reduction")
+- "values" must contain exactly two keys: "They Say" (the marketing/packaging claim) and "Data Shows" (what the report/data actually reveals)
+- "winner": Which side is more credible — "They Say" if claim is well-supported, "Data Shows" if data contradicts/undermines the claim, or null if inconclusive
+
+WHAT TO COMPARE:
+- Emissions claims vs. reported Scope 1/2/3 data
+- "Recycled" / "Recyclable" claims vs. actual material composition or recycling rate data
+- "Net zero" / "Carbon neutral" targets vs. actual offset quality and coverage
+- Certification claims vs. what the certification actually covers
+- Packaging claims vs. product lifecycle data
+- "Natural" / "Organic" claims vs. ingredient/sourcing data
+- Reduction targets vs. baseline year and actual progress
 
 WINNER SELECTION RULES:
-- Only declare a winner when there's a meaningful, defensible advantage
-- For price fields: lowest wins (unless quality/risk tradeoff exists — note it)
-- For terms: most favorable to the buyer/reader wins
-- For risk: lowest risk exposure wins
-- If genuinely equal or not applicable: winner = null
+- "Data Shows" wins when data contradicts or significantly undermines the marketing claim
+- "They Say" wins when the claim is specific, measurable, and fully supported by data
+- null when evidence is insufficient to determine credibility either way
 
 Return ONLY valid JSON in this exact format:
 {{
   "comparisonMatrix": [
     {{
-      "field": "<specific comparison dimension — not generic labels like 'Cost' but rather 'Total 3-Year Cost (including maintenance)'>",
+      "field": "<specific sustainability topic being examined — not generic labels like 'Environment' but rather 'Carbon Offset Coverage (% of total emissions)'>",
       "values": {{
-        "<Entity/Option/Document Name>": "<specific value with units, percentages, or clear qualitative assessment — not vague>"
+        "They Say": "<exact marketing/packaging claim or paraphrased assertion from the company>",
+        "Data Shows": "<what the sustainability report, audit, or data actually reveals>"
       }},
-      "winner": "<name of the objectively superior option for this specific field, with brief reason — or null if genuinely tied>"
+      "winner": "<'They Say' if claim is credible, 'Data Shows' if data contradicts claim, or null if inconclusive>"
     }}
   ]
 }}
 
-Include 5-8 comparison fields based on what's ACTUALLY IMPORTANT for this decision.
-Every value must be grounded in document content. Flag assumptions with (estimated) or (inferred).
+Include 5-8 comparison rows based on the most significant claim-vs-reality gaps found.
+Every value must be grounded in document content. Flag inferences with (inferred) or (not explicitly stated).
 Do NOT include any text outside the JSON object."""
 
 
@@ -156,14 +162,14 @@ class AnalysisService:
             return_exceptions=True,
         )
 
-        # Unpack summary + questions
+        # Unpack summary + questions + greenwashScore
         if isinstance(summary_and_questions_result, Exception):
             logger.warning(f"Summary generation failed, using fallback: {summary_and_questions_result}")
-            doc_names = [doc.filename for doc in session.documents]
             summary_result = f"Analysis of {len(doc_names)} document(s): {', '.join(doc_names)}. The AI summary could not be generated — please review individual sections below for detailed findings."
-            suggested_questions = ["What are the key terms?", "Are there any risks?", "What conflicts exist?"]
+            suggested_questions = ["What are the key claims?", "Are there any greenwash flags?", "What contradictions exist?"]
+            greenwash_score = None
         else:
-            summary_result, suggested_questions = summary_and_questions_result
+            summary_result, suggested_questions, greenwash_score = summary_and_questions_result
 
         if isinstance(risks_result, Exception):
             logger.warning(f"Risk analysis failed, using empty: {risks_result}")
@@ -178,7 +184,7 @@ class AnalysisService:
             recommendation_result = Recommendation(
                 title="Analysis Complete",
                 summary="Please review the identified risks and document comparison for details.",
-                nextSteps=["Review identified risks", "Compare document options", "Ask the AI Copilot"],
+                nextSteps=["Review identified risks", "Compare claims vs. data", "Ask the AI Copilot"],
                 confidence=0.6,
             )
 
@@ -189,6 +195,7 @@ class AnalysisService:
         analysis = AnalysisResult(
             analyzedAt=datetime.utcnow(),
             executiveSummary=summary_result,
+            greenwashScore=self._clamp_greenwash_score(greenwash_score),
             risks=risks_result,
             comparisonMatrix=matrix_result,
             conflicts=conflicts_result,
@@ -250,7 +257,7 @@ class AnalysisService:
         recommendation = Recommendation(
             title="Analysis Complete",
             summary="Please review the risks and comparison matrix for details.",
-            nextSteps=["Review identified risks", "Compare document options", "Ask the AI Copilot"],
+            nextSteps=["Review identified risks", "Compare claims vs. data", "Ask the AI Copilot"],
             confidence=0.6,
         )
         rec_data = data.get("recommendation")
@@ -278,9 +285,13 @@ class AnalysisService:
             except Exception as e:
                 logger.warning(f"[single-call] Conflict detection failed: {e}")
 
+        # Extract and clamp greenwashScore
+        greenwash_score = self._clamp_greenwash_score(data.get("greenwashScore"))
+
         analysis = AnalysisResult(
             analyzedAt=datetime.utcnow(),
             executiveSummary=summary,
+            greenwashScore=greenwash_score,
             risks=risks,
             comparisonMatrix=matrix,
             conflicts=conflicts,
@@ -303,13 +314,25 @@ class AnalysisService:
                 f"LLM call '{label}' timed out after {LLM_CALL_TIMEOUT}s"
             )
 
+    @staticmethod
+    def _clamp_greenwash_score(raw_score) -> int:
+        """Clamp greenwashScore to [0, 100]. Falls back to 50 for non-numeric values."""
+        if raw_score is None:
+            logger.warning("[greenwashScore] Missing from LLM response, defaulting to 50")
+            return 50
+        try:
+            score = int(raw_score)
+            return max(0, min(100, score))
+        except (TypeError, ValueError):
+            logger.warning(f"[greenwashScore] Non-numeric value '{raw_score}', defaulting to 50")
+            return 50
     async def _generate_summary_and_questions(
         self,
         system_prompt: str,
         chunks: list[Chunk],
-    ) -> tuple[str, list[str]]:
+    ) -> tuple[str, list[str], int | None]:
         """
-        Generate executive summary AND suggested questions in a single LLM call.
+        Generate executive summary, suggested questions, AND greenwashScore in a single LLM call.
         Uses the QUALITY model (deepseek-v4-flash) for deep reasoning.
         Merging these saves one full LLM round-trip (10-60s).
         """
@@ -318,25 +341,31 @@ class AnalysisService:
         doc_names = list(dict.fromkeys(c.source_document for c in chunks))
         doc_list = ", ".join(doc_names) if doc_names else "the uploaded document"
 
-        merged_prompt = f"""You are a senior analyst. Write an executive summary for a decision-maker based on these documents.
+        merged_prompt = f"""You are a senior sustainability claims analyst. Write a verdict summary for a consumer or watchdog based on these documents.
 
 DOCUMENTS: {doc_list}
 
 {context}
 
-Lead with the single most important finding. Include specific figures. Flag urgency. End with a clear recommended action.
+Lead with the overall sustainability credibility verdict. Flag the most serious greenwashing concern. Include specific claims vs. data comparisons. End with a clear recommended action for consumers.
 
-Also generate 5 short follow-up questions (max 10 words each) that a decision-maker would most likely want to ask. Make them SPECIFIC to the document content — not generic questions like "What are the key terms?" but rather "Is the $245K/year rate competitive for this scope?"
+Also provide a Greenwash Score from 0-100:
+- 0-30: HIGH RISK — multiple misleading claims, major contradictions with data
+- 31-60: MEDIUM RISK — vague claims, some unverified assertions, partial evidence
+- 61-100: LOW RISK — claims are specific, measurable, third-party verified, data-consistent
+
+Also generate 5 short follow-up questions (max 10 words each) that a consumer or watchdog would most likely want to ask. Make them SPECIFIC to the document content — not generic questions like "Are these claims true?" but rather "Does their Scope 3 data support the net-zero claim?"
 
 Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
 {{
-  "executiveSummary": "<4-6 sentence executive briefing with specific figures, key insight, urgency, and recommended direction>",
+  "executiveSummary": "<4-6 sentence sustainability verdict: overall credibility, most serious greenwash flag, specific claim-vs-data example, recommended consumer action>",
+  "greenwashScore": <integer 0-100>,
   "suggestedQuestions": ["question1", "question2", "question3", "question4", "question5"]
 }}"""
 
-        # Quality model (deepseek-v4-flash) for nuanced summary; 1200 tokens is enough
+        # Quality model (deepseek-v4-flash) for nuanced summary; 800 tokens is enough
         raw = await self.llm_service.complete(
-            system_prompt, merged_prompt, max_tokens=1200, fast=False
+            system_prompt, merged_prompt, max_tokens=800, fast=False
         )
         raw = _strip_json_fences(raw)
 
@@ -349,14 +378,15 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
         try:
             data = json.loads(raw)
             summary = data.get("executiveSummary", raw)
+            greenwash_score = data.get("greenwashScore")
             questions = data.get("suggestedQuestions", [])
             if not isinstance(questions, list):
                 questions = []
             questions = [q for q in questions if isinstance(q, str)][:6]
-            return summary, questions
+            return summary, questions, greenwash_score
         except json.JSONDecodeError:
             # Fallback: treat the whole response as a summary, no questions
-            return raw.strip(), []
+            return raw.strip(), [], None
 
     async def _generate_risks(
         self,
@@ -369,7 +399,7 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
         # and needs extra headroom to output 5-8 detailed risk items without truncation.
         # Temperature 0.0 for maximum consistency in risk identification.
         raw = await self.llm_service.complete(
-            system_prompt, user_prompt, max_tokens=3000, temperature=0.0, fast=False
+            system_prompt, user_prompt, max_tokens=1500, temperature=0.0, fast=False
         )
         logger.info(f"[risks] raw LLM response: {len(raw)} chars, first 500: {raw[:500]!r}")
         raw = _strip_json_fences(raw)
@@ -426,7 +456,7 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
             )
             try:
                 raw2 = await self.llm_service.complete(
-                    system_prompt, retry_prompt, max_tokens=2000, fast=False
+                    system_prompt, retry_prompt, max_tokens=1500, fast=False
                 )
                 raw2 = _strip_json_fences(raw2)
                 logger.info(f"[risks] retry response, first 200: {raw2[:200]!r}")
@@ -466,7 +496,7 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
             )
             try:
                 raw_retry = await self.llm_service.complete(
-                    system_prompt, retry_prompt, max_tokens=3000, temperature=0.0, fast=False
+                    system_prompt, retry_prompt, max_tokens=1500, temperature=0.0, fast=False
                 )
                 raw_retry = _strip_json_fences(raw_retry)
                 brace_s = raw_retry.find("{")
@@ -518,12 +548,12 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
         """
         Generate comparison matrix rows.
         Uses FAST model (gpt-oss-120b) — structured JSON output, no deep reasoning needed.
-        max_tokens=500 is sufficient for 5-8 matrix rows.
+        max_tokens=1000 is sufficient for 5-8 matrix rows.
         """
         from prompts.executive_summary import _format_chunks
 
         context = _format_chunks(chunks)
-        user_prompt = f"""You are analyzing the following procurement documents:
+        user_prompt = f"""You are analyzing the following sustainability and environmental claims documents:
 
 DOCUMENT CONTEXT:
 {context}
@@ -533,7 +563,7 @@ DOCUMENT CONTEXT:
         # QUALITY model — comparison requires reasoning about relative merits
         # Temperature 0.0 for consistency
         raw = await self.llm_service.complete(
-            system_prompt, user_prompt, max_tokens=1500, temperature=0.0, fast=False
+            system_prompt, user_prompt, max_tokens=1000, temperature=0.0, fast=False
         )
         logger.info(f"[matrix] raw LLM response: {len(raw)} chars, first 300: {raw[:300]!r}")
         raw = _strip_json_fences(raw)
@@ -585,7 +615,7 @@ DOCUMENT CONTEXT:
         chunks: list[Chunk],
     ) -> Recommendation:
         """
-        Generate procurement recommendation.
+        Generate sustainability accountability recommendation.
         Uses QUALITY model (deepseek-v4-flash) — requires strategic reasoning.
         max_tokens=800 is sufficient for a recommendation with 3-5 next steps.
         """
@@ -603,6 +633,6 @@ DOCUMENT CONTEXT:
             return Recommendation(
                 title="Analysis Complete",
                 summary="Please review the risks and comparison matrix for details.",
-                nextSteps=["Review identified risks", "Compare supplier options"],
+                nextSteps=["Review identified risks", "Compare claims vs. data"],
                 confidence=0.5,
             )

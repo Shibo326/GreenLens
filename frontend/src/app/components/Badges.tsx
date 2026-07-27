@@ -7,20 +7,23 @@ interface RiskBadgeProps {
 export function RiskBadge({ variant }: RiskBadgeProps) {
   const styles = {
     HIGH: {
-      background: 'rgba(237, 28, 36, 0.12)',
-      border: '1px solid rgba(237, 28, 36, 0.25)',
-      color: 'var(--amd-signal)'
+      background: 'var(--flag-red-dim)',
+      border: '1px solid rgba(240, 68, 82, 0.25)',
+      color: 'var(--flag-red)',
+      label: 'MISLEADING',
     },
     MEDIUM: {
-      background: 'rgba(245, 166, 35, 0.12)',
-      border: '1px solid rgba(245, 166, 35, 0.25)',
-      color: 'var(--caution)'
+      background: 'var(--flag-amber-dim)',
+      border: '1px solid rgba(240, 169, 55, 0.25)',
+      color: 'var(--flag-amber)',
+      label: 'VAGUE',
     },
     LOW: {
-      background: 'rgba(0, 196, 140, 0.12)',
-      border: '1px solid rgba(0, 196, 140, 0.25)',
-      color: 'var(--cleared)'
-    }
+      background: 'var(--flag-blue-dim)',
+      border: '1px solid rgba(95, 168, 211, 0.25)',
+      color: 'var(--flag-blue)',
+      label: 'UNVERIFIED',
+    },
   };
 
   const icons = {
@@ -36,7 +39,7 @@ export function RiskBadge({ variant }: RiskBadgeProps) {
       background: style.background,
       border: style.border,
       color: style.color,
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
       fontSize: '11px',
       fontWeight: 600,
       lineHeight: '16px',
@@ -44,7 +47,7 @@ export function RiskBadge({ variant }: RiskBadgeProps) {
       textTransform: 'uppercase'
     }}>
       {icons[variant]}
-      {variant}
+      {style.label}
     </span>
   );
 }
@@ -62,7 +65,7 @@ export function EvidenceTag({ filename }: EvidenceTagProps) {
     }}>
       <FileText size={12} style={{ color: 'var(--ghost)', flexShrink: 0 }} />
       <span style={{
-        fontFamily: "'JetBrains Mono', monospace",
+        fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace",
         fontSize: '11px',
         color: 'var(--ash)',
         lineHeight: '16px',
@@ -91,7 +94,7 @@ export function EvidenceBox({ quote, className = '', style = {} }: EvidenceBoxPr
       style={{
         background: 'var(--parchment)',
         color: 'var(--lead)',
-        fontFamily: "'JetBrains Mono', monospace",
+        fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace",
         fontWeight: 400,
         fontSize: '12px',
         lineHeight: '18px',

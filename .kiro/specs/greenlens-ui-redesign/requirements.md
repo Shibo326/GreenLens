@@ -1,5 +1,7 @@
 # Requirements Document
 
+> **NOTE:** This spec was written and implemented before the project's rebrand from "Clausify" to "GreenLens." It accurately describes the base UI architecture (tokens, typography, component structure) as it was built and already exists in the codebase today — do not treat "Clausify" mentions below as inaccurate, they describe real completed work. For the current brand identity on top of this architecture (colors, component labels, copy), see `.kiro/steering/greenlens-design-system.md` and the `.kiro/specs/greenlens-pivot/` spec.
+
 ## Introduction
 
 This document specifies requirements for the complete UI redesign of the Clausify AI frontend. The redesign transforms the existing React + TypeScript + Tailwind application from its current electric-blue-on-navy aesthetic into a high-contrast, document-centric design system built around a cyan accent color, physical paper aesthetics, and editorial typography. All four pages (Landing, Dashboard, Chat, Demo) are in scope. Every existing API integration must remain fully functional throughout the redesign.

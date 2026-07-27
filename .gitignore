@@ -1,5 +1,5 @@
 # ============================================
-# Clausify AI — .gitignore
+# GreenLens AI — .gitignore
 # ============================================
 
 # --- Dependencies ---
@@ -31,9 +31,10 @@ backend/.env
 backend/.env.local
 frontend/.env
 
-# --- Persistent data (sessions + ChromaDB) ---
+# --- Persistent data (sessions + ChromaDB + training) ---
 backend/data/sessions/*.json
 backend/data/chroma/
+backend/data/training/*.jsonl
 
 # --- IDE ---
 .vscode/

@@ -1,7 +1,7 @@
-# Clausify AI — Portfolio
+# GreenLens — Portfolio
 
 > **AMD Developer Hackathon: ACT II | lablab.ai | July 2026**
-> Full-Stack AI Document Intelligence Platform — Built by Rhenmart Dela Cruz
+> Full-Stack AI Greenwashing Detection Platform — Built by Rhenmart Dela Cruz
 
 **Live Demo:** https://amd-hackthon-ll14.vercel.app
 **Backend API:** https://amdhackthon-production.up.railway.app/docs
@@ -12,7 +12,7 @@
 
 ## Who Built This
 
-I'm **Rhenmart Dela Cruz**, an AWS Cloud Club Lead at STI Global City, Taguig, Philippines. I built Clausify AI as the **sole full-stack developer** for the AMD Developer Hackathon: ACT II on lablab.ai (July 2026).
+I'm **Rhenmart Dela Cruz**, an AWS Cloud Club Lead at STI Global City, Taguig, Philippines. I built GreenLens as the **sole full-stack developer** for the AMD Developer Hackathon: ACT II on lablab.ai (July 2026).
 
 I was responsible for the **entire codebase** — from the FastAPI backend and RAG pipeline architecture, to the React frontend, prompt engineering, deployment configuration, and performance optimization. My teammates Julie Ann Tiron, Mica Pauline Calingo, and Reymark Panes contributed to the project concept and testing, but all engineering decisions and implementation were mine.
 
@@ -22,24 +22,24 @@ This project represents roughly **2–3 weeks of intensive solo engineering** ac
 
 ## The Problem I'm Solving
 
-Enterprise procurement teams manually cross-reference contracts, invoices, and quotations — spending **4–6 hours per document set** and still missing critical discrepancies. A single missed clause or price mismatch can cost organizations thousands.
+Consumers and watchdogs have no fast way to check whether a company's sustainability claims actually hold up against its own reported data. Marketing copy says "carbon neutral" or "100% recycled," but the underlying sustainability report often tells a different, narrower, or contradictory story — buried in 30+ pages of dense ESG disclosures that almost nobody reads end-to-end.
 
-**Real example:** An invoice bills 470 units at $107/unit, but the original contract specifies $100/unit. That's a **$3,290 overcharge** buried in 30+ pages of dense legal text. A human reviewer might catch it. Might not. Clausify catches it in under 90 seconds, every time.
+**Real example:** A packaging claim says "100% recycled materials," but the sustainability report shows only the outer box — not the plastic liner — is recycled. That's a **scope-mismatch greenwashing claim** hidden in dense reporting language. A human reviewer might catch it. Might not. GreenLens catches it in under 90 seconds, every time.
 
 ---
 
 ## What I Built
 
-**Clausify AI** is a production-grade document intelligence platform that lets you upload contracts, quotations, and invoices, then instantly generates:
+**GreenLens** is a production-grade AI platform that lets you upload sustainability reports, packaging text, and marketing claims, then instantly generates:
 
-- **Cross-document conflict detection** — automatically identifies contradictions, pricing discrepancies, and clause mismatches across all uploaded documents (e.g., "Unit price in the invoice is $107 but the contract says $100 — $3,290 overcharge on 470 units")
-- **Risk analysis with severity ratings** — categorizes every risk as HIGH/MEDIUM/LOW with specific source citations and financial impact estimates
-- **Side-by-side comparison matrix** — structured table comparing suppliers/documents across 8–12 dimensions with a clear winner per field and an overall recommendation
-- **Executive summary** — one-paragraph decision brief written for C-level consumption, not generic AI filler
+- **Cross-document contradiction detection** — automatically identifies greenwashing contradictions between what companies claim and what their own data shows (e.g., "Packaging claims '100% recycled' but the sustainability report shows only 40% recycled content across the full product — an overstated claim")
+- **Greenwash flag analysis with severity ratings** — categorizes every claim as MISLEADING/VAGUE/UNVERIFIED with specific source citations and consumer-impact estimates
+- **Claim vs. reality matrix** — structured table comparing marketing claims against reported data with a clear verdict per field and an overall assessment
+- **Sustainability verdict** — one-paragraph decision brief on the company's claims, written for a consumer or watchdog, not generic AI filler
 - **AI chat copilot** — grounded in your documents with real-time streaming responses, source citations, and conversational memory
 - **PDF/DOCX export** — downloadable professional report of the full analysis for stakeholder distribution
 
-The core differentiator: Clausify doesn't just summarize documents — it **cross-references them against each other**, detects hidden conflicts, and gives opinionated recommendations with specific numbers. It thinks like a senior procurement consultant, not a generic chatbot.
+The core differentiator: GreenLens doesn't just summarize documents — it **cross-references marketing claims against a company's own reported data**, detects hidden contradictions, and gives opinionated verdicts with specific evidence. It thinks like a forensic sustainability analyst, not a generic chatbot.
 
 ---
 
@@ -63,7 +63,7 @@ I designed and built the entire backend from scratch — 8 services, 5 routers, 
   - Built a `SINGLE_CALL_MODE` emergency fallback that combines ALL analysis into one mega-prompt (for extreme rate-limit scenarios)
   - Results are cached in the session — re-analysis is 0ms, not 30s
 - **`services/conflict_engine.py`** — Cross-document conflict detector. Original architecture required N*(N-1)/2 pairwise LLM calls (10 calls for 5 documents). I redesigned it to send all document excerpts in a **single consolidated prompt**, making conflict detection O(1) regardless of document count. The prompt explicitly instructs the LLM to cross-reference every document against every other document in one pass.
-- **`services/embedding_service.py`** — Local `all-MiniLM-L6-v2` sentence transformer (384-dim, L2-normalized vectors). Pre-warmed on startup with a "warmup clausify ai amd mi300x" sentence to eliminate first-query cold lag and force model weight loading
+- **`services/embedding_service.py`** — Local `all-MiniLM-L6-v2` sentence transformer (384-dim, L2-normalized vectors). Pre-warmed on startup with a "warmup greenlens ai amd mi300x" sentence to eliminate first-query cold lag and force model weight loading
 - **`services/vector_store.py`** — ChromaDB with session-isolated collections. Each upload session gets its own vector namespace so documents never bleed between users. Supports query with configurable `n_results` (default 12, fallback to 16 for sparse retrieval)
 - **`services/document_parser.py`** — Multi-format text extraction: PyMuPDF for PDFs, python-docx for Word files, pytesseract OCR fallback for scanned/image-based pages. Handles Unicode normalization and control character stripping
 - **`services/session_manager.py`** — Disk-persistent JSON sessions that survive Railway container restarts. Stores document metadata, analysis results, chat history, and upload timestamps. Sessions auto-expire after configurable TTL
@@ -99,7 +99,7 @@ I wrote all 6 prompt templates from scratch. Each follows a structured **5-phase
 - Always give specific numbers (e.g., "7.3% overcharge — $3,290 on a $45,200 base" not "there is a discrepancy")
 - Always cite which document and which section
 - Prioritize actionable advice over balanced hedging
-- Think like a senior consultant with 15 years of procurement experience, not a helpful assistant
+- Think like a senior sustainability claims analyst with 15 years of greenwashing-detection experience, not a helpful assistant
 
 **Model-specific engineering:**
 - Chose `deepseek-v4-flash` over `deepseek-v4-pro` because the pro model outputs `<think>...</think>` reasoning blocks before JSON, adding 60–100 seconds per call with no quality improvement for document analysis
@@ -444,7 +444,7 @@ I deliberately chose React Context + `useReducer` over Redux, Zustand, or Jotai.
 **Rhenmart Dela Cruz**
 🎓 AWS Cloud Club Lead · STI Global City · Taguig, Philippines
 
-I'm a full-stack developer focused on AI/ML integration, cloud architecture, and system design. I built Clausify end-to-end — every line of backend Python, every React component, every prompt template, every deployment config, and every performance optimization.
+I'm a full-stack developer focused on AI/ML integration, cloud architecture, and system design. I built GreenLens end-to-end — every line of backend Python, every React component, every prompt template, every deployment config, and every performance optimization.
 
 ### Technical Skills Demonstrated in This Project
 
@@ -467,6 +467,6 @@ I'm a full-stack developer focused on AI/ML integration, cloud architecture, and
 
 ---
 
-*Clausify AI — AMD Developer Hackathon: ACT II | lablab.ai | July 2026*
+*GreenLens — AMD Developer Hackathon: ACT II | lablab.ai | July 2026*
 *Built solo by Rhenmart Dela Cruz*
 *Live at: https://amd-hackthon-ll14.vercel.app*

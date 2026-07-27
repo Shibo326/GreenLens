@@ -5,19 +5,19 @@ from models.document import Chunk
 def build_risk_prompt(chunks: list[Chunk]) -> str:
     context = _format_chunks_for_risk(chunks)
 
-    return f"""You are a senior risk analyst specializing in contract and procurement risk. Analyze the documents below and identify ALL material risks.
+    return f"""You are a senior sustainability claims analyst specializing in greenwashing detection. Analyze the documents below and identify ALL greenwash flags — claims that are misleading, vague, or unverified.
 
-CRITICAL INSTRUCTION: For business documents (contracts, POs, invoices, agreements), there are ALWAYS risks to identify. If you find pricing discrepancies, unfavorable terms, missing protections, or conflicting clauses, you MUST report them. Returning zero risks for business documents with discrepancies is INCORRECT.
+CRITICAL INSTRUCTION: For sustainability claims, marketing materials, and corporate environmental communications, there are ALWAYS flags to identify. If you find contradictions with data, unmeasurable language, or uncertified assertions, you MUST report them. Returning zero flags for documents with environmental claims is INCORRECT.
 
 DOCUMENTS:
 {context}
 
-RISK IDENTIFICATION CHECKLIST — check every one:
-1. FINANCIAL RISKS: Price discrepancies, hidden fees, unfavorable payment terms, cost escalators, missing volume discounts, billing errors
-2. LEGAL RISKS: One-sided clauses, missing indemnification, auto-renewal traps, jurisdiction issues, IP ownership gaps
-3. COMPLIANCE RISKS: Missing approvals, regulatory gaps, audit exposure, data handling issues
-4. OPERATIONAL RISKS: Delivery timeline conflicts, SLA gaps, resource dependency, vendor lock-in
-5. STRATEGIC RISKS: Precedent-setting terms, competitive exposure, relationship imbalance
+GREENWASH FLAG CHECKLIST — check every one:
+1. MISLEADING CLAIMS (HIGH): Claims that directly contradict available data, overstate environmental benefit, misrepresent scope/coverage, or use false/expired certifications
+2. VAGUE CLAIMS (MEDIUM): Unmeasurable language ("eco-friendly", "green", "natural", "sustainable"), claims without specific metrics or timelines, undefined scope boundaries, ambiguous qualifiers
+3. UNVERIFIED CLAIMS (LOW): Assertions without third-party certification, self-declared environmental benefits without methodology disclosure, claims citing internal audits only, missing standard frameworks (GRI, SASB, ISO 14001)
+4. HIDDEN TRADE-OFFS: Highlighting one green attribute while ignoring larger environmental impact (e.g., "recyclable packaging" on a high-emissions product)
+5. IRRELEVANCE: Technically true claims that are meaningless (e.g., "CFC-free" when CFCs are banned anyway)
 
 Return ONLY valid JSON (start your response with the opening brace, no preamble, no thinking tags):
 {{
@@ -25,36 +25,37 @@ Return ONLY valid JSON (start your response with the opening brace, no preamble,
     {{
       "id": "r1",
       "level": "HIGH",
-      "description": "<specific risk with document evidence, quantified impact where possible, and what happens if ignored>",
+      "description": "<specific greenwash flag with document evidence: what the claim says, why it's problematic, what a consumer would wrongly believe, and what verification is missing>",
       "sourceDocument": "<exact filename>",
-      "category": "<Financial | Legal | Compliance | Operational | Strategic | Procurement>"
+      "category": "<Misleading | Vague | Unverified | Hidden Trade-off | Irrelevance | Scope Manipulation>"
     }}
   ]
 }}
 
 Severity guide:
-- HIGH: Material financial/legal exposure requiring immediate action (>$1K impact or legal liability)
-- MEDIUM: Significant gap needing resolution within 30 days
-- LOW: Minor issue for regular review
+- HIGH: Claim directly contradicts data or makes a demonstrably false/deceptive assertion (MISLEADING) — regulators would likely take action
+- MEDIUM: Claim uses vague, unmeasurable, or unqualified language that creates a misleading impression (VAGUE) — needs specific metrics/qualifiers to be legitimate
+- LOW: Claim may be accurate but has no third-party verification or recognized certification (UNVERIFIED) — could be true but consumers can't confirm it
 
-You MUST identify at least 3 risks for any business document set with financial terms. If documents have pricing discrepancies or conflicting terms, those are automatically HIGH or CRITICAL risks.
+You MUST identify at least 3 greenwash flags for any document set with environmental/sustainability claims. Look for: (1) claims without supporting data, (2) vague/unmeasurable language, (3) scope mismatches between headline claims and fine print.
 
 Return ONLY the JSON object starting with {{. No explanation, no markdown, no thinking."""
 
 
-# Regex patterns that signal risk-relevant content
+# Regex patterns that signal greenwash-relevant content
 _RISK_SIGNALS = re.compile(
-    r'\$[\d,]+|%|\bshall\b|\bmust\b|\brequired\b|\bliability\b|\bindemnif|\bterminat|\bpenalt'
-    r'|\bexpir|\brenew|\bwarrant|\bIP\b|\bintellectual property\b|\bconfidential\b'
-    r'|\bcovenant\b|\bnon.compet|\bassign|\bpayment\b|\bdue\b|\bdeadline\b'
-    r'|\bvoid\b|\bbreach\b|\bdispute\b|\bgovernin\b|\bjurisdiction\b',
+    r'\bcarbon\b|\bnet.zero\b|\bneutral\b|\bsustain|\brecycl|\bbiodegrad|\brenewable\b'
+    r'|\beco.friendly\b|\bgreen\b|\borganic\b|\bnatural\b|\bclean\b|\boffset'
+    r'|\bemission|\bscope\s*[123]\b|\bcertif|\biso\s*14|\bGRI\b|\bSASB\b'
+    r'|\bplastic.free\b|\bzero.waste\b|\bcompost|\bplant.based\b|\bfair.trade\b'
+    r'|\bresponsib|\bethical\b|\bcruelty.free\b|\bvegan\b|\benergy.efficien',
     re.IGNORECASE,
 )
 
 
 def _format_chunks_for_risk(chunks: list[Chunk], max_chunks_per_doc: int = 8) -> str:
     """
-    Format chunks for risk analysis. Dynamically adjusts chunks-per-doc based on
+    Format chunks for greenwash flag analysis. Dynamically adjusts chunks-per-doc based on
     total document count to balance speed vs coverage:
     - 1 doc:  up to 12 chunks at 1200 chars — full coverage
     - 2 docs: up to 8 chunks at 1000 chars — balanced
@@ -71,8 +72,6 @@ def _format_chunks_for_risk(chunks: list[Chunk], max_chunks_per_doc: int = 8) ->
 
     num_docs = len(doc_chunks)
 
-    # Dynamic allocation: more docs = fewer chunks per doc, shorter per chunk
-    # Increased limits to ensure the LLM has enough context to identify risks
     if num_docs == 1:
         max_per_doc = 10
         max_chars = 1200
@@ -83,13 +82,12 @@ def _format_chunks_for_risk(chunks: list[Chunk], max_chunks_per_doc: int = 8) ->
         max_per_doc = 5
         max_chars = 900
     else:
-        # 4+ docs: tighter budget but always prioritize high-risk-signal chunks
         max_per_doc = max(3, 10 // num_docs)
         max_chars = 800
 
     sections = []
     for doc_name, doc_chunk_list in doc_chunks.items():
-        # Score each chunk by risk-signal density
+        # Score each chunk by greenwash-signal density
         scored = sorted(
             doc_chunk_list,
             key=lambda c: len(_RISK_SIGNALS.findall(c.text)),
@@ -116,7 +114,6 @@ def _format_chunks(chunks: list[Chunk], max_chunks_per_doc: int = 3) -> str:
     if not chunks:
         return "(no document content available)"
 
-    # Count unique docs
     unique_docs = list(dict.fromkeys(c.source_document for c in chunks))
     num_docs = len(unique_docs)
     if num_docs == 1:

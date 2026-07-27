@@ -7,23 +7,30 @@ afterEach(() => {
   cleanup();
 });
 
-const ALL_COLORS = ["var(--amd-signal)", "var(--caution)", "var(--cleared)"];
+const LEVEL_TO_LABEL: Record<"HIGH" | "MEDIUM" | "LOW", string> = {
+  HIGH: "MISLEADING",
+  MEDIUM: "VAGUE",
+  LOW: "UNVERIFIED",
+};
 
-function expectedColorFor(level: "HIGH" | "MEDIUM" | "LOW"): string {
-  if (level === "HIGH") return "var(--amd-signal)";
-  if (level === "MEDIUM") return "var(--caution)";
-  return "var(--cleared)";
-}
+const LEVEL_TO_COLOR: Record<"HIGH" | "MEDIUM" | "LOW", string> = {
+  HIGH: "var(--flag-red)",
+  MEDIUM: "var(--flag-amber)",
+  LOW: "var(--flag-blue)",
+};
+
+const ALL_COLORS = Object.values(LEVEL_TO_COLOR);
 
 describe("RiskBadge property tests", () => {
-  // Feature: clausify-ui-redesign, Property 6: RiskBadge color is determined exclusively by risk level
+  // Property: RiskBadge color is determined exclusively by risk level
   it("uses the color mapped to the risk level and no other color, for any level", () => {
     fc.assert(
       fc.property(fc.constantFrom("HIGH", "MEDIUM", "LOW"), (level) => {
         cleanup();
         render(<RiskBadge variant={level} />);
-        const badge = screen.getByText(level);
-        const expected = expectedColorFor(level);
+        const label = LEVEL_TO_LABEL[level];
+        const badge = screen.getByText(label);
+        const expected = LEVEL_TO_COLOR[level];
 
         expect(badge.style.color).toBe(expected);
 
@@ -37,11 +44,23 @@ describe("RiskBadge property tests", () => {
       { numRuns: 100 },
     );
   });
+
+  it("renders the correct GreenLens severity label for each level", () => {
+    fc.assert(
+      fc.property(fc.constantFrom("HIGH", "MEDIUM", "LOW"), (level) => {
+        cleanup();
+        render(<RiskBadge variant={level} />);
+        const label = LEVEL_TO_LABEL[level];
+        expect(screen.getByText(label)).toBeTruthy();
+      }),
+      { numRuns: 30 },
+    );
+  });
 });
 
 describe("EvidenceBox", () => {
-  // Feature: clausify-ui-redesign, Property 7: EvidenceBoxes in AI messages use parchment background with dark text
-  it("uses parchment background with dark text by default (Property 7)", () => {
+  // Property: EvidenceBoxes in AI messages use parchment background with dark text
+  it("uses parchment background with dark text by default", () => {
     fc.assert(
       fc.property(
         fc.string().filter((s) => s.trim().length > 0),
@@ -58,8 +77,8 @@ describe("EvidenceBox", () => {
     );
   });
 
-  // Feature: clausify-ui-redesign, Property 5: EvidenceBoxes inside ConflictAlert use paper background with dark text
-  it("respects a style override of paper background with dark text (Property 5)", () => {
+  // Property: EvidenceBoxes inside ConflictAlert use paper background with dark text
+  it("respects a style override of paper background with dark text", () => {
     fc.assert(
       fc.property(
         fc.string().filter((s) => s.trim().length > 0),

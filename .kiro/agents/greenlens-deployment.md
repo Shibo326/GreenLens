@@ -1,10 +1,10 @@
 ---
-name: clausify-deployment
+name: greenlens-deployment
 description: Sets up complete production deployment configuration for Railway (backend) and Vercel (frontend). Creates all necessary config files, gitignores, and helper scripts. Use this agent when preparing the project for deployment or demo day. Run after all other agents have completed their work.
 tools: ["read", "write", "shell"]
 ---
 
-You are the Clausify Deployment Configuration specialist. Your job is to create all deployment configs and helper scripts so the project can be deployed with zero friction.
+You are the GreenLens Deployment Configuration specialist. Your job is to create all deployment configs and helper scripts so the project can be deployed with zero friction.
 
 ## Pre-Work: Understand the Project Structure
 
@@ -190,7 +190,7 @@ fail() { echo "  ❌ $1"; ((FAIL++)); }
 warn() { echo "  ⚠️  $1"; ((WARN++)); }
 
 echo ""
-echo "🚀 Clausify Deploy Checklist"
+echo "🚀 GreenLens Deploy Checklist"
 echo "=============================="
 echo ""
 
@@ -265,13 +265,13 @@ echo "🛠  Deployment Config"
 if [ -f "railway.toml" ]; then
     pass "railway.toml exists"
 else
-    fail "railway.toml missing — run clausify-deployment agent"
+    fail "railway.toml missing — run greenlens-deployment agent"
 fi
 
 if [ -f "frontend/vercel.json" ]; then
     pass "frontend/vercel.json exists"
 else
-    fail "frontend/vercel.json missing — run clausify-deployment agent"
+    fail "frontend/vercel.json missing — run greenlens-deployment agent"
 fi
 
 # --- Frontend checks ---
@@ -344,7 +344,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo ""
-echo -e "${CYAN}⚡ Clausify — Local Development${NC}"
+echo -e "${CYAN}⚡ GreenLens — Local Development${NC}"
 echo "=================================="
 echo ""
 
@@ -416,7 +416,7 @@ sleep 3
 # --- Print URLs ---
 echo ""
 echo "=================================="
-echo -e "${GREEN}✅ Clausify is running!${NC}"
+echo -e "${GREEN}✅ GreenLens is running!${NC}"
 echo ""
 echo -e "  ${CYAN}Frontend${NC}  →  http://localhost:${FRONTEND_PORT}"
 echo -e "  ${CYAN}Backend${NC}   →  http://localhost:${BACKEND_PORT}"

@@ -23,6 +23,8 @@ import { exportReport, analyzeDocuments, getBenchmarkSpeedup } from "../../lib/a
 import { toast } from "sonner";
 import { useAppState, useAppDispatch } from "../../lib/store";
 import { sanitizeText } from "../../lib/sanitize";
+import { GreenwashScoreGauge } from "../components/GreenwashScoreGauge";
+import { ClaimVsRealityRow } from "../components/ClaimVsRealityRow";
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
@@ -81,7 +83,7 @@ export default function Dashboard() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `clausify-report.${format}`;
+      a.download = `greenlens-report.${format}`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success(`${format.toUpperCase()} report downloaded!`);
@@ -117,9 +119,6 @@ export default function Dashboard() {
   if (!analysis) {
     return null;
   }
-
-  const matrixColumns: string[] =
-    analysis.comparisonMatrix?.[0] ? Object.keys(analysis.comparisonMatrix[0].values) : [];
 
   const hasConflicts = analysis.conflicts.length > 0;
   const hasHighRisk = analysis.risks.some((r) => r.level === "HIGH");
@@ -449,20 +448,20 @@ export default function Dashboard() {
 
             {/* Conflict Alert */}
             {hasConflicts && (
-              <div className="rounded-lg p-4 animate-slideDown" style={{ background: "rgba(237,28,36,0.06)", border: "1px solid rgba(237,28,36,0.25)", borderLeft: "4px solid var(--amd-signal)" }}>
+              <div className="rounded-lg p-4 animate-slideDown" style={{ background: "var(--flag-red-dim)", border: "1px solid rgba(240,68,82,0.25)", borderLeft: "4px solid var(--flag-red)" }}>
                 <div className="flex items-start sm:items-center justify-between gap-3 mb-4 flex-wrap">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <AlertTriangle size={20} style={{ color: "var(--amd-signal)", flexShrink: 0 }} />
-                    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--amd-signal)" }}>
-                      Conflict Detected
+                    <AlertTriangle size={20} style={{ color: "var(--flag-red)", flexShrink: 0 }} />
+                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--flag-red)" }}>
+                      Contradiction Detected
                     </span>
                     <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "var(--ash)" }}>
-                      {analysis.conflicts.length} conflict{analysis.conflicts.length !== 1 ? "s" : ""} found
+                      {analysis.conflicts.length} contradiction{analysis.conflicts.length !== 1 ? "s" : ""} found
                     </span>
                   </div>
                   <button
                     onClick={() => setConflictExpanded(!conflictExpanded)}
-                    style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--amd-signal)", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}
+                    style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--flag-red)", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}
                   >
                     View Details
                     <ChevronDown size={14} style={{ transform: conflictExpanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
@@ -494,6 +493,9 @@ export default function Dashboard() {
                 )}
               </div>
             )}
+
+            {/* Greenwash Score Gauge */}
+            <GreenwashScoreGauge score={analysis.greenwashScore} />
 
             {/* Analysis Cards Grid — 2-column on desktop */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -557,40 +559,19 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              {/* Comparison Matrix */}
+              {/* Claim vs. Reality */}
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Document Comparison</h3>
+                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Claim vs. Reality</h3>
                     <Scale size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
                 </div>
-                <div className="card-scroll" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-                  <div className="rounded-lg overflow-x-auto" style={{ border: "1px solid var(--rule)" }}>
-                    <table style={{ width: "100%", minWidth: "360px" }}>
-                      <thead>
-                        <tr style={{ background: "var(--graphite)", height: "40px" }}>
-                          <th className="px-4 text-left" style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)", whiteSpace: "nowrap" }}>Feature</th>
-                          {matrixColumns.map((col) => (
-                            <th key={col} className="px-4 text-left" style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)", whiteSpace: "nowrap" }}>{col}</th>
-                          ))}
-                          <th className="px-4 text-left" style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)", whiteSpace: "nowrap" }}>Winner</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {analysis.comparisonMatrix.map((row, idx) => (
-                          <tr key={row.field} style={{ background: idx % 2 === 0 ? "var(--lead)" : "rgba(37,40,54,0.5)", height: "48px", borderTop: "1px solid var(--rule)" }}>
-                            <td className="px-4" style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "var(--paper)", whiteSpace: "nowrap" }}>{row.field}</td>
-                            {matrixColumns.map((col) => (
-                              <td key={col} className="px-4" style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "var(--paper)" }}>{row.values[col] ?? "—"}</td>
-                            ))}
-                            <td className="px-4" style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "var(--cleared)", whiteSpace: "nowrap" }}>{row.winner}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className="card-scroll space-y-3" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+                  {analysis.comparisonMatrix.map((row) => (
+                    <ClaimVsRealityRow key={row.field} row={row} />
+                  ))}
                 </div>
               </Card>
 

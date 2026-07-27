@@ -1,4 +1,4 @@
-# Clausify AI Backend — Dockerfile
+# GreenLens AI Backend — Dockerfile
 # AMD Developer Hackathon: ACT II | Track 3: Unicorn Track
 
 FROM python:3.11-slim

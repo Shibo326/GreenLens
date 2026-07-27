@@ -8,7 +8,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Chat = lazy(() => import("./pages/Chat"));
 const Demo = lazy(() => import("./pages/Demo"));
 
-// Professional loading fallback with Clausify branding
+// Professional loading fallback with GreenLens branding
 function PageLoader() {
   return (
     <div
@@ -22,7 +22,7 @@ function PageLoader() {
         gap: "24px",
       }}
     >
-      {/* Animated Clausify logo mark */}
+      {/* Animated GreenLens logo mark */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
         <motion.div
           animate={{ rotate: 360 }}
@@ -45,7 +45,7 @@ function PageLoader() {
             letterSpacing: "-0.02em",
           }}
         >
-          Clausify AI
+          GreenLens AI
         </span>
       </div>
 
@@ -78,7 +78,7 @@ function RouteErrorBoundary() {
       message.includes("error loading dynamically imported module");
 
     if (isChunkError) {
-      const reloadKey = "clausify_chunk_reload";
+      const reloadKey = "greenlens_chunk_reload";
       const alreadyReloaded = sessionStorage.getItem(reloadKey);
       if (!alreadyReloaded) {
         sessionStorage.setItem(reloadKey, "1");

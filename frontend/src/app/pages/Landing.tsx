@@ -17,6 +17,7 @@ import { uploadDocuments, analyzeDocuments, warmupServer, getBenchmarkSpeedup } 
 import { toast } from "sonner";
 import { useAppDispatch } from "../../lib/store";
 import { motion, AnimatePresence } from "framer-motion";
+import { QuickScanPanel } from "../components/QuickScanPanel";
 
 const LOADING_STAGES = [
   { label: "Extracting text", icon: "📄" },
@@ -305,7 +306,7 @@ export default function Landing() {
               letterSpacing: "0.12em",
             }}
           >
-            DOCUMENT INTELLIGENCE PLATFORM
+            GREENWASHING DETECTION PLATFORM
           </span>
           <div
             className="flex items-center gap-2 px-3 py-1.5 rounded-full"
@@ -354,12 +355,12 @@ export default function Landing() {
           <span
             style={{
               textDecoration: "underline",
-              textDecorationColor: "var(--volt)",
+              textDecorationColor: "var(--leaf)",
               textDecorationThickness: "3px",
               textUnderlineOffset: "4px",
             }}
           >
-            at once
+            for greenwashing
           </span>
           .
         </h1>
@@ -377,9 +378,9 @@ export default function Landing() {
             maxWidth: "min(560px, 92vw)",
           }}
         >
-          Upload contracts, quotations, and invoices. Ask anything in plain
-          language. Get evidence-based decisions in under 90 seconds — powered
-          by AMD Instinct MI300X.
+          Upload sustainability reports, packaging claims, and marketing copy. 
+          Ask anything in plain language. Get evidence-based greenwashing 
+          detection in under 60 seconds — powered by AMD Instinct MI300X.
         </p>
 
         {/* Stats Row */}
@@ -388,9 +389,9 @@ export default function Landing() {
           style={{ animationDelay: "0.15s" }}
         >
           {[
-            { value: "< 90s", label: "Analysis time", color: "var(--paper)" },
-            { value: benchmarkLabel, label: benchmarkSub, color: "var(--volt)" },
-            { value: "100%", label: "Evidence-based", color: "var(--paper)" },
+            { value: "< 60s", label: "Analysis time", color: "var(--paper)" },
+            { value: benchmarkLabel, label: benchmarkSub, color: "var(--leaf)" },
+            { value: "100%", label: "Claim verification", color: "var(--paper)" },
           ].map((stat, i) => (
             <div key={i} className="flex items-center">
               {i > 0 && (
@@ -718,10 +719,32 @@ export default function Landing() {
         )}
       </div>
 
+      {/* Quick Scan Panel */}
+      <div className="flex flex-col items-center px-4 sm:px-6 py-10 mx-auto" style={{ maxWidth: "1200px" }}>
+        <div className="flex items-center gap-2 mb-4">
+          <div style={{ flex: 1, height: "1px", background: "var(--rule)" }} />
+          <span
+            style={{
+              fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace",
+              fontSize: "11px",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "var(--ghost)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            OR TRY INSTANT SCAN
+          </span>
+          <div style={{ flex: 1, height: "1px", background: "var(--rule)" }} />
+        </div>
+        <QuickScanPanel />
+      </div>
+
       {/* AMD Trust Strip */}
       <div
         className="w-full py-4 flex items-center justify-center gap-2 mt-4"
-        style={{ background: "var(--volt-dim)", borderTop: "1px solid var(--rule)", borderBottom: "1px solid var(--rule)" }}
+        style={{ background: "var(--leaf-dim)", borderTop: "1px solid var(--rule)", borderBottom: "1px solid var(--rule)" }}
       >
         <Zap size={14} style={{ color: "var(--ash)" }} />
         <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(11px, 2vw, 12px)", fontWeight: 500, color: "var(--ash)", textAlign: "center" }}>

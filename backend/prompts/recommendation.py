@@ -4,20 +4,20 @@ from models.document import Chunk
 def build_recommendation_prompt(chunks: list[Chunk]) -> str:
     context = _format_chunks(chunks)
 
-    return f"""You are a senior strategic advisor. Based on these documents, provide a decisive recommendation.
+    return f"""You are a senior sustainability accountability advisor. Based on these documents, provide decisive action steps that consumers, watchdogs, or regulators should take to hold this company accountable for its environmental claims.
 
 {context}
 
-Give a specific, actionable recommendation with evidence from the documents.
+Focus on: specific questions to ask the company, verification steps anyone can take, regulatory complaints if warranted, and alternative choices consumers can make.
 
 Return ONLY valid JSON:
 {{
-  "title": "<decisive action statement>",
-  "summary": "<2-3 sentences: key evidence + expert rationale + conditions. Include specific figures or dates.>",
+  "title": "<decisive accountability action statement — what should be done about these claims>",
+  "summary": "<2-3 sentences: the core greenwashing concern + what evidence supports it + why action is needed now. Include specific claims or figures from the documents.>",
   "nextSteps": [
-    "<Step 1: specific action | owner role | timeframe>",
-    "<Step 2: specific action | owner role | timeframe>",
-    "<Step 3: specific action | owner role | timeframe>"
+    "<Step 1: specific question to ask the company | what their answer should include to be credible>",
+    "<Step 2: verification action | where to check (certifier website, regulatory database, etc.)>",
+    "<Step 3: escalation path if claims cannot be verified | regulatory body or consumer org to contact>"
   ],
   "confidence": 0.85
 }}"""

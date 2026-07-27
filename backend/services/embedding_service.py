@@ -60,16 +60,15 @@ class EmbeddingService:
     def chunk_text(
         self,
         text: str,
-        max_tokens: int = 600,
-        overlap: int = 80,
+        max_tokens: int = 400,
+        overlap: int = 40,
     ) -> list[str]:
         """
         Split text into overlapping chunks of approximately max_tokens tokens.
         Uses word-based approximation (1 token ≈ 0.75 words).
         
-        Larger chunks (600 tokens) with more overlap (80 tokens) preserve more
-        context per chunk, leading to better retrieval quality and richer
-        LLM understanding of document structure.
+        Smaller chunks (400 tokens) with moderate overlap (40 tokens) process
+        faster while still preserving enough context for accurate retrieval.
 
         Args:
             text: Input text to chunk

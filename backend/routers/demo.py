@@ -7,15 +7,15 @@ from fastapi.responses import JSONResponse
 router = APIRouter()
 
 # Static demo session ID
-DEMO_SESSION_ID = "demo-session-amd-mi300x-2026"
+DEMO_SESSION_ID = "demo-session-greenlens-ecotech-2025"
 
 # Pre-computed demo timestamps (ISO 8601 strings as required)
-DEMO_ANALYZED_AT = "2026-03-15T10:30:00.000Z"
-DEMO_UPLOADED_AT = "2026-03-15T10:00:00.000Z"
-MSG_1_TS = "2026-03-15T10:32:00.000Z"
-MSG_2_TS = "2026-03-15T10:32:02.000Z"
-MSG_3_TS = "2026-03-15T10:34:00.000Z"
-MSG_4_TS = "2026-03-15T10:34:02.000Z"
+DEMO_ANALYZED_AT = "2025-11-15T10:30:00.000Z"
+DEMO_UPLOADED_AT = "2025-11-15T10:00:00.000Z"
+MSG_1_TS = "2025-11-15T10:32:00.000Z"
+MSG_2_TS = "2025-11-15T10:32:02.000Z"
+MSG_3_TS = "2025-11-15T10:34:00.000Z"
+MSG_4_TS = "2025-11-15T10:34:02.000Z"
 
 
 DEMO_DATA = {
@@ -23,41 +23,17 @@ DEMO_DATA = {
     "documents": [
         {
             "id": "doc-1",
-            "filename": "Supplier_A_Quotation.pdf",
+            "filename": "EcoTech_SustainabilityReport_2025.pdf",
             "fileType": "pdf",
-            "fileSize": 2456789,
+            "fileSize": 3456789,
             "uploadedAt": DEMO_UPLOADED_AT,
             "processingStatus": "completed",
         },
         {
             "id": "doc-2",
-            "filename": "Supplier_B_Quotation.pdf",
+            "filename": "EcoTech_PackagingClaims_Q4Campaign.pdf",
             "fileType": "pdf",
-            "fileSize": 1987654,
-            "uploadedAt": DEMO_UPLOADED_AT,
-            "processingStatus": "completed",
-        },
-        {
-            "id": "doc-3",
-            "filename": "Existing_Contract_TechCorp.pdf",
-            "fileType": "pdf",
-            "fileSize": 3245678,
-            "uploadedAt": DEMO_UPLOADED_AT,
-            "processingStatus": "completed",
-        },
-        {
-            "id": "doc-4",
-            "filename": "Invoice_TechCorp_March2026.pdf",
-            "fileType": "pdf",
-            "fileSize": 876543,
-            "uploadedAt": DEMO_UPLOADED_AT,
-            "processingStatus": "completed",
-        },
-        {
-            "id": "doc-5",
-            "filename": "Company_Procurement_Policy.pdf",
-            "fileType": "pdf",
-            "fileSize": 1567890,
+            "fileSize": 1234567,
             "uploadedAt": DEMO_UPLOADED_AT,
             "processingStatus": "completed",
         },
@@ -65,146 +41,258 @@ DEMO_DATA = {
     "analysis": {
         "analyzedAt": DEMO_ANALYZED_AT,
         "executiveSummary": (
-            "Analysis of five procurement documents reveals a critical price discrepancy between "
-            "TechCorp's invoice ($48,500) and their original quotation ($45,200), representing a "
-            "$3,300 overcharge requiring immediate clarification. Supplier B presents the most "
-            "competitive overall package with lower pricing, better payment terms, and extended "
-            "warranty coverage. The existing TechCorp contract is approaching renewal and requires "
-            "renegotiation before the June 2026 deadline."
+            "GreenLens analysis of EcoTech Corporation's sustainability report and marketing materials "
+            "reveals significant greenwashing across multiple claims. The company's 'carbon neutral' "
+            "marketing implies zero total emissions, but their report confirms only Scope 1 emissions "
+            "(3.9% of total footprint) are offset. Marketing materials claim '100% recycled packaging' "
+            "while the sustainability report confirms only the outer box (45% by weight) uses recycled "
+            "content — inner trays, plastic wrap, and blister packs are virgin materials. The '15% water "
+            "reduction' claim omits that water-intensive processes were relocated to Mexico, increasing "
+            "total usage by 8%. These discrepancies represent HIGH-severity greenwashing that would likely "
+            "attract regulatory scrutiny under FTC Green Guides and the EU Green Claims Directive."
         ),
+        "greenwashScore": 24,
         "risks": [
             {
                 "id": "r1",
                 "level": "HIGH",
-                "description": "Invoice amount ($48,500) exceeds quotation ($45,200) by $3,300 — 7.3% overcharge with no documented justification.",
-                "sourceDocument": "Invoice_TechCorp_March2026.pdf",
-                "category": "Financial",
+                "description": (
+                    "Marketing claims 'zero carbon footprint' and 'ZERO emissions' but only Scope 1 "
+                    "(17,400 tCO2e = 3.9% of total 448,400 tCO2e) is offset. Unqualified 'carbon neutral' "
+                    "claims covering less than 4% of actual emissions violate FTC Green Guides Section 260.5."
+                ),
+                "sourceDocument": "EcoTech_PackagingClaims_Q4Campaign.pdf",
+                "category": "Misleading Claims",
             },
             {
                 "id": "r2",
                 "level": "HIGH",
-                "description": "TechCorp contract renewal deadline is June 30, 2026. No renewal terms have been initiated.",
-                "sourceDocument": "Existing_Contract_TechCorp.pdf",
-                "category": "Legal",
+                "description": (
+                    "'100% recycled packaging' claim is deceptive — sustainability report reveals only "
+                    "the outer box uses recycled content (153g of 340g = 45% by weight). Inner trays are "
+                    "virgin polystyrene, wrap is non-recyclable LDPE, accessories use PVC blister packs."
+                ),
+                "sourceDocument": "EcoTech_SustainabilityReport_2025.pdf",
+                "category": "Packaging Deception",
             },
             {
                 "id": "r3",
-                "level": "MEDIUM",
-                "description": "Supplier A's payment terms (Net 30) are less favorable than Supplier B's (Net 60), impacting cash flow by 30 days.",
-                "sourceDocument": "Supplier_A_Quotation.pdf",
-                "category": "Financial",
+                "level": "HIGH",
+                "description": (
+                    "Water reduction claim (15%) achieved by relocating processes to Mexico, not by "
+                    "actual conservation. Combined water usage increased 8% YoY. Marketing presents "
+                    "this as a genuine environmental improvement ('every drop counts')."
+                ),
+                "sourceDocument": "EcoTech_SustainabilityReport_2025.pdf",
+                "category": "Hidden Trade-off",
             },
             {
                 "id": "r4",
                 "level": "MEDIUM",
-                "description": "Procurement policy requires 3 competitive bids for purchases over $40,000. Only 2 quotations have been obtained.",
-                "sourceDocument": "Company_Procurement_Policy.pdf",
-                "category": "Compliance",
+                "description": (
+                    "'Clean supply chain' and 'all suppliers meet rigorous standards' claims contradicted "
+                    "by report data: only 30% of suppliers audited, 6 found non-compliant with wastewater "
+                    "standards, 3 using banned substances, and 33 suppliers never audited."
+                ),
+                "sourceDocument": "EcoTech_SustainabilityReport_2025.pdf",
+                "category": "Unverified Claims",
             },
             {
                 "id": "r5",
+                "level": "MEDIUM",
+                "description": (
+                    "'Eco-friendly manufacturing' and 'sustainable manufacturing' used without definition "
+                    "or certification. ISO 14001 covers Austin facility only. No cradle-to-cradle, B Corp, "
+                    "or equivalent whole-company environmental certification exists."
+                ),
+                "sourceDocument": "EcoTech_PackagingClaims_Q4Campaign.pdf",
+                "category": "Vague Claims",
+            },
+            {
+                "id": "r6",
                 "level": "LOW",
-                "description": "Supplier B warranty is 2 years vs Supplier A's 1 year, but no service escalation path is defined.",
-                "sourceDocument": "Supplier_B_Quotation.pdf",
-                "category": "Operational",
+                "description": (
+                    "Press release states EcoTech is 'one of the first major consumer electronics companies "
+                    "to reach net-zero emissions' — conflating carbon offsetting (credits) with actual "
+                    "emission elimination. This distinction matters for investor and consumer trust."
+                ),
+                "sourceDocument": "EcoTech_PackagingClaims_Q4Campaign.pdf",
+                "category": "Misleading Framing",
             },
         ],
         "comparisonMatrix": [
             {
-                "field": "Total Price",
+                "field": "Carbon Neutrality Scope",
                 "values": {
-                    "Supplier A": "$45,200",
-                    "Supplier B": "$42,800",
-                    "TechCorp (current)": "$48,500",
+                    "Marketing Claim": "Full carbon neutrality, zero emissions",
+                    "Actual (Report)": "Scope 1 only — 3.9% of total footprint",
                 },
-                "winner": "Supplier B",
+                "winner": None,
             },
             {
-                "field": "Payment Terms",
+                "field": "Recycled Packaging",
                 "values": {
-                    "Supplier A": "Net 30",
-                    "Supplier B": "Net 60",
-                    "TechCorp (current)": "Net 30",
+                    "Marketing Claim": "100% recycled packaging",
+                    "Actual (Report)": "45% by weight (outer box only)",
                 },
-                "winner": "Supplier B",
+                "winner": None,
             },
             {
-                "field": "Delivery Time",
+                "field": "Water Reduction",
                 "values": {
-                    "Supplier A": "14 days",
-                    "Supplier B": "21 days",
-                    "TechCorp (current)": "7 days",
+                    "Marketing Claim": "15% less water, 'every drop counts'",
+                    "Actual (Report)": "Relocated to Mexico; total usage up 8%",
                 },
-                "winner": "TechCorp (current)",
+                "winner": None,
             },
             {
-                "field": "Warranty",
+                "field": "Supply Chain Standards",
                 "values": {
-                    "Supplier A": "1 year",
-                    "Supplier B": "2 years",
-                    "TechCorp (current)": "1 year",
+                    "Marketing Claim": "All suppliers meet rigorous standards",
+                    "Actual (Report)": "30% audited; 9 non-compliant findings",
                 },
-                "winner": "Supplier B",
+                "winner": None,
             },
             {
-                "field": "Support SLA",
+                "field": "Renewable Energy",
                 "values": {
-                    "Supplier A": "48 hours",
-                    "Supplier B": "24 hours",
-                    "TechCorp (current)": "48 hours",
+                    "Marketing Claim": "Implied green/sustainable operations",
+                    "Actual (Report)": "12% renewable; 88% fossil grid",
                 },
-                "winner": "Supplier B",
+                "winner": None,
             },
         ],
         "conflicts": [
             {
                 "id": "c1",
-                "type": "Price Discrepancy",
+                "type": "Carbon Claim vs. Actual Data",
                 "severity": "HIGH",
                 "documentA": {
-                    "name": "Invoice_TechCorp_March2026.pdf",
-                    "excerpt": "Total amount due: $48,500.00 (including expedite fee)",
+                    "name": "EcoTech_PackagingClaims_Q4Campaign.pdf",
+                    "excerpt": (
+                        "We've eliminated our carbon footprint entirely. Every EcoTech product is made "
+                        "with net-zero emissions, meaning you can feel good about your purchase knowing "
+                        "it had zero climate impact."
+                    ),
                 },
                 "documentB": {
-                    "name": "Existing_Contract_TechCorp.pdf",
-                    "excerpt": "Agreed unit price: $45,200.00 per standard order",
+                    "name": "EcoTech_SustainabilityReport_2025.pdf",
+                    "excerpt": (
+                        "Scope 2 (purchased electricity) and Scope 3 (supply chain, product use, "
+                        "end-of-life) emissions are tracked but not included in our carbon neutrality "
+                        "claim. Total actual footprint: 448,400 tCO2e. Percentage offset: 3.9%."
+                    ),
                 },
-                "explanation": "The invoice charges $3,300 more than the contracted price. No expedite fee clause exists in the contract.",
-                "recommendedAction": "Request itemized invoice breakdown from TechCorp and cross-reference with contract Section 4.2 before approving payment.",
+                "explanation": (
+                    "Marketing claims 'zero climate impact' and 'eliminated carbon footprint entirely' "
+                    "while the sustainability report explicitly states only Scope 1 (3.9% of total "
+                    "emissions) is offset. The remaining 96.1% (430,600 tCO2e) is unaddressed. This "
+                    "is a textbook example of scope manipulation — the most common corporate greenwashing "
+                    "tactic identified by the EU Green Claims Directive."
+                ),
+                "recommendedAction": (
+                    "Immediately qualify all carbon neutrality claims to specify 'Scope 1 only' or face "
+                    "potential FTC enforcement action. Remove unqualified 'zero emissions' language from "
+                    "all marketing channels. Consider ACCC v. Clorox precedent ($5.5M fine for misleading "
+                    "'eco-friendly' claims)."
+                ),
             },
             {
                 "id": "c2",
-                "type": "Policy Non-compliance",
-                "severity": "MEDIUM",
+                "type": "Packaging Claim vs. Actual Composition",
+                "severity": "HIGH",
                 "documentA": {
-                    "name": "Company_Procurement_Policy.pdf",
-                    "excerpt": "Purchases exceeding $40,000 require a minimum of three competitive bids (Section 6.1)",
+                    "name": "EcoTech_PackagingClaims_Q4Campaign.pdf",
+                    "excerpt": (
+                        "This box? It's made entirely from recycled materials. We've eliminated virgin "
+                        "materials from our packaging supply chain completely."
+                    ),
                 },
                 "documentB": {
-                    "name": "Supplier_A_Quotation.pdf",
-                    "excerpt": "Quotation #QT-2026-0312 — value: $45,200",
+                    "name": "EcoTech_SustainabilityReport_2025.pdf",
+                    "excerpt": (
+                        "Inner product tray: Virgin polystyrene foam. Plastic wrap: Standard LDPE film "
+                        "(not recyclable). Accessories packaging: PVC blister packs. Recycled content "
+                        "by weight: 45% (outer box only = 153g of 340g)."
+                    ),
                 },
-                "explanation": "Only two supplier quotations have been collected. Policy requires a third before proceeding.",
-                "recommendedAction": "Obtain one additional competitive quotation before finalizing the purchase decision.",
+                "explanation": (
+                    "The '100% recycled' claim applies only to the outer shipping box but is presented "
+                    "as covering all packaging. The sustainability report reveals 55% of packaging weight "
+                    "consists of virgin polystyrene, non-recyclable LDPE, and PVC — materials with "
+                    "significant environmental impact that directly contradict the 'eliminated virgin "
+                    "materials' claim."
+                ),
+                "recommendedAction": (
+                    "Revise packaging claims to specify 'outer box made from 100% recycled cardboard' "
+                    "and disclose that inner packaging uses virgin materials. Under FTC Green Guides "
+                    "Section 260.13, unqualified '100% recycled' claims must apply to the entire product "
+                    "or package, not just one component."
+                ),
+            },
+            {
+                "id": "c3",
+                "type": "Supply Chain Claim vs. Audit Reality",
+                "severity": "MEDIUM",
+                "documentA": {
+                    "name": "EcoTech_PackagingClaims_Q4Campaign.pdf",
+                    "excerpt": (
+                        "We work closely with all our suppliers to reduce environmental impact. All "
+                        "suppliers sign our environmental code of conduct and undergo regular audits."
+                    ),
+                },
+                "documentB": {
+                    "name": "EcoTech_SustainabilityReport_2025.pdf",
+                    "excerpt": (
+                        "Environmental audits conducted on suppliers representing 30% of procurement "
+                        "spend. 14 of 47 suppliers audited. 6 found non-compliant with wastewater "
+                        "standards. 3 identified as using banned substances. 33 suppliers not yet audited."
+                    ),
+                },
+                "explanation": (
+                    "Marketing implies all 47 suppliers undergo environmental audits, but only 14 (30%) "
+                    "have been audited. Of those audited, 64% (9 of 14) had compliance failures. "
+                    "The claim of 'rigorous standards' is undermined by the fact that 70% of the "
+                    "supply chain has never been assessed."
+                ),
+                "recommendedAction": (
+                    "Remove 'all suppliers' language and replace with factual '30% of suppliers audited "
+                    "to date, with a target of 100% by [year]'. Disclose non-compliance findings and "
+                    "remediation status per GRI Standards 308 (Supplier Environmental Assessment)."
+                ),
             },
         ],
         "recommendation": {
-            "title": "Proceed with Supplier B — with conditions",
-            "summary": "Supplier B offers the best overall value: lowest price, longest warranty, and best support SLA. However, two blockers must be resolved first.",
+            "title": "High Greenwashing Risk — Immediate Claim Revision Required",
+            "summary": (
+                "EcoTech's marketing materials contain multiple HIGH-severity greenwashing violations "
+                "that directly contradict their own sustainability report data. The gap between claims "
+                "and evidence is substantial and systemic, not incidental. Regulatory action is likely "
+                "if these claims reach enforcement bodies."
+            ),
             "nextSteps": [
-                "Dispute TechCorp invoice overcharge of $3,300 before approving payment",
-                "Obtain a third competitive quotation to satisfy procurement policy Section 6.1",
-                "Initiate TechCorp contract renewal discussion before June 30 deadline",
-                "Request formal proposal and delivery confirmation from Supplier B",
+                "Immediately qualify carbon neutrality claims to 'Scope 1 only (3.9% of total footprint)' across all channels",
+                "Revise packaging claims to disclose actual recycled content by weight (45%) and virgin materials used",
+                "Remove unqualified absolute claims ('zero emissions', 'entirely recycled', 'all suppliers') from all marketing",
+                "Engage external legal review of all environmental marketing against FTC Green Guides and EU Green Claims Directive",
+                "Develop a substantiation file for each environmental claim with supporting third-party evidence",
             ],
-            "confidence": 0.87,
+            "confidence": 0.92,
         },
+        "suggestedQuestions": [
+            "What percentage of EcoTech's total emissions are actually offset?",
+            "How does the '100% recycled packaging' claim hold up against the actual packaging composition?",
+            "What are the regulatory risks of EcoTech's current carbon neutrality marketing?",
+            "Which specific claims would trigger FTC or EU Green Claims Directive enforcement?",
+            "How does the water reduction claim mask the actual increase in total water usage?",
+            "What would EcoTech need to do to make their sustainability claims substantiatable?",
+        ],
     },
     "preSeededMessages": [
         {
             "id": "m1",
             "role": "user",
-            "content": "Which supplier should I choose?",
+            "content": "Is EcoTech really carbon neutral?",
             "timestamp": MSG_1_TS,
         },
         {
@@ -214,57 +302,55 @@ DEMO_DATA = {
             "timestamp": MSG_2_TS,
             "structuredResponse": {
                 "answer": (
-                    "Supplier B is the recommended selection based on a four-of-five criteria advantage across "
-                    "the evaluated documents. Supplier B's total quoted price of $42,800 is $2,400 (5.3%) below "
-                    "Supplier A's $45,200 and $5,700 (11.8%) below TechCorp's current invoice rate of $48,500. "
-                    "Beyond price, Supplier B offers Net 60 payment terms versus Net 30 from both alternatives — "
-                    "a meaningful 30-day cash flow advantage — plus a 24-month parts-and-labor warranty (double "
-                    "Supplier A's 12-month coverage) and a 24-hour support SLA against the 48-hour standard. "
-                    "The sole area where Supplier B trails is delivery lead time (21 days versus TechCorp's 7 "
-                    "days); assess this against your operational urgency before finalizing. Two conditions block "
-                    "immediate award: Procurement Policy Section 6.1 requires a third competitive bid for "
-                    "purchases exceeding $40,000, and Supplier B's warranty does not define an escalation path "
-                    "or specify on-site versus depot repair terms — both must be resolved before issuing a PO."
+                    "No. EcoTech's carbon neutrality claim is severely misleading. Their sustainability "
+                    "report explicitly states that only Scope 1 emissions are offset — that's 17,400 tCO2e "
+                    "out of a total footprint of 448,400 tCO2e. In other words, they've offset 3.9% of their "
+                    "actual carbon footprint and called it 'carbon neutral'. Their marketing says 'zero climate "
+                    "impact' and 'eliminated our carbon footprint entirely' — this is demonstrably false by "
+                    "their own data. Scope 2 (89,000 tCO2e from purchased electricity) and Scope 3 (342,000 "
+                    "tCO2e from supply chain, product use, and end-of-life) are completely unaddressed. Under "
+                    "FTC Green Guides Section 260.5, an unqualified 'carbon neutral' claim must account for "
+                    "all material emission sources unless clearly qualified. EcoTech's claim does neither — "
+                    "it implies total neutrality while covering less than 4% of actual emissions. This is the "
+                    "type of scope manipulation that resulted in regulatory action against Shell, TotalEnergies, "
+                    "and Santos in recent years."
                 ),
                 "evidence": [
                     {
-                        "quote": "Total quotation value: $42,800.00 | Payment terms: Net 60 days | Warranty: 24 months parts & labor | Support SLA: 24-hour response",
-                        "sourceDocument": "Supplier_B_Quotation.pdf",
+                        "quote": "Total actual footprint: 448,400 tCO2e. Percentage offset: 3.9% (Scope 1 only)",
+                        "sourceDocument": "EcoTech_SustainabilityReport_2025.pdf",
                         "documentType": "pdf",
                     },
                     {
-                        "quote": "Total quotation value: $45,200.00 | Payment terms: Net 30 days | Warranty: 12 months | Support SLA: 48-hour response",
-                        "sourceDocument": "Supplier_A_Quotation.pdf",
+                        "quote": "We've eliminated our carbon footprint entirely. Every EcoTech product is made with net-zero emissions, meaning zero climate impact.",
+                        "sourceDocument": "EcoTech_PackagingClaims_Q4Campaign.pdf",
                         "documentType": "pdf",
                     },
                     {
-                        "quote": "Section 6.1: Purchases exceeding $40,000 require a minimum of three (3) written competitive bids prior to purchase order issuance.",
-                        "sourceDocument": "Company_Procurement_Policy.pdf",
+                        "quote": "Scope 2 and Scope 3 emissions are tracked but not included in our carbon neutrality claim at this time.",
+                        "sourceDocument": "EcoTech_SustainabilityReport_2025.pdf",
                         "documentType": "pdf",
                     },
                 ],
                 "risks": (
-                    "Two blocking conditions must be satisfied before award: (1) Only two bids are on file; "
-                    "Policy Section 6.1 requires a third — proceeding without it creates audit exposure. "
-                    "(2) Supplier B's warranty terms lack an escalation path and do not specify on-site versus "
-                    "depot repair, which introduces ambiguity in the event of a claim. Additionally, note the "
-                    "open dispute with TechCorp: their March 2026 invoice of $48,500 exceeds the contracted "
-                    "rate of $45,200 by $3,300 (7.3%) — do not approve that payment until the discrepancy "
-                    "is resolved with documented justification."
+                    "HIGH — Unqualified carbon neutrality claims covering only 3.9% of actual emissions "
+                    "constitute misleading environmental marketing under multiple jurisdictions. FTC Green "
+                    "Guides require material qualification. The EU Green Claims Directive (effective 2026) "
+                    "will make such unsubstantiated claims explicitly illegal. ACCC has fined companies "
+                    "$5.5M+ for similar overstatements."
                 ),
                 "recommendation": (
-                    "Procurement manager to solicit one additional competitive bid from a pre-approved vendor "
-                    "this week to satisfy Policy Section 6.1. Simultaneously, request written warranty "
-                    "clarification from Supplier B specifying service modality and escalation terms. "
-                    "Once both conditions are met — target within 5 business days — issue the PO to "
-                    "Supplier B at $42,800 with Net 60 payment terms."
+                    "Consumers should disregard EcoTech's 'carbon neutral' marketing as materially "
+                    "misleading. The company should immediately qualify all claims to state 'Scope 1 "
+                    "carbon neutral (3.9% of total footprint)' or face regulatory risk. Look for "
+                    "SBTi-validated targets covering all scopes as a credible alternative."
                 ),
             },
         },
         {
             "id": "m3",
             "role": "user",
-            "content": "What is the TechCorp contract deadline and what happens if we miss it?",
+            "content": "What about their recycled packaging claim?",
             "timestamp": MSG_3_TS,
         },
         {
@@ -274,43 +360,43 @@ DEMO_DATA = {
             "timestamp": MSG_4_TS,
             "structuredResponse": {
                 "answer": (
-                    "The TechCorp master agreement expires on June 30, 2026, with a contractual requirement "
-                    "of 60 days written notice prior to expiry for either renewal or termination — placing the "
-                    "effective deadline for notice at April 30, 2026. That date has already passed, meaning "
-                    "the organization is currently in default of the notice obligation. If no action is taken: "
-                    "(1) the contract may auto-expire with no renewal protections, creating a potential service "
-                    "gap; (2) TechCorp loses the obligation to honor the contracted rate of $45,200, and any "
-                    "new terms would be negotiated without leverage; (3) if you intend to transition to "
-                    "Supplier B, the 21-day Supplier B lead time must be factored against the TechCorp "
-                    "contract end date to avoid a service interruption window. Immediate contact with "
-                    "TechCorp is required regardless of the intended outcome — renewal or exit."
+                    "The '100% recycled packaging' claim is another clear case of deceptive marketing. "
+                    "EcoTech's own sustainability report breaks down packaging composition: the outer "
+                    "shipping box (153g) uses post-consumer recycled cardboard, but the inner product tray "
+                    "is virgin polystyrene foam, the plastic wrap is non-recyclable LDPE film, and "
+                    "accessories come in PVC blister packs. By weight, recycled content accounts for only "
+                    "45% of total packaging (153g out of 340g). The marketing claim that they've 'eliminated "
+                    "virgin materials from our packaging supply chain completely' is directly contradicted "
+                    "by their own data showing 55% virgin material content. Under FTC Green Guides Section "
+                    "260.13, an unqualified 'recycled' claim must apply to the entire product. Claiming "
+                    "'100% recycled' when only the outer box qualifies is textbook deception — it's the "
+                    "packaging equivalent of claiming your car is 'electric' because the clock runs on a "
+                    "battery. PVC blister packs are particularly problematic as PVC is considered one of "
+                    "the most environmentally harmful plastics in terms of production and end-of-life toxicity."
                 ),
                 "evidence": [
                     {
-                        "quote": "Contract term: January 1, 2025 — June 30, 2026. Either party must provide written notice of intent to renew or terminate no less than sixty (60) days prior to expiry.",
-                        "sourceDocument": "Existing_Contract_TechCorp.pdf",
+                        "quote": "Recycled content by weight: 45% (outer box only = 153g of 340g). Inner product tray: Virgin polystyrene foam. Plastic wrap: Standard LDPE film (not recyclable).",
+                        "sourceDocument": "EcoTech_SustainabilityReport_2025.pdf",
                         "documentType": "pdf",
                     },
                     {
-                        "quote": "Agreed unit price: $45,200.00 per standard order. Price protections applicable for duration of contract term only.",
-                        "sourceDocument": "Existing_Contract_TechCorp.pdf",
+                        "quote": "This box? It's made entirely from recycled materials. We've eliminated virgin materials from our packaging supply chain completely.",
+                        "sourceDocument": "EcoTech_PackagingClaims_Q4Campaign.pdf",
                         "documentType": "pdf",
                     },
                 ],
                 "risks": (
-                    "HIGH severity — the 60-day notice window expired April 30, 2026. Without immediate "
-                    "written communication to TechCorp, the organization risks: (a) unprotected contract lapse "
-                    "on June 30 with no guaranteed continuity of service or pricing; (b) loss of the $45,200 "
-                    "contracted rate if TechCorp reprices on expiry; (c) a service gap if transitioning to "
-                    "Supplier B given their 21-day lead time. Even an informal notice sent now demonstrates "
-                    "intent and may preserve some negotiating protections depending on TechCorp's response."
+                    "HIGH — Unqualified '100% recycled' claims that apply only to one component violate "
+                    "FTC Green Guides Section 260.13. The explicit statement about eliminating virgin "
+                    "materials is directly contradicted by reported data (55% virgin content by weight). "
+                    "This creates both regulatory liability and consumer trust risk."
                 ),
                 "recommendation": (
-                    "Legal or procurement lead to send a formal written notice to TechCorp today — either "
-                    "signaling intent to negotiate renewal terms or initiating an orderly transition. "
-                    "Do not wait for the Supplier B selection to be finalized before making this contact; "
-                    "the two tracks should run in parallel. Preserving the existing rate during any transition "
-                    "period should be a key negotiating objective."
+                    "Consumers should verify what 'recycled packaging' actually means before trusting such "
+                    "claims. Look for specific percentages and which components are covered. EcoTech should "
+                    "revise claims to state 'outer box made from 100% recycled cardboard' and develop a "
+                    "roadmap to eliminate virgin polystyrene, LDPE, and PVC from their packaging entirely."
                 ),
             },
         },
@@ -321,10 +407,10 @@ DEMO_DATA = {
 @router.get("/demo")
 async def get_demo():
     """
-    Return pre-loaded demo data for the DealFlow AI demo experience.
+    Return pre-loaded demo data for the GreenLens sustainability claims analysis demo.
 
-    No authentication required. Returns 5 procurement documents with
-    a complete analysis and pre-seeded chat messages.
+    No authentication required. Returns EcoTech Corporation sustainability report and
+    marketing materials with a complete greenwashing analysis and pre-seeded chat messages.
     """
     return JSONResponse(content=DEMO_DATA)
 
@@ -335,7 +421,7 @@ async def benchmark_inference():
     Run a live LLM inference benchmark to verify speed optimizations.
 
     Returns:
-    - Model name (llama-4-maverick-instruct or current configured model)
+    - Model name (current configured model)
     - Tokens/second throughput
     - Total latency (time to first token + generation time)
     - Provider info (Fireworks AI on AMD MI300X)
@@ -348,37 +434,40 @@ async def benchmark_inference():
 
         llm_service = LLMService()
 
-        # Benchmark prompt: realistic doc analysis snippet
-        test_prompt = """Analyze the following invoice excerpt and identify any risks:
+        # Benchmark prompt: realistic sustainability claim analysis
+        test_prompt = """Analyze the following sustainability claim and identify any greenwashing risks:
 
-INVOICE #INV-2026-0315
-Supplier: TechCorp Global
-Invoice Date: March 15, 2026
-Total Amount: $48,500.00 (includes $3,300 expedite fee)
-Payment Terms: Net 30
----
-IMPORTANT: Previous quotation for this order was $45,200. No expedite service was requested.
+CLAIM: "Our company has achieved carbon neutrality across all operations. 
+We offset 100% of our emissions through certified carbon credits, making 
+every product we sell completely carbon-free."
 
-Respond with a JSON array of risk objects."""
+CONTEXT: Company sustainability report shows:
+- Scope 1 emissions: 15,000 tCO2e (offset with Gold Standard credits)
+- Scope 2 emissions: 78,000 tCO2e (not offset)
+- Scope 3 emissions: 290,000 tCO2e (not tracked)
+- Total footprint: 383,000 tCO2e
+- Percentage actually offset: 3.9%
+
+Respond with a JSON array of risk objects identifying greenwashing indicators."""
 
         start = time.time()
         response = await llm_service.complete(
-            system_prompt="You are a procurement document analyst.",
+            system_prompt="You are a sustainability claims analyst specializing in greenwashing detection.",
             user_prompt=test_prompt,
-            max_tokens=400,  # Quick benchmark
+            max_tokens=400,
             temperature=0.1,
         )
         latency_ms = int((time.time() - start) * 1000)
 
         # Estimate tokens/sec (rough: assume ~300 output tokens)
-        estimated_output_tokens = len(response.split()) * 1.3  # words to tokens rough conversion
+        estimated_output_tokens = len(response.split()) * 1.3
         tokens_per_sec = int(estimated_output_tokens / (latency_ms / 1000)) if latency_ms > 0 else 0
 
         await llm_service.aclose()
 
         return JSONResponse(content={
             "status": "success",
-            "model": os.getenv("FIREWORKS_MODEL", "unknown"),
+            "model": os.getenv("FIREWORKS_MODEL_QUALITY", os.getenv("FIREWORKS_MODEL", "unknown")),
             "provider": "Fireworks AI",
             "hardware": "AMD MI300X",
             "speedTier": "fast",
@@ -386,14 +475,14 @@ Respond with a JSON array of risk objects."""
                 "latencyMs": latency_ms,
                 "estimatedTokensPerSecond": tokens_per_sec,
                 "responseLength": len(response),
-                "testType": "structured_analysis",
+                "testType": "greenwashing_analysis",
             },
             "optimizations": [
                 "Persistent HTTP connection pooling",
                 "Fireworks 'fast' speed tier enabled",
                 "Temperature 0.1 for structured outputs",
-                "Parallel async calls (5 concurrent)",
-                "Reduced token budgets (900-1200 per call)",
+                "Parallel async calls (3 concurrent via semaphore)",
+                "Tiered model routing (quality + fast)",
             ],
             "timestamp": time.time(),
         })

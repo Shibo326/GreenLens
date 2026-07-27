@@ -1,10 +1,10 @@
 ---
-name: clausify-backend-hardening
-description: Adds production-grade improvements to the Clausify backend including AMD swap validation, benchmark endpoint, improved error messages, request ID logging, and deployment configuration files. Use this agent to harden the backend before deployment. Run after basic functionality is confirmed working.
+name: greenlens-backend-hardening
+description: Adds production-grade improvements to the GreenLens backend including AMD swap validation, benchmark endpoint, improved error messages, request ID logging, and deployment configuration files. Use this agent to harden the backend before deployment. Run after basic functionality is confirmed working.
 tools: ["read", "write"]
 ---
 
-You are the Clausify Backend Hardening specialist. Your job is to add production-grade features to the backend without breaking any existing functionality.
+You are the GreenLens Backend Hardening specialist. Your job is to add production-grade features to the backend without breaking any existing functionality.
 
 ## Pre-Work: Read Everything First
 
@@ -84,7 +84,7 @@ async def benchmark_embeddings():
     embedding_service = _embedding_service  # injected from main.py at startup
     
     test_chunks = [
-        f"This is test clause number {i} for benchmarking embedding performance in the Clausify system."
+        f"This is test clause number {i} for benchmarking embedding performance in the GreenLens system."
         for i in range(50)
     ]
     
@@ -176,7 +176,7 @@ async def health_check():
     provider = os.getenv("LLM_PROVIDER", "GROQ").upper()
     return {
         "status": "healthy",
-        "service": "clausify-api",
+        "service": "greenlens-api",
         "version": "1.0.0",
         "provider": provider,
         "amd_active": provider == "AMD",
@@ -247,11 +247,11 @@ PYTHON_VERSION = "3.11"
 Create a comprehensive README:
 
 ```markdown
-# Clausify — AI Contract Intelligence
+# GreenLens — AI Contract Intelligence
 
 > Built for the AMD Hackathon on lablab.ai | Powered by AMD Cloud Inference
 
-Clausify analyzes legal contracts using AMD's high-performance AI inference. Upload multiple documents, detect conflicts between clauses, get risk assessments, and chat with your contracts using natural language.
+GreenLens analyzes legal contracts using AMD's high-performance AI inference. Upload multiple documents, detect conflicts between clauses, get risk assessments, and chat with your contracts using natural language.
 
 ## AMD Integration
 

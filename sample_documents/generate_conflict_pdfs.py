@@ -1,5 +1,5 @@
 """
-Generate two conflicting demo PDF documents for Clausify demo purposes.
+Generate two conflicting demo PDF documents for GreenLens demo purposes.
 Doc A: Purchase Order PO-98231-GDH (buyer's version)
 Doc B: Vendor Order Confirmation VC-2026-0847 (vendor's version)
 Both reference the same deal but have deliberate conflicts on price, terms, delivery, and warranty.
@@ -353,7 +353,7 @@ if __name__ == "__main__":
     styles = make_styles()
     build_purchase_order(styles)
     build_vendor_confirmation(styles)
-    print("\nDone! Upload both PDFs to Clausify to see conflict detection in action.")
+    print("\nDone! Upload both PDFs to GreenLens to see conflict detection in action.")
     print("Key conflicts:")
     print("  - AI License: $425 (PO) vs $525 (vendor) = +$3,300")
     print("  - Payment: Net 60 (buyer) vs Net 30 (vendor)")

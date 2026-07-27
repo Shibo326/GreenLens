@@ -3,7 +3,7 @@ import logging
 import time
 import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, File, Form, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 import asyncio
 
@@ -114,7 +114,7 @@ async def chat(request: ChatRequest):
                 low_relevance = True
                 logger.info(f"[chat] Low relevance detected: avg_distance={avg_distance:.2f}")
 
-    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance)
+    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance, simplify=request.simplify)
 
     try:
         raw = await llm_service.complete(system_prompt, user_prompt, max_tokens=6144)
@@ -392,7 +392,7 @@ async def chat_stream(request: ChatRequest):
                 low_relevance = True
                 logger.info(f"[chat/stream] Low relevance detected: avg_distance={avg_distance:.2f}")
 
-    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance)
+    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance, simplify=request.simplify)
 
     async def generate():
         try:
@@ -595,3 +595,126 @@ async def chat_stream(request: ChatRequest):
             "Content-Type": "text/event-stream; charset=utf-8",
         },
     )
+
+
+@router.post("/chat/vision")
+async def chat_vision(
+    image: UploadFile = File(...),
+    sessionId: str = Form(""),
+    question: str = Form(""),
+):
+    """
+    Analyze an uploaded image using the vision model.
+
+    Accepts multipart form: image file + optional sessionId and question.
+    Returns a ChatResponse with the vision model's analysis.
+    """
+    import base64
+
+    llm_service = _llm_service
+
+    # Service readiness check
+    svc_err = _check_services()
+    if svc_err:
+        return svc_err
+
+    start_time = time.time()
+
+    # --- Validate image MIME type ---
+    content_type = (image.content_type or "").split(";")[0].strip().lower()
+    allowed_image_types = {"image/png", "image/jpeg", "image/jpg", "image/webp"}
+    if content_type not in allowed_image_types:
+        return _err(
+            400,
+            f"Unsupported image type: {content_type}. Accepted: PNG, JPEG, WebP.",
+            "INVALID_FILE_TYPE",
+            "Please upload a PNG, JPEG, or WebP image.",
+        )
+
+    # --- Read and validate size (max 10 MB) ---
+    image_bytes = await image.read()
+    max_image_size = 10 * 1024 * 1024  # 10 MB
+    if len(image_bytes) > max_image_size:
+        return _err(
+            400,
+            "Image exceeds 10 MB limit.",
+            "FILE_TOO_LARGE",
+            "Please upload an image smaller than 10 MB.",
+        )
+
+    # --- Check if vision model is configured ---
+    if not llm_service._model_vision:
+        # Graceful fallback — don't crash, return helpful message
+        elapsed_ms = int((time.time() - start_time) * 1000)
+        structured_response = StructuredAIResponse(
+            answer=(
+                "Vision analysis is not currently available. "
+                "The FIREWORKS_MODEL_VISION environment variable is not configured. "
+                "Please set it to a vision-capable model to enable image analysis."
+            ),
+            evidence=[],
+            risks="Vision model not configured — image analysis disabled.",
+            recommendation="Configure FIREWORKS_MODEL_VISION in your environment to enable this feature.",
+        )
+        response = ChatResponse(
+            messageId=str(uuid.uuid4()),
+            role="assistant",
+            structuredResponse=structured_response,
+            processingTimeMs=elapsed_ms,
+        )
+        return JSONResponse(content=response.model_dump(mode="json"))
+
+    # --- Base64 encode image ---
+    image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+
+    # --- Build prompt ---
+    user_text = question.strip() if question and question.strip() else (
+        "Analyze this image for sustainability or environmental claims. "
+        "Identify any greenwashing indicators, marketing claims, certifications, "
+        "or environmental messaging. Assess credibility and flag concerns."
+    )
+
+    system_prompt = (
+        "You are GreenLens AI — a sustainability claims analyst. "
+        "Analyze images for greenwashing, misleading environmental claims, "
+        "packaging language, certification logos, and marketing tactics. "
+        "Be direct and specific in your findings."
+    )
+
+    try:
+        raw = await llm_service.complete_vision(
+            system_prompt=system_prompt,
+            user_text=user_text,
+            image_base64=image_base64,
+            image_mime=content_type,
+            max_tokens=800,
+        )
+
+        elapsed_ms = int((time.time() - start_time) * 1000)
+
+        structured_response = StructuredAIResponse(
+            answer=raw,
+            evidence=[],
+            risks="",
+            recommendation="",
+        )
+
+        response = ChatResponse(
+            messageId=str(uuid.uuid4()),
+            role="assistant",
+            structuredResponse=structured_response,
+            processingTimeMs=elapsed_ms,
+        )
+        return JSONResponse(
+            content=response.model_dump(mode="json"),
+            headers={"X-Processing-Time-Ms": str(elapsed_ms)},
+        )
+
+    except Exception as e:
+        logger.error(f"[chat/vision] Error: {e}", exc_info=True)
+        return _err(
+            502,
+            f"Vision analysis failed: {type(e).__name__}: {str(e)[:120]}",
+            "STREAM_FAILED",
+            "The vision AI service encountered an error. Please try again.",
+        )

@@ -2,30 +2,47 @@
 
 :root {
   --font-size: 16px;
-  /* Clausify AI Design System Colors */
-  /* Core palette */
-  --ink: #080D1A;
-  --paper: #F0F4FF;
-  --lead: #0D1528;
-  --graphite: #111E35;
-  --rule: #1E2D4A;
-  --ash: #8B9CC8;
-  --ghost: #4A5878;
+  /* GreenLens AI Design System Colors */
+  /* Core palette — forest-dark theme */
+  --ink: #0A120E;
+  --paper: #F3F0E6;
+  --lead: #131F19;
+  --graphite: #1C2B23;
+  --rule: #24352C;
+  --ash: #9BAFA3;
+  --ghost: #4E6157;
+  --parchment: #E9E4D6;
 
-  /* Brand / semantic */
+  /* Brand accent — leaf green */
+  --leaf: #3DDC84;
+  --leaf-dim: rgba(61, 220, 132, 0.08);
+  --leaf-border: rgba(61, 220, 132, 0.22);
+
+  /* Legacy aliases — components still referencing --volt get --leaf */
+  --volt: #3DDC84;
+  --volt-hover: #2FCB73;
+  --volt-dim: rgba(61, 220, 132, 0.08);
+  --volt-border: rgba(61, 220, 132, 0.22);
+  --volt-glow: rgba(61, 220, 132, 0.3);
+
+  /* Greenwash severity flags */
+  --flag-red: #F04452;
+  --flag-amber: #F0A937;
+  --flag-blue: #5FA8D3;
+  --flag-red-dim: rgba(240, 68, 82, 0.12);
+  --flag-amber-dim: rgba(240, 169, 55, 0.12);
+  --flag-blue-dim: rgba(95, 168, 211, 0.12);
+
+  /* AMD badge — reserved, unchanged */
   --amd-signal: #ED1C24;
-  --volt: #3B7BF6;
-  --volt-hover: #2D6AE0;
-  --volt-dim: rgba(59, 123, 246, 0.08);
-  --volt-border: rgba(59, 123, 246, 0.20);
-  --volt-glow: rgba(59, 123, 246, 0.3);
-  --cyan: #00D4FF;
-  --cleared: #10B981;
-  --caution: #F59E0B;
-  --conflict: #ED1C24;
-  --parchment: #E8E4DA;
+
+  /* Legacy semantic colors — mapped to new palette */
+  --cyan: #5FA8D3;
+  --cleared: #3DDC84;
+  --caution: #F0A937;
+  --conflict: #F04452;
   --stamp-green: #1A4731;
-  --error: #EF4444;
+  --error: #F04452;
 
   /* Shape */
   --radius-card: 6px;
@@ -42,13 +59,13 @@
   --card-foreground: var(--paper);
   --popover: var(--lead);
   --popover-foreground: var(--paper);
-  --primary: var(--volt);
+  --primary: var(--leaf);
   --primary-foreground: var(--ink);
   --secondary: var(--lead);
   --secondary-foreground: var(--paper);
   --muted: var(--graphite);
   --muted-foreground: var(--ash);
-  --accent: var(--volt);
+  --accent: var(--leaf);
   --accent-foreground: var(--ink);
   --destructive: var(--error);
   --destructive-foreground: var(--paper);
@@ -58,21 +75,21 @@
   --switch-background: var(--rule);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: var(--volt);
-  --chart-1: var(--volt);
-  --chart-2: var(--cleared);
-  --chart-3: var(--caution);
-  --chart-4: var(--error);
+  --ring: var(--leaf);
+  --chart-1: var(--leaf);
+  --chart-2: var(--flag-blue);
+  --chart-3: var(--flag-amber);
+  --chart-4: var(--flag-red);
   --chart-5: var(--ash);
   --radius: 0.625rem;
   --sidebar: var(--lead);
   --sidebar-foreground: var(--paper);
-  --sidebar-primary: var(--volt);
+  --sidebar-primary: var(--leaf);
   --sidebar-primary-foreground: var(--ink);
   --sidebar-accent: var(--graphite);
   --sidebar-accent-foreground: var(--paper);
   --sidebar-border: var(--rule);
-  --sidebar-ring: var(--volt);
+  --sidebar-ring: var(--leaf);
 }
 
 .dark {
@@ -82,13 +99,13 @@
   --card-foreground: var(--paper);
   --popover: var(--lead);
   --popover-foreground: var(--paper);
-  --primary: var(--volt);
+  --primary: var(--leaf);
   --primary-foreground: var(--ink);
   --secondary: var(--lead);
   --secondary-foreground: var(--paper);
   --muted: var(--graphite);
   --muted-foreground: var(--ash);
-  --accent: var(--volt);
+  --accent: var(--leaf);
   --accent-foreground: var(--ink);
   --destructive: var(--error);
   --destructive-foreground: var(--paper);
@@ -96,22 +113,22 @@
   --input: var(--graphite);
   --input-background: var(--graphite);
   --switch-background: var(--rule);
-  --ring: var(--volt);
+  --ring: var(--leaf);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --chart-1: var(--volt);
-  --chart-2: var(--cleared);
-  --chart-3: var(--caution);
-  --chart-4: var(--error);
+  --chart-1: var(--leaf);
+  --chart-2: var(--flag-blue);
+  --chart-3: var(--flag-amber);
+  --chart-4: var(--flag-red);
   --chart-5: var(--ash);
   --sidebar: var(--lead);
   --sidebar-foreground: var(--paper);
-  --sidebar-primary: var(--volt);
+  --sidebar-primary: var(--leaf);
   --sidebar-primary-foreground: var(--ink);
   --sidebar-accent: var(--graphite);
   --sidebar-accent-foreground: var(--paper);
   --sidebar-border: var(--rule);
-  --sidebar-ring: var(--volt);
+  --sidebar-ring: var(--leaf);
 }
 
 @theme inline {

@@ -2,6 +2,7 @@ import type {
   AnalyzeResponse,
   ChatResponse,
   DemoResponse,
+  QuickScanResponse,
   UploadResponse,
 } from './types';
 
@@ -372,4 +373,64 @@ export async function getDemoData(): Promise<DemoResponse> {
   }
 
   return response.json() as Promise<DemoResponse>;
+}
+
+/**
+ * Quick Scan — instant mini-verdict on a single sustainability claim.
+ * No file upload required. Text-only entry point.
+ * POST /api/quick-scan
+ */
+export async function quickScan(claim: string): Promise<QuickScanResponse> {
+  const url = `${API_BASE_URL}/api/quick-scan`;
+  console.log(`[API] POST ${url} — claim="${claim}"`);
+
+  const response = await fetchWithTimeout(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ claim }),
+  }, 30000);
+
+  console.log(`[API] POST ${url} → ${response.status}`);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Quick scan failed' }));
+    throw new Error(error.error ?? `Quick scan failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<QuickScanResponse>;
+}
+
+/**
+ * Snap & Check — send an image (product label, packaging) to the vision-capable
+ * chat endpoint for greenwashing analysis.
+ * POST /api/chat/vision — multipart/form-data
+ */
+export async function sendVisionMessage(
+  sessionId: string,
+  image: File,
+  question?: string,
+): Promise<ChatResponse> {
+  const url = `${API_BASE_URL}/api/chat/vision`;
+  console.log(`[API] POST ${url} — sessionId=${sessionId}, image="${image.name}", question="${question ?? ''}"`);
+
+  const formData = new FormData();
+  formData.append('sessionId', sessionId);
+  formData.append('image', image);
+  if (question) {
+    formData.append('question', question);
+  }
+
+  const response = await fetchWithTimeout(url, {
+    method: 'POST',
+    body: formData,
+  }, 60000);
+
+  console.log(`[API] POST ${url} → ${response.status}`);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Vision analysis failed' }));
+    throw new Error(error.error ?? `Vision analysis failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<ChatResponse>;
 }

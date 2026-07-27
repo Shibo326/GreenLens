@@ -206,14 +206,14 @@ def test_pdf_report_generation_produces_bytes():
 
 
 def test_pdf_report_filename_format():
-    """Report filename must match clausify-report-YYYY-MM-DD.pdf pattern."""
+    """Report filename must match greenlens-report-YYYY-MM-DD.pdf pattern."""
     from datetime import datetime
 
     today = datetime.utcnow().strftime("%Y-%m-%d")
-    filename = f"clausify-report-{today}.pdf"
+    filename = f"greenlens-report-{today}.pdf"
 
     # Validate the format
-    pattern = r"^clausify-report-\d{4}-\d{2}-\d{2}\.pdf$"
+    pattern = r"^greenlens-report-\d{4}-\d{2}-\d{2}\.pdf$"
     assert re.match(pattern, filename), f"Filename '{filename}' doesn't match expected pattern"
 
 

@@ -1,72 +1,92 @@
-# Clausify AI — AMD Developer Hackathon: ACT II
+# GreenLens AI — Greenwashing Detection Powered by AMD MI300X
 
-> Document intelligence platform powered by AMD Instinct MI300X via Fireworks AI. Upload contracts, quotations, and invoices — get evidence-based decisions in under 90 seconds.
+> Upload sustainability reports and marketing materials → AI cross-references claims against data and flags contradictions, vague language, and unverified assertions in under 90 seconds.
 
 **Live Demo:** https://amd-hackthon-ll14.vercel.app  
 **Backend API:** https://amdhackthon-production.up.railway.app  
-**Track:** Unicorn Track 🦄
+**GitHub:** https://github.com/your-repo/AmdHackthon  
+**Track:** AI for Sustainability 🌱 — YFS Build for Good Hackathon
 
 ---
 
 ## What It Does
 
-Clausify analyzes multiple business documents simultaneously and:
-- Detects **billing discrepancies** and price conflicts between documents
-- Identifies **legal and financial risks** with severity ratings
-- Generates a **comparison matrix** between documents
-- Provides **AI-powered Q&A** (chat copilot) grounded in your documents with citations
-- Exports full analysis as **PDF or DOCX**
+GreenLens analyzes a company's sustainability claims (reports, packaging, marketing) simultaneously and:
+
+- 🔍 Detects **greenwashing contradictions** between what companies claim and what their own data shows
+- 📊 Generates a **Greenwash Score (0–100)** — color-coded credibility gauge
+- ⚖️ Builds a **Claim vs. Reality Matrix** comparing marketing language against reported data
+- ⚡ **Quick Scan** — instant verdict on any sustainability claim, no documents needed
+- 📷 **Snap & Check** — photograph product labels/packaging for AI vision analysis
+- 💬 **Chat Copilot** — sustainability analyst persona with RAG-grounded citations
+- 🧒 **ELI15 Mode** — toggle to simplify AI responses for younger audiences
+- 🌐 **Bilingual** — responds in English and Filipino/Tagalog (language matching)
+- 📄 Exports full analysis as **PDF or DOCX**
 
 ---
 
 ## Architecture
 
 ```
-Frontend (React/Vite) → Vercel
-Backend (FastAPI/Python) → Railway
-LLM inference → Fireworks AI (AMD MI300X hardware)
-Embeddings → sentence-transformers (local CPU)
-Vector store → ChromaDB (in-memory)
+┌─────────────────────────────────────────────────────────┐
+│  Frontend (React 18 / Vite / TailwindCSS 4)  → Vercel  │
+└────────────────────────┬────────────────────────────────┘
+                         │ REST + SSE
+┌────────────────────────▼────────────────────────────────┐
+│  Backend (FastAPI / Python 3.11)             → Railway  │
+│  ├── RAG: ChromaDB + all-MiniLM-L6-v2 embeddings       │
+│  ├── 5 parallel LLM calls via asyncio.gather            │
+│  └── Semaphore(3) rate-limit protection                 │
+└────────────────────────┬────────────────────────────────┘
+                         │ HTTPS
+┌────────────────────────▼────────────────────────────────┐
+│  Fireworks AI  (AMD Instinct MI300X hardware)           │
+│  ├── deepseek-v4-flash  (quality tier — reasoning)     │
+│  └── gpt-oss-120b       (fast tier — 646 tok/s)        │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ### AI Pipeline (5 parallel LLM calls)
-1. **Executive Summary + Suggested Questions** — `deepseek-v4-flash` (quality tier)
-2. **Risk Analysis** — `deepseek-v4-flash` (quality tier)
-3. **Comparison Matrix** — `gpt-oss-120b` (fast tier, AMD MI300X optimized)
-4. **Recommendation** — `deepseek-v4-flash` (quality tier)
-5. **Conflict Detection** — `gpt-oss-120b` (fast tier)
 
-All 5 calls run in parallel via `asyncio.gather`. Semaphore(3) prevents rate-limit cascades.
+| # | Task | Model | Tier |
+|---|------|-------|------|
+| 1 | Executive Summary + Greenwash Score | deepseek-v4-flash | Quality |
+| 2 | Risk/Flag Analysis | deepseek-v4-flash | Quality |
+| 3 | Claim vs. Reality Matrix | gpt-oss-120b | Fast (MI300X) |
+| 4 | Accountability Action Steps | deepseek-v4-flash | Quality |
+| 5 | Contradiction Detection | gpt-oss-120b | Fast (MI300X) |
+
+All 5 run concurrently via `asyncio.gather` with `Semaphore(3)` to prevent rate-limit cascades.
 
 ---
 
-## Quick Start (Local Development)
+## Quick Start
 
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+
-- Fireworks AI API key (get one at https://app.fireworks.ai)
+- Fireworks AI API key → https://app.fireworks.ai
 
-### Backend Setup
+### Backend
 
 ```bash
 cd backend
 cp .env.example .env
-# Edit .env with your API key (see Environment Variables section below)
+# Edit .env — add your FIREWORKS_API_KEY
 pip install -r requirements.txt
-py main.py
-# Backend runs on http://localhost:8000
+python main.py
+# → http://localhost:8000
 ```
 
-### Frontend Setup
+### Frontend
 
 ```bash
 cd frontend
 cp .env.example .env
-# Edit .env — set VITE_API_URL=http://localhost:8000 for local dev
+# Edit .env — set VITE_API_URL=http://localhost:8000
 npm install
 npm run dev
-# Frontend runs on http://localhost:5173 or 5174
+# → http://localhost:5173
 ```
 
 ---
@@ -75,104 +95,22 @@ npm run dev
 
 ### Backend (`backend/.env`)
 
-```env
-# ── REQUIRED ──────────────────────────────────────────────────────────────────
-
-# Fireworks AI API key — get yours at https://app.fireworks.ai/settings/api-keys
-FIREWORKS_API_KEY=fw_your_key_here
-
-# Fireworks AI endpoint (do not change)
-FIREWORKS_ENDPOINT=https://api.fireworks.ai/inference/v1
-
-# ── MODEL CONFIGURATION (tiered architecture) ─────────────────────────────────
-
-# Quality model: used for Summary, Risks, Recommendation (complex reasoning)
-FIREWORKS_MODEL_QUALITY=accounts/fireworks/models/deepseek-v4-flash
-
-# Fast model: used for Comparison Matrix, Conflict Detection (structured extraction)
-# gpt-oss-120b runs on AMD MI300X at 646 tokens/sec
-FIREWORKS_MODEL_FAST=accounts/fireworks/models/gpt-oss-120b
-
-# Legacy single-model fallback (used if QUALITY/FAST not set)
-# FIREWORKS_MODEL=accounts/fireworks/models/gpt-oss-120b
-
-# ── OPTIONAL ──────────────────────────────────────────────────────────────────
-
-# CORS origins (comma-separated). Leave empty to allow all.
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,https://your-vercel-app.vercel.app
-
-# Server port
-PORT=8000
-
-# Emergency fallback: combine ALL analysis into 1 LLM call (extreme speed, lower quality)
-# Only use if analysis keeps timing out
-SINGLE_CALL_MODE=false
-```
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `FIREWORKS_API_KEY` | ✅ | — | Fireworks AI API key |
+| `FIREWORKS_ENDPOINT` | ✅ | `https://api.fireworks.ai/inference/v1` | Fireworks API base URL |
+| `FIREWORKS_MODEL_QUALITY` | — | `accounts/fireworks/models/deepseek-v4-flash` | Quality tier model (reasoning) |
+| `FIREWORKS_MODEL_FAST` | — | `accounts/fireworks/models/gpt-oss-120b` | Fast tier model (MI300X optimized) |
+| `FIREWORKS_MODEL_VISION` | — | *(disabled)* | Vision model for Snap & Check |
+| `SINGLE_CALL_MODE` | — | `false` | Emergency: combine all analysis into 1 call |
+| `ALLOWED_ORIGINS` | — | `*` (all) | Comma-separated CORS origins |
+| `PORT` | — | `8000` | Server port |
 
 ### Frontend (`frontend/.env`)
 
-```env
-# Backend API URL
-# For local dev:
-VITE_API_URL=http://localhost:8000
-
-# For production (point to your Railway deployment):
-# VITE_API_URL=https://your-backend.up.railway.app
-```
-
----
-
-## Deployment
-
-### Backend → Railway
-
-1. Connect your GitHub repo to Railway
-2. Select the `backend/` directory as root (or use root with `Dockerfile`)
-3. Set these environment variables in Railway dashboard:
-
-| Variable | Value |
-|----------|-------|
-| `FIREWORKS_API_KEY` | `fw_your_key_here` |
-| `FIREWORKS_ENDPOINT` | `https://api.fireworks.ai/inference/v1` |
-| `FIREWORKS_MODEL_QUALITY` | `accounts/fireworks/models/deepseek-v4-flash` |
-| `FIREWORKS_MODEL_FAST` | `accounts/fireworks/models/gpt-oss-120b` |
-| `FIREWORKS_MODEL` | `accounts/fireworks/models/deepseek-v4-flash` |
-| `ALLOWED_ORIGINS` | `https://your-app.vercel.app,http://localhost:5173` |
-| `SINGLE_CALL_MODE` | `false` |
-| `PORT` | `8000` |
-
-4. Railway auto-deploys on every push to `main`
-
-### Frontend → Vercel
-
-1. Connect your GitHub repo to Vercel
-2. Set **Root Directory** to `frontend`
-3. Set environment variable:
-   - `VITE_API_URL` = `https://your-backend.up.railway.app`
-4. Vercel auto-deploys on every push to `main`
-
-> **Important:** After setting env vars in Vercel, always click **Redeploy** for changes to take effect. Vercel bakes `VITE_*` vars at build time.
-
----
-
-## Key Technical Decisions
-
-### Why Tiered Models?
-Running 5 LLM calls simultaneously on a single large model caused rate-limit cascades (151s). Splitting into quality (`deepseek-v4-flash`) for reasoning tasks and fast (`gpt-oss-120b`) for structured extraction reduced analysis time to ~60s.
-
-### Why `asyncio.Semaphore(3)`?
-Limits concurrent Fireworks API calls to 3 at a time, preventing the 429 rate-limit errors that caused automatic retries (+6-12s each).
-
-### Why `deepseek-v4-flash` over `deepseek-v4-pro`?
-`deepseek-v4-pro` is a reasoning model that outputs `<think>` blocks before JSON, which caused JSON parse failures. `deepseek-v4-flash` outputs clean JSON directly, is ~5x faster, and produces equivalent quality for document analysis.
-
-### JSON Parsing Robustness
-All LLM outputs go through 5-strategy parsing:
-1. Direct `json.loads`
-2. Brace extraction (handles prose preamble before `{`)
-3. Trailing comma cleanup
-4. Regex array extraction
-5. LLM retry with explicit JSON-only instruction
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_API_URL` | ✅ | Backend URL (e.g., `http://localhost:8000` or Railway URL) |
 
 ---
 
@@ -180,45 +118,74 @@ All LLM outputs go through 5-strategy parsing:
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/upload` | Upload documents (PDF/PNG/JPEG/DOCX) |
-| `POST` | `/api/analyze` | Run full AI analysis |
-| `POST` | `/api/chat` | Ask questions about documents |
-| `POST` | `/api/chat/stream` | Streaming chat (SSE) |
+| `POST` | `/api/upload` | Upload documents (PDF, PNG, JPEG, DOCX) — max 10 files, 10 MB each |
+| `POST` | `/api/analyze` | Run full 5-call AI analysis pipeline |
+| `POST` | `/api/suggest-questions` | Generate context-aware questions from documents |
+| `POST` | `/api/quick-scan` | Instant greenwashing verdict on a single claim (no upload needed) |
+| `POST` | `/api/chat` | RAG-powered Q&A about uploaded documents |
+| `POST` | `/api/chat/stream` | Streaming chat via SSE (Server-Sent Events) |
+| `POST` | `/api/chat/vision` | Snap & Check — analyze product label/packaging image |
 | `POST` | `/api/report` | Export analysis as PDF or DOCX |
-| `GET` | `/api/warmup` | Wake Railway from cold start |
+| `GET` | `/api/demo` | Pre-loaded demo data (EcoTech Corp greenwashing case) |
+| `GET` | `/api/warmup` | Wake backend from cold start |
+| `GET` | `/api/provider-info` | Current LLM provider config (no secrets) |
+| `GET` | `/api/benchmark` | Live inference speed benchmark |
+| `POST` | `/api/benchmark` | AMD MI300X embedding benchmark (CPU vs GPU comparison) |
 | `GET` | `/api/session/{id}/check` | Check if session exists |
 | `POST` | `/api/session/new` | Create empty session |
-| `POST` | `/api/benchmark` | AMD MI300X embedding benchmark |
-| `GET` | `/health` | Health check with model info |
+| `GET` | `/health` | Health check with model info + readiness status |
 
 ---
 
-## Sample Documents
+## Deployment
 
-The `sample_documents/` folder contains demo files with intentional conflicts:
-- `Demo_PurchaseOrder_GlobalDynamics.pdf` — Client PO at agreed pricing
-- `Demo_VendorConfirmation_TechCorp.pdf` — Vendor confirmation with inflated prices
+### Backend → Railway
 
-Known conflicts: $13,144.95 billing discrepancy, Net30 vs Net60 payment terms, volume discount removal, delivery location mismatch.
+1. Connect GitHub repo to Railway
+2. Railway auto-detects the root `Dockerfile` (configured in `railway.toml`)
+3. Set environment variables in Railway dashboard:
+
+```
+FIREWORKS_API_KEY=fw_your_key_here
+FIREWORKS_ENDPOINT=https://api.fireworks.ai/inference/v1
+FIREWORKS_MODEL_QUALITY=accounts/fireworks/models/deepseek-v4-flash
+FIREWORKS_MODEL_FAST=accounts/fireworks/models/gpt-oss-120b
+ALLOWED_ORIGINS=https://amd-hackthon-ll14.vercel.app,http://localhost:5173
+PORT=8000
+```
+
+4. Health check configured at `/health` with 60s timeout
+5. Auto-deploys on push to `main`
+
+### Frontend → Vercel
+
+1. Connect GitHub repo to Vercel
+2. Set **Root Directory** to `frontend`
+3. Set environment variable: `VITE_API_URL` = `https://amdhackthon-production.up.railway.app`
+4. Auto-deploys on push to `main`
+
+> **Note:** `VITE_*` vars are baked at build time. Always **Redeploy** after changing them.
 
 ---
 
-## Troubleshooting
+## Key Technical Decisions
 
-**"Analysis failed" immediately**
-→ Wrong model ID in Railway. Check `FIREWORKS_MODEL` has no spaces or `=` sign in the value.
+### Why AMD MI300X?
+`gpt-oss-120b` on Fireworks AI runs on AMD Instinct MI300X at **646 tokens/sec** — enabling the fast-tier structured extraction calls (comparison matrix, conflict detection) to complete in 2–4 seconds each. This makes the 5-parallel-call architecture viable within a 90-second budget.
 
-**"Connection error" on frontend**
-→ `VITE_API_URL` not set correctly in Vercel. Must be exactly `https://your-backend.up.railway.app` (no trailing slash). Redeploy after changing.
+### Why Tiered Models?
+Running 5 simultaneous calls on one large model caused rate-limit cascades (151s total). Splitting into `deepseek-v4-flash` (quality reasoning) + `gpt-oss-120b` (fast extraction) reduced end-to-end analysis to **~60 seconds**.
 
-**0 risks / empty comparison matrix**
-→ `max_tokens` too low or model truncating output. Current values: risks=3000, matrix=1500.
+### Why `deepseek-v4-flash` over `-v4-pro`?
+The `-pro` variant outputs `<think>` blocks before JSON, causing parse failures. `-flash` outputs clean JSON directly, is ~5x faster, and produces equivalent quality for document analysis.
 
-**Analysis taking 140s+**
-→ Model is a reasoning model outputting `<think>` blocks. Switch to `deepseek-v4-flash` instead of `deepseek-v4-pro`.
-
-**Chat showing raw JSON**
-→ JSON parse issue. Check Railway logs for `[chat] JSON parse failed` messages.
+### JSON Parsing Robustness
+All LLM outputs pass through a 5-strategy fallback parser:
+1. Direct `json.loads`
+2. Brace extraction (handles prose preamble)
+3. Trailing comma cleanup
+4. Regex field extraction
+5. LLM retry with explicit JSON-only instruction
 
 ---
 
@@ -226,13 +193,45 @@ Known conflicts: $13,144.95 billing discrepancy, Net30 vs Net60 payment terms, v
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS, Framer Motion |
+| Frontend | React 18, TypeScript, Vite, TailwindCSS 4, Framer Motion |
+| UI Components | Radix UI, Lucide icons, shadcn/ui patterns |
 | Backend | FastAPI, Python 3.11, uvicorn |
-| AI inference | Fireworks AI (AMD Instinct MI300X) |
-| LLM models | deepseek-v4-flash (quality), gpt-oss-120b (fast) |
+| AI Inference | Fireworks AI on AMD Instinct MI300X |
+| LLM Models | deepseek-v4-flash (quality), gpt-oss-120b (fast) |
 | Embeddings | sentence-transformers all-MiniLM-L6-v2 |
 | Vector DB | ChromaDB (in-memory) |
-| PDF parsing | PyMuPDF, pytesseract |
-| PDF export | reportlab |
-| DOCX export | python-docx |
-| Hosting | Railway (backend), Vercel (frontend) |
+| PDF Parsing | PyMuPDF, pytesseract |
+| PDF Export | reportlab |
+| DOCX Export | python-docx |
+| Rate Limiting | slowapi |
+| Deployment | Railway (backend), Vercel (frontend) |
+
+---
+
+## Frontend Pages
+
+| Route | Page | Purpose |
+|-------|------|---------|
+| `/` | Landing | Hero, feature showcase, Quick Scan entry point |
+| `/dashboard` | Dashboard | Upload → Analyze → Results (Score, Risks, Matrix, Conflicts) |
+| `/chat` | Chat | RAG copilot with ELI15 toggle + Snap & Check |
+| `/demo` | Demo | Pre-loaded EcoTech Corp analysis (no API key needed) |
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| "Analysis failed" immediately | Wrong model ID in Railway | Check `FIREWORKS_MODEL_QUALITY` — no spaces or `=` in value |
+| "Connection error" on frontend | `VITE_API_URL` misconfigured | Must be exact URL, no trailing slash. Redeploy after change |
+| 0 risks / empty matrix | `max_tokens` too low | Check Railway logs — model may be truncating |
+| Analysis taking 140s+ | Using reasoning model | Switch to `deepseek-v4-flash` (not `-v4-pro`) |
+| Vision returns "not configured" | `FIREWORKS_MODEL_VISION` unset | Set it to a vision-capable model in env |
+| 429 rate limit errors | Too many concurrent requests | Reduce parallel calls or wait 60s |
+
+---
+
+## License
+
+Built for the YFS Build for Good Hackathon 2025.

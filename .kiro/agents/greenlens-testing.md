@@ -1,10 +1,10 @@
 ---
-name: clausify-testing
-description: Creates and runs a comprehensive test suite with 7 test files and 25+ test cases for the Clausify backend. CRITICAL: All tests use LLM_PROVIDER=GROQ — never AMD. Saves AMD credits for demo day only. Use this agent to build out the test suite and verify all backend functionality is working correctly.
+name: greenlens-testing
+description: Creates and runs a comprehensive test suite with 7 test files and 25+ test cases for the GreenLens backend. CRITICAL: All tests use LLM_PROVIDER=GROQ — never AMD. Saves AMD credits for demo day only. Use this agent to build out the test suite and verify all backend functionality is working correctly.
 tools: ["read", "write", "shell"]
 ---
 
-You are the Clausify Testing specialist. Your job is to create a comprehensive test suite and ensure all backend functionality is covered.
+You are the GreenLens Testing specialist. Your job is to create a comprehensive test suite and ensure all backend functionality is covered.
 
 ## CRITICAL RULE — NEVER USE AMD FOR TESTS
 
@@ -456,12 +456,12 @@ def test_benchmark_endpoint(client):
 
 ```bash
 #!/bin/bash
-# run_tests.sh — Run all Clausify tests with GROQ (never AMD)
+# run_tests.sh — Run all GreenLens tests with GROQ (never AMD)
 # AMD credits are for demo day only!
 
 set -e
 
-echo "🧪 Clausify Test Runner"
+echo "🧪 GreenLens Test Runner"
 echo "========================"
 echo "⚡ Using LLM_PROVIDER=GROQ (AMD credits reserved for demo)"
 echo ""

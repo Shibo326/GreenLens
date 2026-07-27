@@ -98,7 +98,7 @@ async def warmup():
     Railway cold-start delays when the user clicks Analyze.
     Returns instantly; just having the server handle a request is enough to wake it.
     """
-    return {"status": "warm", "service": "clausify-api"}
+    return {"status": "warm", "service": "greenlens-api"}
 
 
 @router.post("/analyze")

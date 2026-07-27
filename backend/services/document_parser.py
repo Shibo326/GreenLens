@@ -4,6 +4,10 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# Performance: cap document text to prevent huge files from slowing analysis.
+# ~8000 chars ≈ 2000 words — more than enough for contract/sustainability report analysis.
+MAX_DOC_CHARS = 8000
+
 
 class ExtractionError(Exception):
     """Raised when text extraction from a document fails unrecoverably."""
@@ -29,19 +33,28 @@ class DocumentParser:
             mime_type: MIME type string (e.g. "application/pdf", "image/png")
 
         Returns:
-            Extracted plain text string
+            Extracted plain text string (truncated to MAX_DOC_CHARS for performance)
 
         Raises:
             ExtractionError: If extraction fails unrecoverably
         """
         if mime_type == "application/pdf":
-            return self._extract_pdf(file_bytes)
+            text = self._extract_pdf(file_bytes)
         elif mime_type in ("image/png", "image/jpeg", "image/jpg"):
-            return self._extract_image(file_bytes)
+            text = self._extract_image(file_bytes)
         elif mime_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-            return self._extract_docx(file_bytes)
+            text = self._extract_docx(file_bytes)
         else:
             raise ExtractionError(f"Unsupported MIME type: {mime_type}")
+
+        # Truncate oversized documents to keep LLM calls fast
+        if len(text) > MAX_DOC_CHARS:
+            logger.warning(
+                f"Document truncated from {len(text)} to {MAX_DOC_CHARS} chars for performance."
+            )
+            text = text[:MAX_DOC_CHARS]
+
+        return text
 
     def _extract_pdf(self, file_bytes: bytes) -> str:
         """

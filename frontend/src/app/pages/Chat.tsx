@@ -17,8 +17,9 @@ import {
   Copy,
   Check,
   RotateCcw,
+  Camera,
 } from "lucide-react";
-import { streamChatMessage, getSuggestedQuestions, exportReport } from "../../lib/api";
+import { streamChatMessage, getSuggestedQuestions, exportReport, sendVisionMessage } from "../../lib/api";
 import { useAppState, useAppDispatch } from "../../lib/store";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -26,12 +27,12 @@ import type { StructuredAIResponse } from "../../lib/types";
 import { MarkdownText } from "../components/MarkdownText";
 
 const fallbackQuestions = [
-  "What are the payment terms?",
-  "Are there any high-risk clauses?",
-  "What conflicts exist between documents?",
-  "Which supplier offers better terms?",
-  "What are the termination conditions?",
-  "Summarize the key financial obligations",
+  "Are these sustainability claims backed by data?",
+  "Which claims show signs of greenwashing?",
+  "What contradictions exist between claims and reports?",
+  "Is there third-party verification for these claims?",
+  "What measurable targets are missing?",
+  "Summarize the key environmental commitments",
 ];
 
 interface UserMessage {
@@ -68,11 +69,15 @@ export default function Chat() {
   const [isExporting, setIsExporting] = useState(false);
   const [inputShake, setInputShake] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [simplify, setSimplify] = useState(false);
+  const [attachedImage, setAttachedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const downloadRef = useRef<HTMLDivElement>(null);
   const streamAbortRef = useRef<(() => void) | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // Cleanup stream on unmount to prevent state updates on unmounted component
   useEffect(() => {
@@ -137,6 +142,37 @@ export default function Chat() {
     setIsThinking(true);
     setStreamingAnswer("");
     setSidebarOpen(false);
+
+    // If image is attached, use vision endpoint instead of streaming
+    if (attachedImage) {
+      const img = attachedImage;
+      setAttachedImage(null);
+      setImagePreview(null);
+      try {
+        const response = await sendVisionMessage(sessionId, img, trimmed);
+        const assistantMsg: AssistantMessage = {
+          id: response.messageId,
+          role: "assistant",
+          structuredResponse: response.structuredResponse,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Vision analysis failed.";
+        toast.error("Image analysis failed. Please try again.");
+        const errMsg: AssistantMessage = {
+          id: `err-${Date.now()}`,
+          role: "assistant",
+          structuredResponse: { answer: errorMessage, evidence: [], risks: "", recommendation: "" },
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, errMsg]);
+      } finally {
+        setIsThinking(false);
+        inputRef.current?.focus();
+      }
+      return;
+    }
 
     const historyForAPI = messages.slice(-10).map(m => ({
       role: m.role as 'user' | 'assistant',
@@ -271,13 +307,13 @@ export default function Chat() {
 
   const handleExportChat = () => {
     if (!messages.length) return;
-    const lines: string[] = [`Clausify AI — Chat Export\n${new Date().toLocaleString()}\n${'='.repeat(60)}\n`];
+    const lines: string[] = [`GreenLens AI — Chat Export\n${new Date().toLocaleString()}\n${'='.repeat(60)}\n`];
     for (const msg of messages) {
       if (msg.role === 'user') {
         lines.push(`[You]\n${msg.content}\n`);
       } else {
         const sr = msg.structuredResponse;
-        lines.push(`[Clausify AI]\n${sr.answer}`);
+        lines.push(`[GreenLens AI]\n${sr.answer}`);
         if (sr.evidence.length) {
           lines.push(`\nEvidence:`);
           sr.evidence.forEach(ev => lines.push(`  • "${ev.quote}" — ${ev.sourceDocument}`));
@@ -291,7 +327,7 @@ export default function Chat() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `clausify-chat-${new Date().toISOString().slice(0,10)}.txt`;
+    a.download = `greenlens-chat-${new Date().toISOString().slice(0,10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -305,7 +341,7 @@ export default function Chat() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `clausify-report.${format}`;
+      a.download = `greenlens-report.${format}`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success(`${format.toUpperCase()} report downloaded!`);
@@ -477,18 +513,18 @@ export default function Chat() {
               </div>
 
               <div className="flex flex-col min-w-0">
-                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, color: "var(--paper)" }}>
-                  Decision Copilot
+                <div style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, color: "var(--paper)" }}>
+                  GreenLens Copilot
                 </div>
                 <div className="flex items-center gap-2">
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", fontWeight: 500, color: "var(--cleared)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "200px" }}>
+                  <span style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "11px", fontWeight: 500, color: "var(--cleared)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "200px" }}>
                     {docCount} doc{docCount !== 1 ? "s" : ""} · AMD MI300X active
                   </span>
                   {isThinking && (
                     <div className="flex items-center gap-1">
-                      <div className="animate-dot-1 w-1.5 h-1.5 rounded-full" style={{ background: "var(--volt)" }} />
-                      <div className="animate-dot-2 w-1.5 h-1.5 rounded-full" style={{ background: "var(--volt)" }} />
-                      <div className="animate-dot-3 w-1.5 h-1.5 rounded-full" style={{ background: "var(--volt)" }} />
+                      <div className="animate-dot-1 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
+                      <div className="animate-dot-2 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
+                      <div className="animate-dot-3 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
                     </div>
                   )}
                 </div>
@@ -496,6 +532,44 @@ export default function Chat() {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* ELI15 Toggle */}
+              <div
+                className="hidden sm:flex items-center rounded-full p-0.5"
+                style={{ background: "var(--graphite)", border: "1px solid var(--rule)" }}
+              >
+                <button
+                  onClick={() => setSimplify(false)}
+                  className="px-3 py-1 rounded-full"
+                  style={{
+                    background: !simplify ? "var(--leaf-dim)" : "transparent",
+                    border: !simplify ? "1px solid var(--leaf-border)" : "1px solid transparent",
+                    fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: !simplify ? "var(--leaf)" : "var(--ghost)",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  Expert
+                </button>
+                <button
+                  onClick={() => setSimplify(true)}
+                  className="px-3 py-1 rounded-full"
+                  style={{
+                    background: simplify ? "var(--leaf-dim)" : "transparent",
+                    border: simplify ? "1px solid var(--leaf-border)" : "1px solid transparent",
+                    fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: simplify ? "var(--leaf)" : "var(--ghost)",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  ELI15
+                </button>
+              </div>
               {/* Download dropdown */}
               <div className="relative" ref={downloadRef}>
                 <GhostButton small onClick={() => setDownloadOpen(!downloadOpen)} disabled={isExporting}>
@@ -612,11 +686,11 @@ export default function Chat() {
                 <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "var(--volt-dim)", border: "1px solid var(--volt-border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
                   <Sparkles size={22} style={{ color: "var(--volt)" }} />
                 </div>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px", textAlign: "center" }}>
-                  Ask anything about your documents
+                <p style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px", textAlign: "center" }}>
+                  Ask anything about sustainability claims
                 </p>
-                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "var(--ghost)", marginBottom: "24px", textAlign: "center" }}>
-                  {documents.length} document{documents.length !== 1 ? "s" : ""} loaded · AMD MI300X ready
+                <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--ghost)", marginBottom: "24px", textAlign: "center" }}>
+                  {documents.length} document{documents.length !== 1 ? "s" : ""} loaded · Greenwashing detection ready
                 </p>
                 {/* Inline suggested questions grid */}
                 {quickQuestions.length > 0 && (
@@ -819,7 +893,7 @@ export default function Chat() {
                     <div className="animate-dot-1 w-2 h-2 rounded-full" style={{ background: "var(--volt)", boxShadow: "0 0 6px rgba(59,123,246,0.5)" }} />
                     <div className="animate-dot-2 w-2 h-2 rounded-full" style={{ background: "var(--volt)", boxShadow: "0 0 6px rgba(59,123,246,0.5)" }} />
                     <div className="animate-dot-3 w-2 h-2 rounded-full" style={{ background: "var(--volt)", boxShadow: "0 0 6px rgba(59,123,246,0.5)" }} />
-                    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)" }}>Clausify AI is thinking…</span>
+                    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)" }}>GreenLens AI is thinking…</span>
                   </div>
                 </div>
               </div>
@@ -830,6 +904,49 @@ export default function Chat() {
 
           {/* Chat Input */}
           <div className="px-4 sm:px-6 py-4 shrink-0 safe-bottom" style={{ background: "var(--lead)", borderTop: "1px solid var(--rule)" }}>
+            {/* Image preview chip */}
+            {attachedImage && imagePreview && (
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <div
+                  className="relative inline-flex items-center gap-2 px-2 py-1.5 rounded-lg"
+                  style={{ background: "var(--graphite)", border: "1px solid var(--leaf-border)" }}
+                >
+                  <img
+                    src={imagePreview}
+                    alt="Attached"
+                    style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "cover" }}
+                  />
+                  <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ash)", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {attachedImage.name}
+                  </span>
+                  <button
+                    onClick={() => { setAttachedImage(null); setImagePreview(null); }}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ghost)", padding: "2px" }}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Hidden image input */}
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setAttachedImage(file);
+                  const reader = new FileReader();
+                  reader.onload = () => setImagePreview(reader.result as string);
+                  reader.readAsDataURL(file);
+                }
+                e.target.value = "";
+              }}
+            />
             {/* Mobile: quick questions scrollable horizontally above input */}
             <div className="md:hidden overflow-x-auto no-scrollbar flex items-center gap-2 mb-3">
               {questionsLoading ? (
@@ -862,14 +979,25 @@ export default function Chat() {
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="Ask anything about your documents…"
+                placeholder="Ask about sustainability claims…"
                 className="flex-1 bg-transparent border-none outline-none placeholder-ghost"
-                style={{ fontFamily: "'Inter', sans-serif", fontSize: "15px", color: "var(--paper)", minWidth: 0 }}
+                style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "15px", color: "var(--paper)", minWidth: 0 }}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isThinking || isStreaming}
               />
+              {/* Camera / Snap & Check button */}
+              <button
+                className="flex items-center justify-center rounded-full shrink-0"
+                style={{ width: "32px", height: "32px", background: "transparent", border: "none", cursor: "pointer", color: "var(--ghost)", transition: "color 0.15s" }}
+                onClick={() => imageInputRef.current?.click()}
+                onMouseOver={(e) => { e.currentTarget.style.color = "var(--leaf)"; }}
+                onMouseOut={(e) => { e.currentTarget.style.color = "var(--ghost)"; }}
+                title="Snap & Check — attach image for analysis"
+              >
+                <Camera size={18} />
+              </button>
               <button
                 className="flex items-center justify-center rounded-full shrink-0"
                 style={{ width: "36px", height: "36px", background: isThinking || isStreaming || !inputValue.trim() ? "var(--graphite)" : "var(--volt)", border: "none", cursor: isThinking || isStreaming || !inputValue.trim() ? "not-allowed" : "pointer", transition: "background 0.2s, opacity 0.2s", opacity: isThinking || isStreaming || !inputValue.trim() ? 0.5 : 1 }}
@@ -880,8 +1008,8 @@ export default function Chat() {
               </button>
             </div>
             <div className="text-center mt-2">
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", fontWeight: 500, color: "var(--ghost)" }}>
-                Clausify AI only answers from your uploaded documents · Powered by AMD
+              <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 500, color: "var(--ghost)" }}>
+                GreenLens AI — greenwashing detection from your uploaded documents · Powered by AMD
               </span>
             </div>
           </div>

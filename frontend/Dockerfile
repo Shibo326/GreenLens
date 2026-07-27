@@ -1,4 +1,4 @@
-# Clausify AI Frontend — Dockerfile
+# GreenLens AI Frontend — Dockerfile
 # Builds the Vite app and serves via nginx
 
 # Stage 1: Build

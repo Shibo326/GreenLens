@@ -52,6 +52,7 @@ export interface Analysis {
   conflicts: Conflict[];
   recommendation: Recommendation;
   suggestedQuestions?: string[];
+  greenwashScore?: number;
 }
 
 export interface AnalyzeResponse {
@@ -113,4 +114,10 @@ export interface DemoResponse {
   documents: UploadedDocument[];
   analysis: Analysis;
   preSeededMessages: PreSeededMessage[];
+}
+
+export interface QuickScanResponse {
+  verdict: string;
+  whatToLookFor: string[];
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
 }

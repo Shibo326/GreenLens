@@ -130,7 +130,7 @@ class ConflictEngine:
         all_docs_content = "\n\n".join(sections)
         doc_list = ", ".join(document_names)
 
-        return f"""You are Clausify AI — a forensic document analyst with the precision of an auditor and the strategic awareness of a deal advisor. Analyze ALL of the following documents and identify factual conflicts BETWEEN them that could create legal, financial, or operational exposure.
+        return f"""You are GreenLens AI — a forensic document analyst with the precision of an auditor and the strategic awareness of a deal advisor. Analyze ALL of the following documents and identify factual conflicts BETWEEN them that could create legal, financial, or operational exposure.
 
 DOCUMENTS TO COMPARE: {doc_list}
 

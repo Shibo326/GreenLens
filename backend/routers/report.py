@@ -74,7 +74,7 @@ async def generate_report(request: ReportRequestWithFormat):
             logger.error(f"DOCX generation failed for session {session_id}: {e}")
             return _err(500, "Report generation failed.", "PDF_GENERATION_FAILED", "An error occurred generating the DOCX report. Please try again.")
 
-        filename = f"clausify-report-{today}.docx"
+        filename = f"greenlens-report-{today}.docx"
         return StreamingResponse(
             io.BytesIO(docx_bytes),
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -94,7 +94,7 @@ async def generate_report(request: ReportRequestWithFormat):
             logger.error(f"PDF generation failed for session {session_id}: {e}")
             return _err(500, "Report generation failed.", "PDF_GENERATION_FAILED", "An error occurred generating the PDF report. Please try again.")
 
-        filename = f"clausify-report-{today}.pdf"
+        filename = f"greenlens-report-{today}.pdf"
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
             media_type="application/pdf",

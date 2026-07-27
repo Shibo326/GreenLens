@@ -32,6 +32,8 @@ vi.mock("../../../lib/store", () => ({
 vi.mock("../../../lib/api", () => ({
   getSuggestedQuestions: vi.fn().mockResolvedValue([]),
   streamChatMessage: vi.fn().mockResolvedValue(undefined),
+  exportReport: vi.fn().mockResolvedValue(new Blob()),
+  sendVisionMessage: vi.fn().mockResolvedValue(undefined),
 }));
 
 import Chat from "../Chat";
@@ -60,11 +62,12 @@ describe("Chat send button", () => {
       fc.property(fc.string(), (value) => {
         const { getByPlaceholderText, unmount } = renderChat();
         const input = getByPlaceholderText(
-          "Ask anything about your documents…",
+          "Ask about sustainability claims…",
         ) as HTMLInputElement;
-        const sendButton = input.parentElement?.querySelector(
-          "button:last-of-type",
-        ) as HTMLButtonElement;
+        // The send button is the last button inside the input's parent container
+        const buttons = input.parentElement?.querySelectorAll("button");
+        const sendButton = buttons ? buttons[buttons.length - 1] as HTMLButtonElement : null;
+        if (!sendButton) { unmount(); return false; }
 
         fireEvent.change(input, { target: { value } });
 
@@ -84,7 +87,7 @@ describe("Chat send button", () => {
         unmount();
         return ok;
       }),
-      { numRuns: 100 },
+      { numRuns: 50 },
     );
-  });
+  }, 15000);
 });

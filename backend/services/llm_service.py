@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
-MAX_TOKENS_DEFAULT = 2000
+MAX_TOKENS_DEFAULT = 800
 
 # ── Tiered model config ──────────────────────────────────────────────────────
 # MODEL_QUALITY: deepseek-v4-flash — deep reasoning for summaries, risks, recommendations
@@ -59,6 +59,9 @@ class LLMService:
                 "FIREWORKS_ENDPOINT is required. "
                 "Set it in your .env file or Railway environment variables."
             )
+
+        # Vision model — optional, used for /chat/vision endpoint
+        self._model_vision = os.getenv("FIREWORKS_MODEL_VISION", "")
 
         # Tiered models — read from env vars so they can be overridden per-deployment
         self._model_quality = os.getenv("FIREWORKS_MODEL_QUALITY", _MODEL_QUALITY_DEFAULT)
@@ -198,6 +201,71 @@ Return ONLY valid JSON with ALL these keys:
     async def aclose(self) -> None:
         """Close the persistent HTTP client. Call on app shutdown."""
         await self._client.aclose()
+
+    async def complete_vision(
+        self,
+        system_prompt: str,
+        user_text: str,
+        image_base64: str,
+        image_mime: str,
+        max_tokens: int = 800,
+    ) -> str:
+        """
+        Send a vision completion request using OpenAI-compatible multi-part message format.
+
+        Requires FIREWORKS_MODEL_VISION to be configured.
+        """
+        if not self._model_vision:
+            raise LLMParseError(
+                "FIREWORKS_MODEL_VISION not configured. "
+                "Set it in your .env file to enable vision analysis."
+            )
+
+        async with self._semaphore:
+            headers = {
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+            payload = {
+                "model": self._model_vision,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": user_text},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:{image_mime};base64,{image_base64}",
+                                },
+                            },
+                        ],
+                    },
+                ],
+                "max_tokens": max_tokens,
+                "temperature": 0.2,
+            }
+
+            try:
+                response = await self._client.post(
+                    f"{self._endpoint}/chat/completions",
+                    json=payload,
+                    headers=headers,
+                )
+                response.raise_for_status()
+            except httpx.HTTPStatusError as exc:
+                exc_str = str(exc).lower()
+                if "429" in exc_str or "rate limit" in exc_str:
+                    raise LLMRateLimitError(f"Fireworks rate limit (vision): {exc}") from exc
+                raise
+
+            data = response.json()
+            content = data["choices"][0]["message"]["content"]
+            content = _sanitize_unicode(content)
+            logger.info(f"[Fireworks/AMD] Vision response received ({len(content)} chars)")
+            return content
 
     async def _call_fireworks(
         self,

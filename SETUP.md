@@ -1,4 +1,4 @@
-# 🛠️ SETUP GUIDE — Clausify AI
+# 🛠️ SETUP GUIDE — GreenLens
 
 ## Para sa mga Teammates (TL;DR)
 

@@ -57,7 +57,7 @@ export function NavigationBar({ showDemo = true }: NavigationBarProps) {
               style={{
                 width: "14px",
                 height: "14px",
-                background: "var(--volt)",
+                background: "var(--leaf)",
                 borderRadius: "2px",
                 transform: "rotate(45deg)",
                 display: "inline-block",
@@ -67,25 +67,25 @@ export function NavigationBar({ showDemo = true }: NavigationBarProps) {
             <span style={{ display: "inline-flex", marginLeft: "9px" }}>
               <span
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "'Syne', 'DM Sans', sans-serif",
                   fontSize: "clamp(18px, 3vw, 22px)",
                   color: "var(--paper)",
                   fontWeight: 700,
                   letterSpacing: "-0.02em",
                 }}
               >
-                Clausify
+                Green
               </span>
               <span
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "'Syne', 'DM Sans', sans-serif",
                   fontSize: "clamp(18px, 3vw, 22px)",
-                  color: "var(--volt)",
+                  color: "var(--leaf)",
                   fontWeight: 700,
                   letterSpacing: "-0.02em",
                 }}
               >
-                AI
+                Lens
               </span>
             </span>
           </Link>

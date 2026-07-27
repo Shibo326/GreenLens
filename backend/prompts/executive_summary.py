@@ -6,17 +6,23 @@ def build_summary_prompt(chunks: list[Chunk]) -> str:
     doc_names = list(dict.fromkeys(c.source_document for c in chunks))
     doc_list = ", ".join(doc_names) if doc_names else "the uploaded document"
 
-    return f"""You are a senior analyst. Write an executive summary for a decision-maker based on these documents.
+    return f"""You are a senior sustainability claims analyst. Write a verdict summary for a consumer or watchdog based on these documents.
 
 DOCUMENTS: {doc_list}
 
 {context}
 
-Lead with the single most important finding. Include specific figures. Flag urgency. End with a clear recommended action.
+Lead with the overall sustainability credibility verdict. Flag the most serious greenwashing concern. Include specific claims vs. data comparisons. End with a clear recommended action for consumers.
+
+Also provide a Greenwash Score from 0-100:
+- 0-30: HIGH RISK — multiple misleading claims, major contradictions with data
+- 31-60: MEDIUM RISK — vague claims, some unverified assertions, partial evidence
+- 61-100: LOW RISK — claims are specific, measurable, third-party verified, data-consistent
 
 Return ONLY valid JSON:
 {{
-  "executiveSummary": "<4-6 sentence executive briefing with specific figures, key insight, urgency, and recommended direction>"
+  "executiveSummary": "<4-6 sentence sustainability verdict: overall credibility assessment, most serious greenwash flag found, specific claim-vs-data example, and recommended consumer action>",
+  "greenwashScore": <integer 0-100>
 }}"""
 
 

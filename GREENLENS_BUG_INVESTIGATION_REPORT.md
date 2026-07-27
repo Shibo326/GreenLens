@@ -1,4 +1,4 @@
-# Clausify AI — Complete Engineering Investigation Report
+# GreenLens — Complete Engineering Investigation Report
 **Date**: 2025-07-18  
 **Investigator**: Kiro AI — Senior Full Stack Architect  
 **Scope**: Tab-switch conversation reset bug + full system audit  
@@ -7,7 +7,7 @@
 
 # Executive Summary
 
-Clausify AI is a Vite + React 18 SPA (not Next.js as planned) with a FastAPI backend.
+GreenLens is a Vite + React 18 SPA (not Next.js as planned) with a FastAPI backend.
 The reported bug — "conversation resets when switching browser tabs" — has **three
 distinct root causes**. The most critical is that `Chat.tsx` stores its message
 history in local component state (`useState`), which is **not persisted** to
@@ -73,7 +73,7 @@ Pages unmount when navigating away.
 1. Upload 2+ documents → analyze → navigate to /chat
 2. Type a question → press Enter (streaming starts)
 3. While the answer is streaming, switch to another browser tab
-4. Switch back to Clausify tab within 5 seconds
+4. Switch back to GreenLens tab within 5 seconds
 5. **Observed**: Streaming answer may appear to freeze or complete silently.
    The final structured response still appears. Messages do NOT disappear.
    **Verdict**: Tab switch alone does NOT reset messages.
@@ -81,7 +81,7 @@ Pages unmount when navigating away.
 ### Scenario B — Navigate Away and Back (TRUE BUG)
 1. Upload documents → navigate to /chat
 2. Send 3 messages and receive 3 responses
-3. Click the Clausify logo (navigates to /)
+3. Click the GreenLens logo (navigates to /)
 4. Click browser back button or navigate to /chat again
 5. **Observed**: ALL 3 messages are gone. Chat starts empty.
    **Root cause**: `messages` state in Chat.tsx is `useState([])` — not persisted.
@@ -312,7 +312,7 @@ dispatch(SET_SESSION)  → AppState.sessionId = uuid
 dispatch(SET_DOCUMENTS) → AppState.documents = [...]
 dispatch(SET_ANALYSIS)  → AppState.analysis = {...}
          ↓
-persistState() → localStorage["clausify_session"] = {sessionId, documents, analysis}
+persistState() → localStorage["greenlens_session"] = {sessionId, documents, analysis}
          ↓
 navigate("/dashboard") — AppState SURVIVES (provider is outside router)
          ↓
@@ -424,7 +424,7 @@ and `analysis` on refresh. `isLoading` and `error` are correctly NOT persisted.
 
 | Key | Value | Written when | Read when |
 |-----|-------|-------------|-----------|
-| `clausify_session` | `{sessionId, documents, analysis}` | Every state change via `persistState()` | App load via `loadPersistedState()` |
+| `greenlens_session` | `{sessionId, documents, analysis}` | Every state change via `persistState()` | App load via `loadPersistedState()` |
 
 **Note**: `messages` is NOT in the persisted value. This is the fix needed.
 

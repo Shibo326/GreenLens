@@ -1,6 +1,6 @@
 """
-Clausify AI Backend — FastAPI Application
-AMD MI300X-powered document intelligence service.
+GreenLens AI Backend — FastAPI Application
+AMD MI300X-powered greenwashing detection service.
 """
 
 import asyncio
@@ -14,6 +14,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -33,16 +34,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ---- Import routers ----
-from routers import upload, analyze, chat, report, demo
+from routers import upload, analyze, chat, report, demo, quick_scan
 
 # ---- Rate Limiter ----
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
 
 # ---- Create FastAPI app ----
 app = FastAPI(
-    title="Clausify AI",
+    title="GreenLens AI",
     version="1.0.0",
-    description="AMD MI300X-powered enterprise procurement document intelligence API",
+    description="AMD MI300X-powered greenwashing and sustainability-claims detection API",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -57,6 +58,10 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         return response
 
 app.add_middleware(RequestIDMiddleware)
+
+# ---- GZip Compression ----
+# Compress responses > 500 bytes — major win for JSON analysis payloads (often 10-30KB)
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # ---- CORS Middleware ----
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
@@ -102,6 +107,7 @@ app.include_router(analyze.router, prefix="/api", tags=["analyze"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(report.router, prefix="/api", tags=["report"])
 app.include_router(demo.router, prefix="/api", tags=["demo"])
+app.include_router(quick_scan.router, prefix="/api", tags=["quick-scan"])
 
 # ---- Service Readiness Flag ----
 app.state.services_ready = False
@@ -136,7 +142,7 @@ async def health_check():
         status_code=status_code,
         content={
             "status": "healthy" if ready else "degraded",
-            "service": "clausify-api",
+            "service": "greenlens-api",
             "version": "1.0.0",
             "provider": "fireworks",
             "model": os.getenv("FIREWORKS_MODEL", "accounts/fireworks/models/gpt-oss-120b"),
@@ -194,8 +200,8 @@ async def startup_event():
     Initialize all services at startup and inject into router modules.
     """
     global _keep_alive_task
-    logger.info("Clausify AI Backend starting up...")
-    logger.info("AMD MI300X-powered document intelligence")
+    logger.info("GreenLens AI Backend starting up...")
+    logger.info("AMD MI300X-powered greenwashing detection")
 
     # Start keep-alive background task
     _keep_alive_task = asyncio.create_task(_self_ping_loop())
@@ -218,7 +224,7 @@ async def startup_event():
 
         # Warm the embedding model
         try:
-            _ = embedding_service.embed("warmup clausify ai amd mi300x")
+            _ = embedding_service.embed("warmup greenlens ai amd mi300x")
             logger.info("Embedding model warmed up")
         except Exception as warm_err:
             logger.warning(f"Warmup failed (non-fatal): {warm_err}")
@@ -268,7 +274,9 @@ async def startup_event():
         report._docx_generator = docx_generator
         report._session_manager = session_manager
 
-        logger.info("All services initialized — Clausify AI is ready!")
+        quick_scan._llm_service = llm_service
+
+        logger.info("All services initialized — GreenLens AI is ready!")
 
         # Mark app as ready
         app.state.services_ready = True
@@ -284,7 +292,7 @@ async def startup_event():
 async def shutdown_event():
     """Close persistent HTTP connections and cancel background tasks on graceful shutdown."""
     global _keep_alive_task
-    logger.info("Clausify AI Backend shutting down...")
+    logger.info("GreenLens AI Backend shutting down...")
 
     # Cancel keep-alive task
     if _keep_alive_task and not _keep_alive_task.done():

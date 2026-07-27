@@ -1,4 +1,6 @@
-# Implementation Plan: Clausify UI Redesign
+# Implementation Plan: Base UI Redesign (Pre-GreenLens, already implemented)
+
+> **NOTE:** All tasks below are marked complete (`[x]`) and describe work already implemented under the "Clausify" name before the GreenLens rebrand. Kept for historical/implementation reference. New GreenLens-specific work is tracked in `.kiro/specs/greenlens-pivot/tasks.md`.
 
 ## Overview
 
