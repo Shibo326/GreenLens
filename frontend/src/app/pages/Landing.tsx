@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, type DragEvent } from "react";
+﻿import { useRef, useState, useEffect, type DragEvent } from "react";
 import { useNavigate } from "react-router";
 import { NavigationBar } from "../components/NavigationBar";
 import { PrimaryButton, GhostButton } from "../components/Buttons";
@@ -193,48 +193,70 @@ export default function Landing() {
         className="flex flex-col items-center justify-center text-center px-4 sm:px-6 mx-auto relative"
         style={{ minHeight: "70vh", maxWidth: "1200px", paddingTop: "60px", paddingBottom: "40px" }}
       >
-        {/* Subtle gradient mesh background */}
+        {/* === ANIMATED BACKGROUND === */}
+        {/* Grid pattern */}
         <div
           aria-hidden="true"
           style={{
             position: "absolute",
-            top: "10%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "80%",
-            height: "60%",
-            background: "radial-gradient(ellipse at center, rgba(61, 220, 132, 0.03) 0%, transparent 70%)",
+            inset: 0,
+            backgroundImage: `linear-gradient(rgba(61, 220, 132, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(61, 220, 132, 0.03) 1px, transparent 1px)`,
+            backgroundSize: "60px 60px",
+            maskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)",
+            WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)",
             pointerEvents: "none",
-            filter: "blur(60px)",
             zIndex: 0,
           }}
         />
 
-        {/* Headline */}
-        {/* Pill badge */}
-        <div
-          className="mb-6 animate-slideUp flex items-center gap-2 px-4 py-1.5 rounded-full"
-          style={{
-            background: "var(--leaf-dim)",
-            border: "1px solid var(--leaf-border)",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          <Leaf size={14} style={{ color: "var(--leaf)" }} />
-          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", fontWeight: 600, color: "var(--leaf)" }}>
-            YFS Build for Good 2026
-          </span>
+        {/* Floating orbs */}
+        <div aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
+          {/* Orb 1 - large, slow */}
+          <div style={{
+            position: "absolute", top: "15%", left: "20%", width: "300px", height: "300px",
+            borderRadius: "50%", background: "radial-gradient(circle, rgba(61, 220, 132, 0.08) 0%, transparent 70%)",
+            animation: "floatOrb1 12s ease-in-out infinite", filter: "blur(40px)",
+          }} />
+          {/* Orb 2 - medium, offset */}
+          <div style={{
+            position: "absolute", top: "50%", right: "15%", width: "200px", height: "200px",
+            borderRadius: "50%", background: "radial-gradient(circle, rgba(110, 231, 168, 0.06) 0%, transparent 70%)",
+            animation: "floatOrb2 10s ease-in-out infinite", filter: "blur(30px)",
+          }} />
+          {/* Orb 3 - small accent */}
+          <div style={{
+            position: "absolute", bottom: "20%", left: "60%", width: "150px", height: "150px",
+            borderRadius: "50%", background: "radial-gradient(circle, rgba(61, 220, 132, 0.1) 0%, transparent 70%)",
+            animation: "floatOrb3 8s ease-in-out infinite", filter: "blur(20px)",
+          }} />
+          {/* Orb 4 - tiny particle */}
+          <div style={{
+            position: "absolute", top: "30%", right: "35%", width: "80px", height: "80px",
+            borderRadius: "50%", background: "rgba(61, 220, 132, 0.15)",
+            animation: "floatOrb2 14s ease-in-out infinite reverse", filter: "blur(20px)",
+          }} />
         </div>
 
+        {/* Top gradient fade */}
+        <div aria-hidden="true" style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: "200px",
+          background: "linear-gradient(180deg, var(--ink) 0%, transparent 100%)",
+          pointerEvents: "none", zIndex: 0,
+        }} />
+
+
+
         {/* Eyebrow */}
-        <p
-          className="mb-3 animate-slideUp"
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-3"
           style={{
             fontFamily: "'Inter', sans-serif",
             fontSize: "clamp(12px, 2vw, 13px)",
             fontWeight: 600,
-            letterSpacing: "0.08em",
+            letterSpacing: "0.12em",
             textTransform: "uppercase",
             color: "var(--leaf)",
             position: "relative",
@@ -242,46 +264,51 @@ export default function Landing() {
           }}
         >
           GREENWASHING DETECTION PLATFORM
-        </p>
+        </motion.p>
 
         {/* Headline */}
-        <h1
-          className="mb-6 animate-slideUp"
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-6"
           style={{
-            fontFamily: "'Syne', 'DM Sans', sans-serif",
+            fontFamily: "'DM Sans', sans-serif",
             fontWeight: 800,
-            fontSize: "clamp(40px, 7vw, 72px)",
-            lineHeight: 1.08,
+            fontSize: "clamp(42px, 7vw, 76px)",
+            lineHeight: 1.05,
             color: "var(--paper)",
             maxWidth: "min(800px, 92vw)",
             position: "relative",
             zIndex: 1,
-            letterSpacing: "-0.02em",
+            letterSpacing: "-0.03em",
           }}
         >
           See through the{" "}
           <span
             style={{
-              textDecoration: "underline",
-              textDecorationColor: "var(--leaf)",
-              textDecorationThickness: "4px",
-              textUnderlineOffset: "6px",
+              background: "linear-gradient(135deg, var(--leaf) 0%, #6ee7a8 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
             }}
           >
             greenwash
           </span>
           .
-        </h1>
+        </motion.h1>
 
         {/* Subheadline */}
-        <p
-          className="mb-10 animate-slideUp"
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="mb-10"
           style={{
-            animationDelay: "0.08s",
             fontFamily: "'Inter', sans-serif",
             fontWeight: 400,
-            fontSize: "clamp(16px, 3vw, 20px)",
-            lineHeight: 1.6,
+            fontSize: "clamp(16px, 3vw, 19px)",
+            lineHeight: 1.7,
             color: "var(--ash)",
             maxWidth: "min(560px, 92vw)",
             position: "relative",
@@ -290,48 +317,70 @@ export default function Landing() {
         >
           Upload sustainability reports, packaging claims, and marketing materials.
           Ask anything in plain language. Get evidence-based greenwashing verdicts in under 90 seconds.
-        </p>
+        </motion.p>
 
         {/* CTA Buttons */}
-        <div
-          className="flex flex-col sm:flex-row items-center gap-4 mb-8 animate-slideUp"
-          style={{ animationDelay: "0.15s", position: "relative", zIndex: 1 }}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.65 }}
+          className="flex flex-col sm:flex-row items-center gap-4 mb-8"
+          style={{ position: "relative", zIndex: 1 }}
         >
-          <PrimaryButton
-            onClick={() => fileInputRef.current?.click()}
-            style={{ height: "48px", padding: "12px 28px", fontSize: "15px" }}
-          >
-            <Upload size={16} />
-            Upload Documents
-          </PrimaryButton>
+          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+            <PrimaryButton
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                height: "52px",
+                padding: "14px 32px",
+                fontSize: "15px",
+                fontWeight: 600,
+                boxShadow: "0 0 20px rgba(61, 220, 132, 0.3), 0 4px 12px rgba(0,0,0,0.3)",
+              }}
+            >
+              <Upload size={16} />
+              Upload Documents
+            </PrimaryButton>
+          </motion.div>
           <a href="#quick-scan">
-            <GhostButton style={{ height: "48px", padding: "12px 28px", fontSize: "15px", borderColor: "var(--leaf-border)" }}>
-              <Search size={16} />
-              Try Quick Scan
-            </GhostButton>
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+              <GhostButton style={{ height: "52px", padding: "14px 32px", fontSize: "15px", fontWeight: 600, borderColor: "var(--leaf-border)" }}>
+                <Search size={16} />
+                Try Quick Scan
+              </GhostButton>
+            </motion.div>
           </a>
-        </div>
+        </motion.div>
 
         {/* Stats Row */}
-        <div
-          className="flex items-center gap-8 sm:gap-12 mb-12 animate-slideUp"
-          style={{ animationDelay: "0.22s", position: "relative", zIndex: 1 }}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="flex items-center gap-8 sm:gap-12 mb-12"
+          style={{ position: "relative", zIndex: 1 }}
         >
           {[
             { value: "< 90s", label: "Analysis time", color: "var(--paper)" },
             { value: "0-100", label: "Greenwash Score", color: "var(--leaf)" },
             { value: "100%", label: "Evidence-based", color: "var(--paper)" },
-          ].map((stat) => (
-            <div key={stat.label} className="flex flex-col items-center">
-              <span style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "clamp(22px, 4vw, 32px)", fontWeight: 800, color: stat.color }}>
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              className="flex flex-col items-center"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.9 + i * 0.1 }}
+            >
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: stat.color, letterSpacing: "-0.02em" }}>
                 {stat.value}
               </span>
               <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)", marginTop: "4px" }}>
                 {stat.label}
               </span>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* Upload Zone */}
@@ -351,11 +400,13 @@ export default function Landing() {
           style={{
             maxWidth: "640px",
             minHeight: files.length > 0 ? "auto" : "220px",
-            borderRadius: "12px",
-            background: isDragging ? "var(--leaf-dim)" : "var(--lead)",
-            border: `2px dashed ${isDragging ? "var(--leaf)" : "var(--rule)"}`,
+            borderRadius: "16px",
+            background: isDragging ? "rgba(61, 220, 132, 0.05)" : "rgba(10, 20, 15, 0.6)",
+            border: `2px dashed ${isDragging ? "var(--leaf)" : "rgba(61, 220, 132, 0.2)"}`,
             padding: files.length > 0 ? "24px" : "clamp(24px, 5vw, 48px) clamp(16px, 4vw, 32px)",
-            transition: "border-color 0.2s, background 0.3s",
+            transition: "all 0.3s ease",
+            backdropFilter: "blur(8px)",
+            boxShadow: isDragging ? "0 0 30px rgba(61, 220, 132, 0.15), inset 0 0 30px rgba(61, 220, 132, 0.05)" : "0 4px 24px rgba(0,0,0,0.2)",
             cursor: isLoading ? "default" : "pointer",
             animationDelay: "0.2s",
             position: "relative",
@@ -375,10 +426,10 @@ export default function Landing() {
           {files.length === 0 ? (
             <>
               <Upload size={32} style={{ color: "var(--leaf)", marginBottom: "16px" }} aria-hidden="true" />
-              <h3 className="hidden md:block" style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontWeight: 600, fontSize: "18px", color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
+              <h3 className="hidden md:block" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: "18px", color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
                 Drop documents here
               </h3>
-              <h3 className="md:hidden" style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontWeight: 600, fontSize: "18px", color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
+              <h3 className="md:hidden" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: "18px", color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
                 Tap to select files
               </h3>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)", marginBottom: "12px", textAlign: "center" }}>
@@ -542,7 +593,7 @@ export default function Landing() {
         </h2>
         <p
           style={{
-            fontFamily: "'Syne', 'DM Sans', sans-serif",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: "clamp(24px, 4vw, 32px)",
             fontWeight: 700,
             color: "var(--paper)",
@@ -582,7 +633,7 @@ export default function Landing() {
               >
                 <Icon size={22} style={{ color: "var(--leaf)" }} aria-hidden="true" />
               </div>
-              <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "8px" }}>{title}</h3>
+              <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "8px" }}>{title}</h3>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--ash)", margin: 0 }}>{desc}</p>
             </motion.div>
           ))}
@@ -595,7 +646,7 @@ export default function Landing() {
           className="flex flex-col items-center glass-card px-6 py-8 w-full"
           style={{ maxWidth: "min(600px, 100%)", border: "1px solid var(--leaf-border)" }}
         >
-          <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "clamp(18px, 3vw, 22px)", fontWeight: 700, color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
+          <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(18px, 3vw, 22px)", fontWeight: 700, color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
             See it in action
           </h3>
           <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "15px", color: "var(--ash)", marginBottom: "20px", textAlign: "center" }}>

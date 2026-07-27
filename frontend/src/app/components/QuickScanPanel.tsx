@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Sparkles, Loader, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { quickScan } from "../../lib/api";
 import type { QuickScanResponse } from "../../lib/types";
@@ -21,7 +21,12 @@ export function QuickScanPanel() {
       const response = await quickScan(trimmed);
       setResult(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Quick scan failed. Please try again.");
+      const msg = err instanceof Error ? err.message : "Quick scan failed.";
+      if (msg.toLowerCase().includes("fetch") || msg.toLowerCase().includes("network")) {
+        setError("Backend not reachable. Start the backend server or check your connection.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +74,7 @@ export function QuickScanPanel() {
         <div>
           <h3
             style={{
-              fontFamily: "'Syne', 'DM Sans', sans-serif",
+              fontFamily: "'DM Sans', sans-serif",
               fontSize: "16px",
               fontWeight: 700,
               color: "var(--paper)",

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { NavigationBar } from "../components/NavigationBar";
 import { Card } from "../components/Card";
 import { RiskBadge, EvidenceTag, EvidenceBox } from "../components/Badges";
@@ -245,7 +245,7 @@ export default function Dashboard() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-4 py-4" style={{ borderBottom: "1px solid var(--rule)" }}>
-                <span style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, color: "var(--paper)" }}>Documents</span>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, color: "var(--paper)" }}>Documents</span>
                 <button onClick={() => setSidebarOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ash)" }}>
                   <X size={18} />
                 </button>
@@ -263,7 +263,7 @@ export default function Dashboard() {
             style={{ background: "var(--ink)", borderBottom: "1px solid var(--rule)", position: "sticky", top: "52px", zIndex: 10 }}
           >
             <div className="flex items-center gap-2 min-w-0">
-              <h2 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 700, color: "var(--paper)", whiteSpace: "nowrap" }}>
+              <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 700, color: "var(--paper)", whiteSpace: "nowrap" }}>
                 Analysis Results
               </h2>
               <span className="hidden sm:inline" style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)" }}>
@@ -375,7 +375,7 @@ export default function Dashboard() {
                 <div className="flex items-start sm:items-center justify-between gap-3 mb-4 flex-wrap">
                   <div className="flex items-center gap-3 flex-wrap">
                     <AlertTriangle size={20} style={{ color: "var(--flag-red)", flexShrink: 0 }} aria-hidden="true" />
-                    <span style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, letterSpacing: "0.02em", textTransform: "uppercase", color: "var(--flag-red)" }}>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, letterSpacing: "0.02em", textTransform: "uppercase", color: "var(--flag-red)" }}>
                       ⚠️ Contradiction
                     </span>
                     <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--ash)" }}>
@@ -423,7 +423,7 @@ export default function Dashboard() {
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Executive Summary</h3>
+                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Executive Summary</h3>
                     <FileText size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -446,7 +446,7 @@ export default function Dashboard() {
                 <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '320px' }}>
                   <div style={{ flexShrink: 0 }}>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Web Research</h3>
+                      <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Web Research</h3>
                       <Globe size={18} style={{ color: "var(--ghost)" }} />
                     </div>
                     <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -466,7 +466,7 @@ export default function Dashboard() {
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Greenwash Flags</h3>
+                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Greenwash Flags</h3>
                     <AlertTriangle size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -501,7 +501,7 @@ export default function Dashboard() {
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Claim vs. Reality</h3>
+                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Claim vs. Reality</h3>
                     <Scale size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -517,7 +517,7 @@ export default function Dashboard() {
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Analytics Overview</h3>
+                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Analytics Overview</h3>
                     <BarChart3 size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -629,7 +629,7 @@ export default function Dashboard() {
               <Card className="md:col-span-2" style={{ display: 'flex', flexDirection: 'column', maxHeight: '320px', background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>AI Recommendation</h3>
+                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>AI Recommendation</h3>
                     <Lightbulb size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--leaf-border)", margin: "12px 0" }} />

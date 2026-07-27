@@ -65,8 +65,15 @@ async def quick_scan(request: Request, body: QuickScanRequest):
             "Please shorten the claim to 500 characters or fewer.",
         )
 
+    # --- Fetch web context for richer verdicts ---
+    from services import web_search
+    try:
+        web_context = await web_search.search(f"greenwashing {claim[:200]}")
+    except Exception:
+        web_context = ""
+
     # --- Build prompt and call LLM ---
-    user_prompt = build_quick_scan_prompt(claim.strip())
+    user_prompt = build_quick_scan_prompt(claim.strip(), web_context=web_context)
     system_prompt = (
         "You are a sustainability claims analyst specializing in greenwashing detection. "
         "Respond ONLY with valid JSON — no prose, no markdown fences."

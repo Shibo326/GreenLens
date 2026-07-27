@@ -114,7 +114,14 @@ async def chat(request: ChatRequest):
                 low_relevance = True
                 logger.info(f"[chat] Low relevance detected: avg_distance={avg_distance:.2f}")
 
-    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance, simplify=request.simplify)
+    # --- Fetch web context for richer chat responses ---
+    from services import web_search
+    try:
+        web_context = await web_search.search(f"greenwashing sustainability {question[:150]}")
+    except Exception:
+        web_context = ""
+
+    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance, simplify=request.simplify, web_context=web_context)
 
     try:
         raw = await llm_service.complete(system_prompt, user_prompt, max_tokens=6144, tier="quality")
@@ -392,7 +399,14 @@ async def chat_stream(request: ChatRequest):
                 low_relevance = True
                 logger.info(f"[chat/stream] Low relevance detected: avg_distance={avg_distance:.2f}")
 
-    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance, simplify=request.simplify)
+    # --- Fetch web context for richer streaming responses ---
+    from services import web_search
+    try:
+        web_context = await web_search.search(f"greenwashing sustainability {question[:150]}")
+    except Exception:
+        web_context = ""
+
+    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance, simplify=request.simplify, web_context=web_context)
 
     async def generate():
         try:

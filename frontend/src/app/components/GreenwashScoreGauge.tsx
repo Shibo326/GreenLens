@@ -1,4 +1,4 @@
-interface GreenwashScoreGaugeProps {
+﻿interface GreenwashScoreGaugeProps {
   score?: number;
 }
 
@@ -60,7 +60,7 @@ export function GreenwashScoreGauge({ score }: GreenwashScoreGaugeProps) {
             bottom: "0",
             left: "50%",
             transform: "translateX(-50%)",
-            fontFamily: "'Syne', 'DM Sans', sans-serif",
+            fontFamily: "'DM Sans', sans-serif",
             fontWeight: 800,
             fontSize: "56px",
             color: isNeutral ? "var(--ghost)" : band.color,

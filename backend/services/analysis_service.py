@@ -133,6 +133,22 @@ class AnalysisService:
         else:
             logger.warning("No document chunks — extraction may have failed")
 
+        # --- Fetch web context for richer analysis (runs before parallel calls) ---
+        web_context = ""
+        try:
+            from services import web_search
+            # Extract company/topic from document names for targeted search
+            company_hint = " ".join(
+                name.replace(".pdf", "").replace("_", " ").replace("-", " ")
+                for name in doc_names[:2]
+            )[:100]
+            web_context = await web_search.search(
+                f"greenwashing {company_hint} sustainability claims"
+            )
+        except Exception as e:
+            logger.warning(f"[analysis] Web search failed (non-fatal): {e}")
+            web_context = ""
+
         # --- Run the 5 analysis calls in parallel ---
         (
             summary_and_questions_result,
@@ -142,19 +158,19 @@ class AnalysisService:
             conflicts_result,
         ) = await asyncio.gather(
             self._with_timeout(
-                self._generate_summary_and_questions(system_prompt, chunks),
+                self._generate_summary_and_questions(system_prompt, chunks, web_context=web_context),
                 "summary+questions",
             ),
             self._with_timeout(
-                self._generate_risks(system_prompt, chunks),
+                self._generate_risks(system_prompt, chunks, web_context=web_context),
                 "risks",
             ),
             self._with_timeout(
-                self._generate_comparison_matrix(system_prompt, chunks, doc_names),
+                self._generate_comparison_matrix(system_prompt, chunks, doc_names, web_context=web_context),
                 "comparison_matrix",
             ),
             self._with_timeout(
-                self._generate_recommendation(system_prompt, chunks),
+                self._generate_recommendation(system_prompt, chunks, web_context=web_context),
                 "recommendation",
             ),
             self._with_timeout(

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
 import { Menu, X, Leaf, Zap } from "lucide-react";
 
@@ -56,7 +56,7 @@ export function NavigationBar({ showDemo = true }: NavigationBarProps) {
             <Leaf size={18} style={{ color: "var(--leaf)" }} aria-hidden="true" />
             <span
               style={{
-                fontFamily: "'Syne', 'DM Sans', sans-serif",
+                fontFamily: "'DM Sans', sans-serif",
                 fontSize: "18px",
                 color: "var(--paper)",
                 fontWeight: 700,

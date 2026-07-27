@@ -5,7 +5,7 @@ interface PrimaryButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   small?: boolean;
 }
 
-export function PrimaryButton({ children, small = false, disabled, ...props }: PrimaryButtonProps) {
+export function PrimaryButton({ children, small = false, disabled, style: externalStyle, ...props }: PrimaryButtonProps) {
   return (
     <button
       className="transition-all"
@@ -31,6 +31,7 @@ export function PrimaryButton({ children, small = false, disabled, ...props }: P
         filter: 'brightness(1)',
         transition: 'all 0.2s ease',
         whiteSpace: 'nowrap',
+        ...externalStyle,
       }}
       onMouseOver={(e) => {
         if (!disabled) {
@@ -60,7 +61,7 @@ interface GhostButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   small?: boolean;
 }
 
-export function GhostButton({ children, small = false, disabled, ...props }: GhostButtonProps) {
+export function GhostButton({ children, small = false, disabled, style: externalStyle, ...props }: GhostButtonProps) {
   return (
     <button
       className="border transition-all"
@@ -84,6 +85,7 @@ export function GhostButton({ children, small = false, disabled, ...props }: Gho
         opacity: disabled ? 0.5 : 1,
         transition: 'all 0.2s ease',
         whiteSpace: 'nowrap',
+        ...externalStyle,
       }}
       onMouseOver={(e) => {
         if (!disabled) {

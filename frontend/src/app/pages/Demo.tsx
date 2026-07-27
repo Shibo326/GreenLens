@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { NavigationBar } from "../components/NavigationBar";
 import { Card } from "../components/Card";
 import { RiskBadge, EvidenceTag, EvidenceBox } from "../components/Badges";
@@ -338,7 +338,7 @@ function DemoLoader() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px" }}
+              style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px" }}
             >
               Loading Demo
             </motion.div>
@@ -533,7 +533,7 @@ export default function Demo() {
                 <PanelLeft size={18} />
               </button>
               <div>
-                <h2 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 700, color: "var(--paper)" }}>
+                <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 700, color: "var(--paper)" }}>
                   Sample Greenwashing Analysis
                 </h2>
                 <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)" }}>
@@ -551,7 +551,7 @@ export default function Demo() {
                   <Lightbulb size={18} style={{ color: "var(--leaf)" }} />
                 </div>
                 <div>
-                  <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "16px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px" }}>
+                  <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "16px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px" }}>
                     What you're seeing
                   </h3>
                   <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--ash)", margin: 0 }}>
@@ -578,7 +578,7 @@ export default function Demo() {
                 <div className="rounded-lg p-4 animate-slideDown" style={{ background: "var(--flag-red-dim)", border: "1px solid rgba(240,68,82,0.25)", borderLeft: "4px solid var(--flag-red)" }}>
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
                   <AlertTriangle size={20} style={{ color: "var(--flag-red)", flexShrink: 0 }} />
-                  <span style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "16px", fontWeight: 700, color: "var(--flag-red)" }}>Contradiction Detected</span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "16px", fontWeight: 700, color: "var(--flag-red)" }}>Contradiction Detected</span>
                   <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "var(--ash)" }}>
                     {analysis.conflicts.length} critical contradiction{analysis.conflicts.length !== 1 ? "s" : ""} found
                   </span>
@@ -624,7 +624,7 @@ export default function Demo() {
               {/* Executive Summary */}
               <Card>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Executive Summary</h3>
+                  <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Executive Summary</h3>
                   <FileText size={18} style={{ color: "var(--ghost)" }} />
                 </div>
                 <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -640,7 +640,7 @@ export default function Demo() {
               {/* Risk Analysis */}
               <Card>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Risk Analysis</h3>
+                  <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Risk Analysis</h3>
                   <AlertTriangle size={18} style={{ color: "var(--ghost)" }} />
                 </div>
                 <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -660,7 +660,7 @@ export default function Demo() {
               {/* Claim vs. Reality */}
               <Card>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Claim vs. Reality</h3>
+                  <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Claim vs. Reality</h3>
                   <Scale size={18} style={{ color: "var(--ghost)" }} />
                 </div>
                 <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -674,7 +674,7 @@ export default function Demo() {
               {/* AI Recommendation */}
               <Card style={{ background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>AI Recommendation</h3>
+                  <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>AI Recommendation</h3>
                   <Lightbulb size={18} style={{ color: "var(--ghost)" }} />
                 </div>
                 <div style={{ height: "1px", background: "var(--leaf-border)", margin: "12px 0" }} />
@@ -702,7 +702,7 @@ export default function Demo() {
                   <FileText size={18} style={{ color: "var(--leaf)" }} />
                 </div>
                 <div>
-                  <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>GreenLens Copilot Preview</h3>
+                  <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>GreenLens Copilot Preview</h3>
                   <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", color: "var(--ash)" }}>See how the AI detects greenwashing patterns</p>
                 </div>
               </div>
@@ -763,7 +763,7 @@ export default function Demo() {
               </div>
 
               <div className="rounded-lg p-4 sm:p-5" style={{ background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
-                <h4 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "14px" }}>
+                <h4 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "14px" }}>
                   Ready to analyze your own documents?
                 </h4>
                 <div className="flex flex-wrap gap-3">
