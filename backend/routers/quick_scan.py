@@ -9,7 +9,6 @@ from slowapi.util import get_remote_address
 from models.response import QuickScanRequest, QuickScanResponse
 from prompts.quick_scan import build_quick_scan_prompt
 from services.llm_service import LLMService, _strip_json_fences
-from services.web_research import WebResearchService
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,6 @@ router = APIRouter()
 
 # Service instances (set from main.py at startup)
 _llm_service: LLMService | None = None
-_web_research: WebResearchService | None = None
 
 
 def _err(status: int, message: str, code: str, suggestion: str = ""):
@@ -68,21 +66,9 @@ async def quick_scan(request: Request, body: QuickScanRequest):
         )
 
     # --- Build prompt and call LLM ---
-    # --- Web Research: fetch online data about this claim ---
-    web_context_str = ""
-    if _web_research:
-        try:
-            web_ctx = await _web_research.research_claim(claim.strip())
-            web_context_str = _web_research.format_for_prompt(web_ctx)
-            if web_context_str:
-                logger.info(f"[quick-scan] Web research enriched with {len(web_ctx.results)} results")
-        except Exception as web_err:
-            logger.warning(f"[quick-scan] Web research failed (non-fatal): {web_err}")
-
-    user_prompt = build_quick_scan_prompt(claim.strip(), web_context=web_context_str)
+    user_prompt = build_quick_scan_prompt(claim.strip())
     system_prompt = (
         "You are a sustainability claims analyst specializing in greenwashing detection. "
-        "You have access to real-time web research to cross-reference claims. "
         "Respond ONLY with valid JSON — no prose, no markdown fences."
     )
 

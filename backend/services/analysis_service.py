@@ -93,12 +93,10 @@ class AnalysisService:
         llm_service: LLMService,
         conflict_engine: ConflictEngine,
         session_manager: SessionManager,
-        web_research=None,
     ):
         self.llm_service = llm_service
         self.conflict_engine = conflict_engine
         self.session_manager = session_manager
-        self.web_research = web_research
         self._single_call_mode = os.getenv("SINGLE_CALL_MODE", "false").lower() == "true"
 
     async def run_full_analysis(
@@ -135,24 +133,7 @@ class AnalysisService:
         else:
             logger.warning("No document chunks — extraction may have failed")
 
-        # --- STEP 1: Web Research FIRST — so it can enrich every analysis prompt ---
-        # This runs before the LLM calls so real-time online sources actually improve
-        # the accuracy of the verdict, greenwash score, risks, and recommendation.
-        web_research_context = ""
-        if self.web_research:
-            try:
-                key_claims = self._extract_key_claims(chunks)
-                web_ctx = await asyncio.wait_for(
-                    self.web_research.research_for_analysis(doc_names, key_claims),
-                    timeout=15.0,  # Cap web research so it doesn't stall the pipeline
-                )
-                web_research_context = self.web_research.format_for_prompt(web_ctx)
-                if web_research_context:
-                    logger.info(f"[analysis] Web research found {len(web_ctx.results)} results — feeding into analysis prompts")
-            except Exception as web_err:
-                logger.warning(f"[analysis] Web research failed (non-fatal): {web_err}")
-
-        # --- STEP 2: Run the 5 analysis calls in parallel, enriched with web context ---
+        # --- Run the 5 analysis calls in parallel ---
         (
             summary_and_questions_result,
             risks_result,
@@ -161,19 +142,19 @@ class AnalysisService:
             conflicts_result,
         ) = await asyncio.gather(
             self._with_timeout(
-                self._generate_summary_and_questions(system_prompt, chunks, web_context=web_research_context),
+                self._generate_summary_and_questions(system_prompt, chunks),
                 "summary+questions",
             ),
             self._with_timeout(
-                self._generate_risks(system_prompt, chunks, web_context=web_research_context),
+                self._generate_risks(system_prompt, chunks),
                 "risks",
             ),
             self._with_timeout(
-                self._generate_comparison_matrix(system_prompt, chunks, doc_names, web_context=web_research_context),
+                self._generate_comparison_matrix(system_prompt, chunks, doc_names),
                 "comparison_matrix",
             ),
             self._with_timeout(
-                self._generate_recommendation(system_prompt, chunks, web_context=web_research_context),
+                self._generate_recommendation(system_prompt, chunks),
                 "recommendation",
             ),
             self._with_timeout(
@@ -222,7 +203,6 @@ class AnalysisService:
             conflicts=conflicts_result,
             recommendation=recommendation_result,
             suggestedQuestions=suggested_questions,
-            webResearchContext=web_research_context,
         )
 
         self.session_manager.store_analysis(session_id, analysis)
@@ -668,39 +648,3 @@ DOCUMENT CONTEXT:
                 nextSteps=["Review identified risks", "Compare claims vs. data"],
                 confidence=0.5,
             )
-
-    def _extract_key_claims(self, chunks: list[Chunk]) -> list[str]:
-        """
-        Extract key sustainability claims from document chunks for web research.
-        Looks for common greenwashing keywords and phrases.
-        """
-        import re as _re
-
-        claim_patterns = [
-            r'carbon\s+neutral',
-            r'net[\s-]?zero',
-            r'100%\s+renewable',
-            r'sustainab\w+',
-            r'eco[\s-]?friendly',
-            r'recyclable|recycled',
-            r'biodegradable',
-            r'organic',
-            r'green\s+energy',
-            r'zero[\s-]?waste',
-            r'climate[\s-]?positive',
-            r'plant[\s-]?based',
-            r'carbon[\s-]?offset',
-            r'scope\s+[123]',
-            r'esg\s+rating',
-            r'certified\s+\w+',
-        ]
-
-        claims = set()
-        combined_text = " ".join(c.text[:500] for c in chunks[:10]).lower()
-
-        for pattern in claim_patterns:
-            matches = _re.findall(pattern, combined_text, _re.IGNORECASE)
-            for match in matches[:2]:
-                claims.add(match.strip())
-
-        return list(claims)[:5]

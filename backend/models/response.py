@@ -97,7 +97,6 @@ class AnalysisResult(BaseModel):
     conflicts: list[Conflict]
     recommendation: Recommendation
     suggestedQuestions: list[str] = []
-    webResearchContext: str = ""  # Real-time web research findings for cross-reference
 
 
 # ---------------------------------------------------------------------------

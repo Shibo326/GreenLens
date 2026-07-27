@@ -35,7 +35,6 @@ logger = logging.getLogger(__name__)
 
 # ---- Import routers ----
 from routers import upload, analyze, chat, report, demo, quick_scan
-from routers import training, evaluation, prompts, feedback
 
 # ---- Rate Limiter ----
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
@@ -109,10 +108,6 @@ app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(report.router, prefix="/api", tags=["report"])
 app.include_router(demo.router, prefix="/api", tags=["demo"])
 app.include_router(quick_scan.router, prefix="/api", tags=["quick-scan"])
-app.include_router(training.router, prefix="/api", tags=["training"])
-app.include_router(evaluation.router, prefix="/api", tags=["evaluation"])
-app.include_router(prompts.router, prefix="/api", tags=["prompts"])
-app.include_router(feedback.router, prefix="/api", tags=["feedback"])
 
 # ---- Service Readiness Flag ----
 app.state.services_ready = False
@@ -220,7 +215,6 @@ async def startup_event():
         from services.conflict_engine import ConflictEngine
         from services.analysis_service import AnalysisService
         from services.pdf_generator import PDFGenerator
-        from services.web_research import WebResearchService
 
         document_parser = DocumentParser()
         logger.info("DocumentParser initialized")
@@ -247,10 +241,7 @@ async def startup_event():
         conflict_engine = ConflictEngine(llm_service)
         logger.info("ConflictEngine initialized")
 
-        web_research = WebResearchService()
-        logger.info("WebResearchService initialized (real-time web data)")
-
-        analysis_service = AnalysisService(llm_service, conflict_engine, session_manager, web_research)
+        analysis_service = AnalysisService(llm_service, conflict_engine, session_manager)
         logger.info("AnalysisService initialized")
 
         pdf_generator = PDFGenerator()
@@ -262,7 +253,6 @@ async def startup_event():
 
         # Store llm_service globally for shutdown hook
         app.state.llm_service = llm_service
-        app.state.web_research = web_research
 
         # --- Inject services into routers ---
         upload._document_parser = document_parser
@@ -279,34 +269,12 @@ async def startup_event():
         chat._vector_store = vector_store
         chat._session_manager = session_manager
         chat._llm_service = llm_service
-        chat._web_research = web_research
 
         report._pdf_generator = pdf_generator
         report._docx_generator = docx_generator
         report._session_manager = session_manager
 
         quick_scan._llm_service = llm_service
-        quick_scan._web_research = web_research
-
-        # --- Inject services into AI Advanced Training routers ---
-        from services.training_pipeline import TrainingPipelineService
-        from services.evaluation_framework import EvaluationFramework
-        from services.prompt_optimizer import PromptOptimizer
-
-        training_pipeline_svc = TrainingPipelineService()
-        logger.info("TrainingPipelineService initialized")
-
-        evaluation_framework = EvaluationFramework(
-            llm_service=llm_service,
-            training_pipeline=training_pipeline_svc,
-        )
-        logger.info("EvaluationFramework initialized")
-
-        prompt_optimizer = PromptOptimizer(evaluation_framework=evaluation_framework)
-        logger.info("PromptOptimizer initialized")
-
-        evaluation._evaluation_framework = evaluation_framework
-        prompts._prompt_optimizer = prompt_optimizer
 
         logger.info("All services initialized — GreenLens AI is ready!")
 
@@ -337,13 +305,6 @@ async def shutdown_event():
             logger.info("LLMService HTTP client closed")
         except Exception as e:
             logger.warning(f"LLMService cleanup failed (non-fatal): {e}")
-
-    if hasattr(app.state, "web_research"):
-        try:
-            await app.state.web_research.aclose()
-            logger.info("WebResearchService HTTP client closed")
-        except Exception as e:
-            logger.warning(f"WebResearchService cleanup failed (non-fatal): {e}")
 
 
 # ---- Entry Point ----

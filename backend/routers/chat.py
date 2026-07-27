@@ -19,7 +19,6 @@ from services.embedding_service import EmbeddingService
 from services.llm_service import LLMService, _strip_json_fences
 from services.session_manager import SessionManager, SessionNotFoundError
 from services.vector_store import VectorStore
-from services.web_research import WebResearchService
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,6 @@ _embedding_service: EmbeddingService | None = None
 _vector_store: VectorStore | None = None
 _session_manager: SessionManager | None = None
 _llm_service: LLMService | None = None
-_web_research: WebResearchService | None = None
 
 
 def _err(status: int, message: str, code: str, suggestion: str = ""):
@@ -116,20 +114,7 @@ async def chat(request: ChatRequest):
                 low_relevance = True
                 logger.info(f"[chat] Low relevance detected: avg_distance={avg_distance:.2f}")
 
-    # --- Web Research: fetch real-time online data to enrich responses ---
-    web_context_str = ""
-    if _web_research:
-        try:
-            # Build doc context hint for better search (company names from filenames)
-            doc_hint = " ".join(doc_names[:2]) if doc_names else ""
-            web_ctx = await _web_research.research_for_chat(question, doc_context=doc_hint)
-            web_context_str = _web_research.format_for_prompt(web_ctx)
-            if web_context_str:
-                logger.info(f"[chat] Web research enriched with {len(web_ctx.results)} results")
-        except Exception as web_err:
-            logger.warning(f"[chat] Web research failed (non-fatal): {web_err}")
-
-    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance, simplify=request.simplify, web_context=web_context_str)
+    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance, simplify=request.simplify)
 
     try:
         raw = await llm_service.complete(system_prompt, user_prompt, max_tokens=6144, tier="quality")
@@ -407,19 +392,7 @@ async def chat_stream(request: ChatRequest):
                 low_relevance = True
                 logger.info(f"[chat/stream] Low relevance detected: avg_distance={avg_distance:.2f}")
 
-    # --- Web Research: fetch real-time online data to enrich responses ---
-    web_context_str = ""
-    if _web_research:
-        try:
-            doc_hint = " ".join(doc_names[:2]) if doc_names else ""
-            web_ctx = await _web_research.research_for_chat(question, doc_context=doc_hint)
-            web_context_str = _web_research.format_for_prompt(web_ctx)
-            if web_context_str:
-                logger.info(f"[chat/stream] Web research enriched with {len(web_ctx.results)} results")
-        except Exception as web_err:
-            logger.warning(f"[chat/stream] Web research failed (non-fatal): {web_err}")
-
-    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance, simplify=request.simplify, web_context=web_context_str)
+    user_prompt = build_chat_prompt(question, chunks, history=history_dicts, low_relevance=low_relevance, simplify=request.simplify)
 
     async def generate():
         try:
