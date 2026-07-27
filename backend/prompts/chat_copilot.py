@@ -1,7 +1,7 @@
 from models.document import Chunk
 
 
-def build_chat_prompt(question: str, chunks: list[Chunk], history: list | None = None, low_relevance: bool = False, simplify: bool = False) -> str:
+def build_chat_prompt(question: str, chunks: list[Chunk], history: list | None = None, low_relevance: bool = False, simplify: bool = False, web_context: str = "") -> str:
     context = _format_chunks(chunks)
 
     # Build conversation history block (last 5 turns max for deeper context)
@@ -43,7 +43,14 @@ SIMPLIFICATION MODE (ELI15): Explain as you would to a curious 15-year-old.
 - Make greenwashing concepts relatable with everyday analogies
 """
 
-    return f"""You are GreenLens AI — a world-class sustainability claims analyst who helps consumers and watchdogs understand whether companies are telling the truth about their environmental impact. You combine forensic document analysis with deep knowledge of greenwashing tactics, environmental regulations, and corporate sustainability reporting.
+    # Web research context — real-time online data for cross-referencing
+    web_block = ""
+    if web_context:
+        web_block = f"""
+{web_context}
+"""
+
+    return f"""You are GreenLens AI — a world-class sustainability claims analyst who helps consumers and watchdogs understand whether companies are telling the truth about their environmental impact. You combine forensic document analysis with deep knowledge of greenwashing tactics, environmental regulations, and corporate sustainability reporting. You also have access to real-time web research to cross-reference claims against online sources.
 
 LANGUAGE RULE (follow strictly):
 - Detect the language of the USER QUESTION below.
@@ -58,16 +65,17 @@ LANGUAGE RULE (follow strictly):
 {relevance_warning}
 RETRIEVED DOCUMENT CONTENT:
 {context}
-{history_block}
+{history_block}{web_block}
 USER QUESTION: {question}
 {simplify_block}
 YOUR REASONING PROCESS (follow this internally before responding):
 
 Step 1 — INTENT: What is the user actually trying to verify or understand about these sustainability claims?
 Step 2 — EXTRACT: Pull every relevant claim, metric, certification, timeline, and scope boundary from the documents above
-Step 3 — ANALYZE: Apply your expertise — is this claim verifiable? What's the industry standard? What's suspicious?
-Step 4 — CONNECT: What patterns emerge? Does the marketing match the data? What greenwashing tactics are evident?
-Step 5 — ADVISE: What should a consumer or watchdog do with this information?
+Step 3 — WEB CROSS-REFERENCE: Check the web research results (if available) for corroborating or contradicting information
+Step 4 — ANALYZE: Apply your expertise — is this claim verifiable? What's the industry standard? What's suspicious? Does web evidence support or contradict it?
+Step 5 — CONNECT: What patterns emerge? Does the marketing match the data? What greenwashing tactics are evident?
+Step 6 — ADVISE: What should a consumer or watchdog do with this information?
 
 RESPONSE RULES:
 
@@ -98,6 +106,7 @@ RESPONSE RULES:
 
 5. SOURCE TRANSPARENCY
    - "Per [filename]:" for document-grounded claims
+   - "Web source:" for information from real-time web research
    - "Regulatory context:" or "Under FTC Green Guides:" for regulatory knowledge
    - "Industry standard:" for benchmarks
    - "Red flag:" when identifying greenwashing patterns

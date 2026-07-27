@@ -16,7 +16,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter()
 
-# Service instance (set from main.py at startup)
+# Service instances (set from main.py at startup)
 _llm_service: LLMService | None = None
 
 

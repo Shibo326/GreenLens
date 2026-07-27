@@ -15,10 +15,10 @@ T = TypeVar("T", bound=BaseModel)
 MAX_TOKENS_DEFAULT = 800
 
 # ── Tiered model config ──────────────────────────────────────────────────────
-# MODEL_QUALITY: deepseek-v4-flash — deep reasoning for summaries, risks, recommendations
-# MODEL_FAST: gpt-oss-120b — AMD MI300X optimised, fast structured output for matrix/questions/conflicts
-_MODEL_QUALITY_DEFAULT = "accounts/fireworks/models/deepseek-v4-flash"
-_MODEL_FAST_DEFAULT = "accounts/fireworks/models/gpt-oss-120b"
+# MODEL_QUALITY: deepseek-v4-pro — top reasoning model for summaries, risks, recommendations
+# MODEL_FAST: deepseek-v4-flash — fast extraction/classification for matrix/questions/conflicts
+_MODEL_QUALITY_DEFAULT = "accounts/fireworks/models/deepseek-v4-pro"
+_MODEL_FAST_DEFAULT = "accounts/fireworks/models/deepseek-v4-flash"
 
 
 class LLMRateLimitError(Exception):
@@ -37,7 +37,7 @@ class LLMService:
     All inference runs on AMD MI300X via the Fireworks platform.
 
     Performance optimizations applied:
-    - Tiered model routing: quality model for reasoning, fast model for structured output
+    - Tiered model routing: deepseek-v4-pro for reasoning, deepseek-v4-flash for structured output
     - Semaphore cap (max 3 concurrent calls) to avoid rate-limit cascades
     - Persistent httpx.AsyncClient with connection pooling (avoids TCP handshake per call)
     - Tuned temperatures (0.1 for structured JSON outputs)

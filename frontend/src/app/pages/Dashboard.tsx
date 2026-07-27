@@ -18,6 +18,7 @@ import {
   FileDown,
   BarChart3,
   DollarSign,
+  Globe,
 } from "lucide-react";
 import { exportReport, analyzeDocuments, getBenchmarkSpeedup } from "../../lib/api";
 import { toast } from "sonner";
@@ -523,6 +524,27 @@ export default function Dashboard() {
                   </div>
                 </div>
               </Card>
+
+              {/* Web Research Context — real-time online findings */}
+              {analysis.webResearchContext && (
+                <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '320px' }}>
+                  <div style={{ flexShrink: 0 }}>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Web Research</h3>
+                      <Globe size={18} style={{ color: "var(--ghost)" }} />
+                    </div>
+                    <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
+                  </div>
+                  <div className="card-scroll" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+                    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)", marginBottom: "8px" }}>
+                      Real-time online sources cross-referenced against document claims:
+                    </p>
+                    <pre style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", lineHeight: 1.5, color: "var(--ash)", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                      {analysis.webResearchContext}
+                    </pre>
+                  </div>
+                </Card>
+              )}
 
               {/* Risk Analysis */}
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>

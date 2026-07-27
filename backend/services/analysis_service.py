@@ -21,7 +21,7 @@ from services.session_manager import SessionManager
 logger = logging.getLogger(__name__)
 
 # Timeout for individual LLM calls (seconds)
-# deepseek-v4-flash reasoning model may need a bit more time than gpt-oss-120b
+# deepseek-v4-pro reasoning model may need more time than deepseek-v4-flash
 LLM_CALL_TIMEOUT = 80
 
 # Prompt for comparison matrix — Claim vs Reality analysis for greenwashing detection
@@ -75,9 +75,10 @@ class AnalysisService:
     Orchestrates the full multi-document AI analysis pipeline.
 
     Performance-optimized architecture:
-    - Tiered model routing: deepseek-v4-flash for reasoning, gpt-oss-120b for structured tasks
+    - Tiered model routing: deepseek-v4-pro for reasoning, deepseek-v4-flash for structured tasks
     - SINGLE_CALL_MODE: combine all analysis into 1 call (set SINGLE_CALL_MODE=true in env)
     - All 5 LLM calls run in parallel (no batching)
+    - Web research enrichment: real-time online data to cross-reference claims
     - Suggested questions merged into executive summary call (saves 1 call)
     - Conflict detection consolidated to 1 call for ALL docs (saves N*(N-1)/2 - 1 calls)
     - Per-call timeout of 80s with graceful partial results
@@ -92,10 +93,12 @@ class AnalysisService:
         llm_service: LLMService,
         conflict_engine: ConflictEngine,
         session_manager: SessionManager,
+        web_research=None,
     ):
         self.llm_service = llm_service
         self.conflict_engine = conflict_engine
         self.session_manager = session_manager
+        self.web_research = web_research
         self._single_call_mode = os.getenv("SINGLE_CALL_MODE", "false").lower() == "true"
 
     async def run_full_analysis(
@@ -124,7 +127,7 @@ class AnalysisService:
         logger.info(
             f"Starting full analysis for session {session_id} "
             f"({len(chunks)} chunks, {len(doc_names)} documents) — 5 parallel LLM calls "
-            f"[quality: deepseek-v4-flash, fast: gpt-oss-120b, timeout: {LLM_CALL_TIMEOUT}s]"
+            f"[quality: deepseek-v4-pro, fast: deepseek-v4-flash, timeout: {LLM_CALL_TIMEOUT}s]"
         )
 
         if chunks:
@@ -161,6 +164,22 @@ class AnalysisService:
             ),
             return_exceptions=True,
         )
+
+        # --- Web Research (non-blocking enrichment) ---
+        web_research_context = ""
+        if self.web_research:
+            try:
+                # Extract key claims from chunks for targeted research
+                key_claims = self._extract_key_claims(chunks)
+                web_ctx = await asyncio.wait_for(
+                    self.web_research.research_for_analysis(doc_names, key_claims),
+                    timeout=15.0,  # Don't let web research delay the pipeline
+                )
+                web_research_context = self.web_research.format_for_prompt(web_ctx)
+                if web_research_context:
+                    logger.info(f"[analysis] Web research found {len(web_ctx.results)} results")
+            except Exception as web_err:
+                logger.warning(f"[analysis] Web research failed (non-fatal): {web_err}")
 
         # Unpack summary + questions + greenwashScore
         if isinstance(summary_and_questions_result, Exception):
@@ -201,6 +220,7 @@ class AnalysisService:
             conflicts=conflicts_result,
             recommendation=recommendation_result,
             suggestedQuestions=suggested_questions,
+            webResearchContext=web_research_context,
         )
 
         self.session_manager.store_analysis(session_id, analysis)
@@ -333,7 +353,7 @@ class AnalysisService:
     ) -> tuple[str, list[str], int | None]:
         """
         Generate executive summary, suggested questions, AND greenwashScore in a single LLM call.
-        Uses the QUALITY model (deepseek-v4-flash) for deep reasoning.
+        Uses the QUALITY model (deepseek-v4-pro) for deep reasoning.
         Merging these saves one full LLM round-trip (10-60s).
         """
         from prompts.executive_summary import _format_chunks
@@ -363,7 +383,7 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
   "suggestedQuestions": ["question1", "question2", "question3", "question4", "question5"]
 }}"""
 
-        # Quality model (deepseek-v4-flash) for nuanced summary; 800 tokens is enough
+        # Quality model (deepseek-v4-pro) for nuanced summary; 800 tokens is enough
         raw = await self.llm_service.complete(
             system_prompt, merged_prompt, max_tokens=800, fast=False
         )
@@ -393,9 +413,9 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
         system_prompt: str,
         chunks: list[Chunk],
     ) -> list[Risk]:
-        """Generate risk analysis list using the QUALITY model (deepseek-v4-flash)."""
+        """Generate risk analysis list using the QUALITY model (deepseek-v4-pro)."""
         user_prompt = build_risk_prompt(chunks)
-        # Increased to 3000 tokens — deepseek-v4-flash is more verbose than gpt-oss-120b
+        # Increased to 1500 tokens — deepseek-v4-pro is more verbose
         # and needs extra headroom to output 5-8 detailed risk items without truncation.
         # Temperature 0.0 for maximum consistency in risk identification.
         raw = await self.llm_service.complete(
@@ -547,7 +567,7 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
     ) -> list[ComparisonRow]:
         """
         Generate comparison matrix rows.
-        Uses FAST model (gpt-oss-120b) — structured JSON output, no deep reasoning needed.
+        Uses FAST model (deepseek-v4-flash) — structured JSON output, no deep reasoning needed.
         max_tokens=1000 is sufficient for 5-8 matrix rows.
         """
         from prompts.executive_summary import _format_chunks
@@ -616,7 +636,7 @@ DOCUMENT CONTEXT:
     ) -> Recommendation:
         """
         Generate sustainability accountability recommendation.
-        Uses QUALITY model (deepseek-v4-flash) — requires strategic reasoning.
+        Uses QUALITY model (deepseek-v4-pro) — requires strategic reasoning.
         max_tokens=800 is sufficient for a recommendation with 3-5 next steps.
         """
         user_prompt = build_recommendation_prompt(chunks)
@@ -636,3 +656,39 @@ DOCUMENT CONTEXT:
                 nextSteps=["Review identified risks", "Compare claims vs. data"],
                 confidence=0.5,
             )
+
+    def _extract_key_claims(self, chunks: list[Chunk]) -> list[str]:
+        """
+        Extract key sustainability claims from document chunks for web research.
+        Looks for common greenwashing keywords and phrases.
+        """
+        import re as _re
+
+        claim_patterns = [
+            r'carbon\s+neutral',
+            r'net[\s-]?zero',
+            r'100%\s+renewable',
+            r'sustainab\w+',
+            r'eco[\s-]?friendly',
+            r'recyclable|recycled',
+            r'biodegradable',
+            r'organic',
+            r'green\s+energy',
+            r'zero[\s-]?waste',
+            r'climate[\s-]?positive',
+            r'plant[\s-]?based',
+            r'carbon[\s-]?offset',
+            r'scope\s+[123]',
+            r'esg\s+rating',
+            r'certified\s+\w+',
+        ]
+
+        claims = set()
+        combined_text = " ".join(c.text[:500] for c in chunks[:10]).lower()
+
+        for pattern in claim_patterns:
+            matches = _re.findall(pattern, combined_text, _re.IGNORECASE)
+            for match in matches[:2]:
+                claims.add(match.strip())
+
+        return list(claims)[:5]

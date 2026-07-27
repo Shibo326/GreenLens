@@ -35,6 +35,7 @@ frontend/.env
 backend/data/sessions/*.json
 backend/data/chroma/
 backend/data/training/*.jsonl
+backend/data/feedback/*.jsonl
 
 # --- IDE ---
 .vscode/

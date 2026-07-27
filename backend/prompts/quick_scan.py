@@ -14,7 +14,7 @@ Evaluate:
 
 Return ONLY valid JSON:
 {{
-  "verdict": "<1-2 sentence assessment of this claim's credibility — what's suspicious, what's missing, or why it might be legitimate>",
+  "verdict": "<1-2 sentence assessment of this claim's credibility — what's suspicious, what's missing, or why it might be legitimate.>",
   "whatToLookFor": ["<specific thing to verify>", "<specific thing to verify>", "<specific thing to verify>"],
-  "confidence": "<LOW|MEDIUM|HIGH — how confident you are in this assessment without supporting documents>"
+  "confidence": "<LOW|MEDIUM|HIGH — how confident you are in this assessment>"
 }}"""

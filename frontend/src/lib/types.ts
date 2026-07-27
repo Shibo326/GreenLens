@@ -53,6 +53,7 @@ export interface Analysis {
   recommendation: Recommendation;
   suggestedQuestions?: string[];
   greenwashScore?: number;
+  webResearchContext?: string;
 }
 
 export interface AnalyzeResponse {
