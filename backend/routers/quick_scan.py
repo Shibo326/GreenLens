@@ -9,6 +9,7 @@ from slowapi.util import get_remote_address
 from models.response import QuickScanRequest, QuickScanResponse
 from prompts.quick_scan import build_quick_scan_prompt
 from services.llm_service import LLMService, _strip_json_fences
+from services.web_research import WebResearchService
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ router = APIRouter()
 
 # Service instances (set from main.py at startup)
 _llm_service: LLMService | None = None
+_web_research: WebResearchService | None = None
 
 
 def _err(status: int, message: str, code: str, suggestion: str = ""):
