@@ -33,6 +33,17 @@ export function OnboardingOverlay() {
     }
   }, []);
 
+  // Lock body scroll when overlay is visible and scroll to top
+  useEffect(() => {
+    if (visible) {
+      document.body.style.overflow = "hidden";
+      window.scrollTo(0, 0);
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [visible]);
+
   const dismiss = () => {
     localStorage.setItem(STORAGE_KEY, "true");
     setVisible(false);

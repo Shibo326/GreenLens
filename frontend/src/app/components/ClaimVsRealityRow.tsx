@@ -1,4 +1,5 @@
 import type { ComparisonRow } from "../../lib/types";
+import { sanitizeText } from "../../lib/sanitize";
 
 interface ClaimVsRealityRowProps {
   row: ComparisonRow;
@@ -9,8 +10,8 @@ export function ClaimVsRealityRow({ row }: ClaimVsRealityRowProps) {
   const theySayCol = columns[0] ?? "";
   const dataShowsCol = columns[1] ?? columns[0] ?? "";
 
-  const theySayValue = row.values[theySayCol] ?? "—";
-  const dataShowsValue = columns.length > 1 ? (row.values[dataShowsCol] ?? "—") : "—";
+  const theySayValue = sanitizeText(row.values[theySayCol] ?? "—");
+  const dataShowsValue = columns.length > 1 ? sanitizeText(row.values[dataShowsCol] ?? "—") : "—";
 
   return (
     <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--rule)" }}>

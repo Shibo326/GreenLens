@@ -56,7 +56,7 @@ describe("Chat send button", () => {
     cleanup();
   });
 
-  // Feature: clausify-ui-redesign, Property 8: Send button state is determined by input value trimmed emptiness
+  // Feature: greenlens-ui-redesign, Property 8: Send button state is determined by input value trimmed emptiness
   it("enables with volt background iff input trims to non-empty, disables with graphite/opacity 0.5 otherwise (Property 8)", () => {
     fc.assert(
       fc.property(fc.string(), (value) => {

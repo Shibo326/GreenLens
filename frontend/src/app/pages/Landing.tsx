@@ -26,11 +26,11 @@ import { ClaimChecker } from "../components/ClaimChecker";
 import { OnboardingOverlay } from "../components/OnboardingOverlay";
 
 const LOADING_STAGES = [
-  { label: "Extracting text", icon: "??" },
-  { label: "Embedding claims", icon: "?" },
-  { label: "AI analysis (5 parallel checks)", icon: "??" },
-  { label: "Detecting contradictions", icon: "??" },
-  { label: "Building greenwash report", icon: "??" },
+  { label: "Extracting text", icon: "\u{1F4C4}" },
+  { label: "Embedding claims", icon: "\u{1F50D}" },
+  { label: "AI analysis (5 parallel checks)", icon: "\u{1F916}" },
+  { label: "Detecting contradictions", icon: "\u{26A0}" },
+  { label: "Building greenwash report", icon: "\u{1F4CA}" },
 ];
 
 const SLOW_MESSAGES = [
@@ -525,7 +525,7 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <span style={{ fontSize: "14px", flexShrink: 0, marginTop: "1px" }}>??</span>
+            <span style={{ fontSize: "14px", flexShrink: 0, marginTop: "1px" }}>{"\u26A0\uFE0F"}</span>
             <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", lineHeight: 1.5, color: "var(--flag-amber)", margin: 0 }}>
               <strong>{files.length} files detected.</strong> Analysis may take 24 minutes for large batches.
             </p>
@@ -578,7 +578,7 @@ export default function Landing() {
               {(slowMessage || files.length >= 5) && (
                 <AnimatePresence mode="wait">
                   <motion.div key={slowMessage ?? "batch"} className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: "var(--flag-amber-dim)", border: "1px solid rgba(240,169,55,0.2)" }} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-                    <span style={{ fontSize: "12px", flexShrink: 0 }}>??</span>
+                    <span style={{ fontSize: "12px", flexShrink: 0 }}>{"\u26A0\uFE0F"}</span>
                     <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--flag-amber)", margin: 0 }}>{slowMessage || `Processing ${files.length} files — hang tight!`}</p>
                   </motion.div>
                 </AnimatePresence>

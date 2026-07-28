@@ -101,6 +101,7 @@ export async function sendChatMessage(
   sessionId: string,
   question: string,
   history: ChatHistoryMessage[] = [],
+  simplify: boolean = false,
 ): Promise<ChatResponse> {
   const url = `${API_BASE_URL}/api/chat`;
   console.log(`[API] POST ${url} — sessionId=${sessionId}, question="${question}"`);
@@ -108,7 +109,7 @@ export async function sendChatMessage(
   const response = await fetchWithTimeout(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId, question, history }),
+    body: JSON.stringify({ sessionId, question, history, simplify }),
   }, 60000);
 
   console.log(`[API] POST ${url} → ${response.status}`);
@@ -206,6 +207,7 @@ export function streamChatMessage(
   onToken: (text: string) => void,
   onDone: (response: ChatResponse) => void,
   onError: (error: string) => void,
+  simplify: boolean = false,
 ): { abort: () => void; promise: Promise<void> } {
   const controller = new AbortController();
   const url = `${API_BASE_URL}/api/chat/stream`;
@@ -216,7 +218,7 @@ export function streamChatMessage(
       response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, question, history }),
+        body: JSON.stringify({ sessionId, question, history, simplify }),
         signal: controller.signal,
       });
     } catch (e) {

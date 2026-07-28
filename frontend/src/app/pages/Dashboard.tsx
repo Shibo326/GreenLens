@@ -464,7 +464,7 @@ export default function Dashboard() {
                   <div className="flex items-center gap-3 flex-wrap">
                     <AlertTriangle size={20} style={{ color: "var(--flag-red)", flexShrink: 0 }} aria-hidden="true" />
                     <span style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, letterSpacing: "0.02em", textTransform: "uppercase", color: "var(--flag-red)" }}>
-                      ?? Contradiction
+                      {"\u26A0\uFE0F"} Contradiction
                     </span>
                     <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--ash)" }}>
                       {analysis.conflicts.length} contradiction{analysis.conflicts.length !== 1 ? "s" : ""} found

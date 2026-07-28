@@ -65,7 +65,7 @@ const conflictArb = fc.record<Conflict>({
 const conflictsArb = fc.array(conflictArb, { maxLength: 6 });
 
 describe("ConflictAlert property tests", () => {
-  // Feature: clausify-ui-redesign, Property 4: ConflictAlert renders iff conflicts exist
+  // Feature: greenlens-ui-redesign, Property 4: ConflictAlert renders iff conflicts exist
   it("renders the ConflictAlert iff conflicts.length > 0, with the correct border/background when rendered", () => {
     fc.assert(
       fc.property(conflictsArb, (conflicts) => {

@@ -5,6 +5,11 @@
 export function sanitizeText(text: string | undefined | null): string {
   if (!text) return '';
   return text
+    // Fix corrupted CO₂ characters (LLM subscript-2 sometimes corrupts to U+FFFD)
+    .replace(/CO\uFFFDe/g, 'CO₂e')
+    .replace(/tCO\uFFFDe/g, 'tCO₂e')
+    // Remove remaining U+FFFD replacement characters
+    .replace(/\uFFFD/g, '')
     // Uncommon hyphens → regular hyphen
     .replace(/\u2010/g, '-')
     .replace(/\u2011/g, '-')

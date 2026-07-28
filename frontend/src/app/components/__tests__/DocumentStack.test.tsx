@@ -53,7 +53,7 @@ function toFiles(specs: FileSpec[]): File[] {
 }
 
 describe("DocumentStack property tests", () => {
-  // Feature: clausify-ui-redesign, Property 1: DocumentStack card count matches file count
+  // Feature: greenlens-ui-redesign, Property 1: DocumentStack card count matches file count
   it("renders exactly one PaperCard per file for any non-empty file array", () => {
     fc.assert(
       fc.property(
@@ -69,7 +69,7 @@ describe("DocumentStack property tests", () => {
     );
   });
 
-  // Feature: clausify-ui-redesign, Property 3: DocumentStack removal reduces count by one
+  // Feature: greenlens-ui-redesign, Property 3: DocumentStack removal reduces count by one
   it("reduces rendered card count by exactly one after removing any valid index", () => {
     fc.assert(
       fc.property(
