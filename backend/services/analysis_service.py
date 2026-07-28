@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Timeout for individual LLM calls (seconds)
 # deepseek-v4-pro reasoning model may need more time than deepseek-v4-flash
-LLM_CALL_TIMEOUT = 80
+LLM_CALL_TIMEOUT = 120
 
 # Prompt for comparison matrix — Claim vs Reality analysis for greenwashing detection
 COMPARISON_MATRIX_PROMPT = """Based on the document content above, create a Claim vs. Reality comparison matrix that exposes gaps between what the company SAYS and what the DATA SHOWS.
@@ -116,10 +116,11 @@ class AnalysisService:
         """
         system_prompt = get_system_prompt(doc_names)
 
-        if self._single_call_mode:
+        if self._single_call_mode or len(doc_names) >= 3:
+            mode_reason = "SINGLE_CALL_MODE env" if self._single_call_mode else f"auto-switched (3+ docs: {len(doc_names)})"
             logger.info(
                 f"[SINGLE_CALL_MODE] Starting single-mega-call analysis for session {session_id} "
-                f"({len(chunks)} chunks, {len(doc_names)} documents)"
+                f"({len(chunks)} chunks, {len(doc_names)} documents) — reason: {mode_reason}"
             )
             return await self._run_single_call_analysis(session_id, system_prompt, chunks, doc_names)
 
