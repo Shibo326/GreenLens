@@ -1,4 +1,4 @@
-ï»¿import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { NavigationBar } from "../components/NavigationBar";
 import { Card } from "../components/Card";
 import { RiskBadge, EvidenceTag, EvidenceBox } from "../components/Badges";
@@ -110,7 +110,7 @@ export default function Dashboard() {
     return null;
   }
 
-  const hasConflicts = analysis.conflicts.length > 0;
+  const hasConflicts = (analysis.conflicts || []).length > 0;
 
   const SidebarContent = () => (
     <>
@@ -192,7 +192,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-center gap-1.5 pt-1">
             <Leaf size={12} style={{ color: "var(--leaf)" }} aria-hidden="true" />
             <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 500, color: "var(--ghost)" }}>
-              Powered by GreenLens AI Â· AMD MI300X
+              Powered by GreenLens AI · AMD MI300X
             </span>
           </div>
         </div>
@@ -397,7 +397,7 @@ export default function Dashboard() {
               if (!bannerBand || !bannerBand.label) return null;
               const topRiskRaw = analysis.risks?.[0]?.description;
               const topRisk = topRiskRaw
-                ? (topRiskRaw.split(".")[0] || topRiskRaw).slice(0, 100) + (topRiskRaw.length > 100 ? "â€¦" : "")
+                ? (topRiskRaw.split(".")[0] || topRiskRaw).slice(0, 100) + (topRiskRaw.length > 100 ? "…" : "")
                 : "See the full breakdown below.";
 
               return (
@@ -417,7 +417,7 @@ export default function Dashboard() {
                       <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: bannerBand.color }}>
                         {bannerScoreDisplay}/100
                       </span>
-                      {" â€” "}
+                      {" — "}
                       <span style={{ fontWeight: 600, color: bannerBand.color }}>{bannerBand.label}</span>.{" "}
                       <span style={{ color: "var(--ash)" }}>{topRisk}</span>
                     </p>
@@ -438,14 +438,14 @@ export default function Dashboard() {
                         cursor: "pointer",
                       }}
                     >
-                      See details â†“
+                      See details ?
                     </a>
                   </div>
                 </div>
               );
             })()}
 
-            {/* Greenwash Score Gauge â€” HERO position with Verdict Stamp */}
+            {/* Greenwash Score Gauge — HERO position with Verdict Stamp */}
             <div style={{ position: "relative", maxWidth: "520px", margin: "0 auto" }}>
               <GreenwashScoreGauge score={analysis.greenwashScore} />
               {analysis.greenwashScore != null && analysis.greenwashScore !== undefined && <VerdictStamp score={analysis.greenwashScore} />}
@@ -466,7 +466,7 @@ export default function Dashboard() {
                       {"\u26A0\uFE0F"} Contradiction
                     </span>
                     <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--ash)" }}>
-                      {analysis.conflicts.length} contradiction{analysis.conflicts.length !== 1 ? "s" : ""} found
+                      {(analysis.conflicts || []).length} contradiction{(analysis.conflicts || []).length !== 1 ? "s" : ""} found
                     </span>
                   </div>
                   <button
@@ -480,7 +480,7 @@ export default function Dashboard() {
 
                 {conflictExpanded && (
                   <div style={{ paddingTop: "16px", borderTop: "1px solid rgba(240,68,82,0.15)" }}>
-                    {analysis.conflicts.map((conflict) => (
+                    {(analysis.conflicts || []).map((conflict) => (
                       <div key={conflict.id} className="rounded-lg p-4 mb-3" style={{ background: "rgba(240,68,82,0.05)" }}>
                         <div className="flex items-center gap-2 mb-3 flex-wrap">
                           <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", color: "var(--flag-red)", textTransform: "uppercase" }}>
@@ -528,7 +528,7 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              {/* Web Research Context â€” real-time online findings */}
+              {/* Web Research Context — real-time online findings */}
               {analysis.webResearchContext && (
                 <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '320px' }}>
                   <div style={{ flexShrink: 0 }}>
@@ -561,7 +561,7 @@ export default function Dashboard() {
                 </div>
                 <div className="card-scroll" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                   <div className="space-y-3">
-                    {analysis.risks.length === 0 && (
+                    {(analysis.risks || []).length === 0 && (
                       <div className="flex flex-col items-center py-6 gap-2">
                         <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <span style={{ fontSize: "18px" }}>?</span>
@@ -570,7 +570,7 @@ export default function Dashboard() {
                         <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)", textAlign: "center" }}>GreenLens AI found no greenwashing signals in these claims.</p>
                       </div>
                     )}
-                    {analysis.risks.map((risk) => (
+                    {(analysis.risks || []).map((risk) => (
                       <div key={risk.id} className="flex gap-3">
                         <RiskBadge variant={risk.level} />
                         <div className="flex-1 min-w-0">
@@ -596,13 +596,13 @@ export default function Dashboard() {
                   <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
                 </div>
                 <div className="card-scroll space-y-3" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-                  {analysis.comparisonMatrix.map((row) => (
+                  {(analysis.comparisonMatrix || []).map((row) => (
                     <ClaimVsRealityRow key={row.field} row={row} />
                   ))}
                 </div>
               </Card>
 
-              {/* AI Recommendation â€” spans full width */}
+              {/* AI Recommendation — spans full width */}
               <Card className="md:col-span-2" style={{ display: 'flex', flexDirection: 'column', background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
@@ -617,7 +617,7 @@ export default function Dashboard() {
                   </p>
                   <div style={{ borderTop: "1px solid var(--leaf-border)", paddingTop: "16px" }}>
                     <Link to="/chat" style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--leaf)", textDecoration: "none" }}>
-                      Ask follow-up questions â†’
+                      Ask follow-up questions ?
                     </Link>
                   </div>
                 </div>
