@@ -167,7 +167,7 @@ async def provider_info():
 
 
 # ---- Self-Ping Keep-Alive ----
-SELF_PING_INTERVAL = int(os.getenv("SELF_PING_INTERVAL", "120"))  # seconds (default 2 min)
+SELF_PING_INTERVAL = int(os.getenv("SELF_PING_INTERVAL", "60"))  # seconds (default 1 min)
 _keep_alive_task: asyncio.Task | None = None
 
 
