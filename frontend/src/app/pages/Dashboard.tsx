@@ -300,9 +300,9 @@ export default function Dashboard() {
               <div className="hidden sm:block">
                 <ShareCard
                   score={analysis.greenwashScore ?? 50}
-                  misleadingCount={analysis.risks.filter(r => r.level?.toUpperCase() === "HIGH").length}
-                  vagueCount={analysis.risks.filter(r => r.level?.toUpperCase() === "MEDIUM").length}
-                  unverifiedCount={analysis.risks.filter(r => r.level?.toUpperCase() === "LOW").length}
+                  misleadingCount={(analysis.risks || []).filter(r => r.level?.toUpperCase() === "HIGH").length}
+                  vagueCount={(analysis.risks || []).filter(r => r.level?.toUpperCase() === "MEDIUM").length}
+                  unverifiedCount={(analysis.risks || []).filter(r => r.level?.toUpperCase() === "LOW").length}
                   documentNames={documents.map(d => d.filename)}
                 />
               </div>
@@ -394,7 +394,8 @@ export default function Dashboard() {
                   : bannerScore <= 60
                     ? { label: "Vague / Mixed Signals", color: "var(--flag-amber)" }
                     : { label: "Credible", color: "var(--leaf)" };
-              const topRiskRaw = analysis.risks[0]?.description;
+              if (!bannerBand || !bannerBand.label) return null;
+              const topRiskRaw = analysis.risks?.[0]?.description;
               const topRisk = topRiskRaw
                 ? (topRiskRaw.split(".")[0] || topRiskRaw).slice(0, 100) + (topRiskRaw.length > 100 ? "…" : "")
                 : "See the full breakdown below.";
@@ -447,14 +448,14 @@ export default function Dashboard() {
             {/* Greenwash Score Gauge — HERO position with Verdict Stamp */}
             <div style={{ position: "relative", maxWidth: "520px", margin: "0 auto" }}>
               <GreenwashScoreGauge score={analysis.greenwashScore} />
-              {analysis.greenwashScore !== undefined && <VerdictStamp score={analysis.greenwashScore} />}
+              {analysis.greenwashScore != null && analysis.greenwashScore !== undefined && <VerdictStamp score={analysis.greenwashScore} />}
             </div>
 
             {/* Achievement Badges */}
             <AchievementBadges
               documentsAnalyzed={documents.length}
-              contradictionsFound={analysis.conflicts.length}
-              flagsFound={analysis.risks.length}
+              contradictionsFound={(analysis.conflicts || []).length}
+              flagsFound={(analysis.risks || []).length}
             />
             {hasConflicts && (
               <div id="contradiction-section" className="rounded-lg p-4 animate-slideDown" style={{ background: "var(--flag-red-dim)", border: "1px solid rgba(240,68,82,0.25)", borderLeft: "4px solid var(--flag-red)" }}>
