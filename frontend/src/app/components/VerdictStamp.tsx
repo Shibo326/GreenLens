@@ -20,8 +20,8 @@ export function VerdictStamp({ score }: VerdictStampProps) {
       transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.6 }}
       style={{
         position: "absolute",
-        top: "16px",
-        right: "16px",
+        top: "20px",
+        right: "clamp(8px, 5%, 60px)",
         zIndex: 10,
         pointerEvents: "none",
       }}

@@ -27,7 +27,7 @@ import { GreenwashScoreGauge } from "../components/GreenwashScoreGauge";
 import { VerdictStamp } from "../components/VerdictStamp";
 import { ConfettiEffect } from "../components/ConfettiEffect";
 import { ShareCard } from "../components/ShareCard";
-import { ClaimSlider } from "../components/ClaimSlider";
+import { ClaimVsRealityRow } from "../components/ClaimVsRealityRow";
 import { AchievementBadges } from "../components/AchievementBadges";
 
 export default function Dashboard() {
@@ -302,9 +302,9 @@ export default function Dashboard() {
               <div className="hidden sm:block">
                 <ShareCard
                   score={analysis.greenwashScore ?? 50}
-                  misleadingCount={analysis.risks.filter(r => r.level === "HIGH").length}
-                  vagueCount={analysis.risks.filter(r => r.level === "MEDIUM").length}
-                  unverifiedCount={analysis.risks.filter(r => r.level === "LOW").length}
+                  misleadingCount={analysis.risks.filter(r => r.level?.toUpperCase() === "HIGH").length}
+                  vagueCount={analysis.risks.filter(r => r.level?.toUpperCase() === "MEDIUM").length}
+                  unverifiedCount={analysis.risks.filter(r => r.level?.toUpperCase() === "LOW").length}
                   documentNames={documents.map(d => d.filename)}
                 />
               </div>
@@ -447,7 +447,7 @@ export default function Dashboard() {
             })()}
 
             {/* Greenwash Score Gauge — HERO position with Verdict Stamp */}
-            <div style={{ position: "relative" }}>
+            <div style={{ position: "relative", maxWidth: "520px", margin: "0 auto" }}>
               <GreenwashScoreGauge score={analysis.greenwashScore} />
               {analysis.greenwashScore !== undefined && <VerdictStamp score={analysis.greenwashScore} />}
             </div>
@@ -598,7 +598,7 @@ export default function Dashboard() {
                 </div>
                 <div className="card-scroll space-y-3" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                   {analysis.comparisonMatrix.map((row) => (
-                    <ClaimSlider key={row.field} row={row} />
+                    <ClaimVsRealityRow key={row.field} row={row} />
                   ))}
                 </div>
               </Card>
@@ -614,9 +614,9 @@ export default function Dashboard() {
                 </div>
                 <div className="card-scroll" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                   {(() => {
-                    const high = analysis.risks.filter(r => r.level === "HIGH").length;
-                    const medium = analysis.risks.filter(r => r.level === "MEDIUM").length;
-                    const low = analysis.risks.filter(r => r.level === "LOW").length;
+                    const high = analysis.risks.filter(r => r.level?.toUpperCase() === "HIGH").length;
+                    const medium = analysis.risks.filter(r => r.level?.toUpperCase() === "MEDIUM").length;
+                    const low = analysis.risks.filter(r => r.level?.toUpperCase() === "LOW").length;
                     const totalRisks = analysis.risks.length;
                     const totalConflicts = analysis.conflicts.length;
                     const categories = [...new Set(analysis.risks.map(r => r.category))];
