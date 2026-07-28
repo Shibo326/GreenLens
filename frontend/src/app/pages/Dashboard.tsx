@@ -110,7 +110,17 @@ export default function Dashboard() {
     return null;
   }
 
-  const hasConflicts = (analysis.conflicts || []).length > 0;
+  // Ensure all required sub-objects exist (API may return partial data)
+  const safeAnalysis = {
+    ...analysis,
+    risks: analysis.risks || [],
+    conflicts: analysis.conflicts || [],
+    comparisonMatrix: analysis.comparisonMatrix || [],
+    recommendation: analysis.recommendation || { title: "Analysis Complete", summary: "Review the findings below.", nextSteps: [], confidence: 0.5 },
+    suggestedQuestions: analysis.suggestedQuestions || [],
+  };
+
+  const hasConflicts = safeAnalysis.conflicts.length > 0;
 
   const SidebarContent = () => (
     <>
@@ -192,7 +202,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-center gap-1.5 pt-1">
             <Leaf size={12} style={{ color: "var(--leaf)" }} aria-hidden="true" />
             <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 500, color: "var(--ghost)" }}>
-              Powered by GreenLens AI · AMD MI300X
+              Powered by GreenLens AI ? AMD MI300X
             </span>
           </div>
         </div>
@@ -269,10 +279,10 @@ export default function Dashboard() {
                 Analysis Results
               </h2>
               <span className="hidden sm:inline" style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)" }}>
-                Analyzed {analysis.analyzedAt ? new Date(analysis.analyzedAt).toLocaleString() : "just now"}
+                Analyzed {safeAnalysis.analyzedAt ? new Date(safeAnalysis.analyzedAt).toLocaleString() : "just now"}
               </span>
-              {documents[0]?.uploadedAt && analysis.analyzedAt && (() => {
-                const ms = new Date(analysis.analyzedAt).getTime() - new Date(documents[0].uploadedAt).getTime();
+              {documents[0]?.uploadedAt && safeAnalysis.analyzedAt && (() => {
+                const ms = new Date(safeAnalysis.analyzedAt).getTime() - new Date(documents[0].uploadedAt).getTime();
                 if (ms > 0 && ms < 300000) {
                   return (
                     <span
@@ -299,10 +309,10 @@ export default function Dashboard() {
               {/* Share Report Card */}
               <div className="hidden sm:block">
                 <ShareCard
-                  score={analysis.greenwashScore ?? 50}
-                  misleadingCount={(analysis.risks || []).filter(r => r.level?.toUpperCase() === "HIGH").length}
-                  vagueCount={(analysis.risks || []).filter(r => r.level?.toUpperCase() === "MEDIUM").length}
-                  unverifiedCount={(analysis.risks || []).filter(r => r.level?.toUpperCase() === "LOW").length}
+                  score={safeAnalysis.greenwashScore ?? 50}
+                  misleadingCount={(safeAnalysis.risks || []).filter(r => r.level?.toUpperCase() === "HIGH").length}
+                  vagueCount={(safeAnalysis.risks || []).filter(r => r.level?.toUpperCase() === "MEDIUM").length}
+                  unverifiedCount={(safeAnalysis.risks || []).filter(r => r.level?.toUpperCase() === "LOW").length}
                   documentNames={documents.map(d => d.filename)}
                 />
               </div>
@@ -385,7 +395,7 @@ export default function Dashboard() {
 
             {/* Key Finding Banner */}
             {analysis && (() => {
-              const bannerScore = analysis.greenwashScore;
+              const bannerScore = safeAnalysis.greenwashScore;
               const bannerScoreDisplay = bannerScore != null ? bannerScore : "N/A";
               const bannerBand = bannerScore == null
                 ? { label: "Awaiting analysis", color: "var(--ghost)" }
@@ -395,9 +405,9 @@ export default function Dashboard() {
                     ? { label: "Vague / Mixed Signals", color: "var(--flag-amber)" }
                     : { label: "Credible", color: "var(--leaf)" };
               if (!bannerBand || !bannerBand.label) return null;
-              const topRiskRaw = analysis.risks?.[0]?.description;
+              const topRiskRaw = safeAnalysis.risks?.[0]?.description;
               const topRisk = topRiskRaw
-                ? (topRiskRaw.split(".")[0] || topRiskRaw).slice(0, 100) + (topRiskRaw.length > 100 ? "…" : "")
+                ? (topRiskRaw.split(".")[0] || topRiskRaw).slice(0, 100) + (topRiskRaw.length > 100 ? "?" : "")
                 : "See the full breakdown below.";
 
               return (
@@ -417,7 +427,7 @@ export default function Dashboard() {
                       <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: bannerBand.color }}>
                         {bannerScoreDisplay}/100
                       </span>
-                      {" — "}
+                      {" ? "}
                       <span style={{ fontWeight: 600, color: bannerBand.color }}>{bannerBand.label}</span>.{" "}
                       <span style={{ color: "var(--ash)" }}>{topRisk}</span>
                     </p>
@@ -445,17 +455,17 @@ export default function Dashboard() {
               );
             })()}
 
-            {/* Greenwash Score Gauge — HERO position with Verdict Stamp */}
+            {/* Greenwash Score Gauge ? HERO position with Verdict Stamp */}
             <div style={{ position: "relative", maxWidth: "520px", margin: "0 auto" }}>
-              <GreenwashScoreGauge score={analysis.greenwashScore} />
-              {analysis.greenwashScore != null && analysis.greenwashScore !== undefined && <VerdictStamp score={analysis.greenwashScore} />}
+              <GreenwashScoreGauge score={safeAnalysis.greenwashScore} />
+              {safeAnalysis.greenwashScore != null && safeAnalysis.greenwashScore !== undefined && <VerdictStamp score={safeAnalysis.greenwashScore} />}
             </div>
 
             {/* Achievement Badges */}
             <AchievementBadges
               documentsAnalyzed={documents.length}
-              contradictionsFound={(analysis.conflicts || []).length}
-              flagsFound={(analysis.risks || []).length}
+              contradictionsFound={(safeAnalysis.conflicts || []).length}
+              flagsFound={(safeAnalysis.risks || []).length}
             />
             {hasConflicts && (
               <div id="contradiction-section" className="rounded-lg p-4 animate-slideDown" style={{ background: "var(--flag-red-dim)", border: "1px solid rgba(240,68,82,0.25)", borderLeft: "4px solid var(--flag-red)" }}>
@@ -466,7 +476,7 @@ export default function Dashboard() {
                       {"\u26A0\uFE0F"} Contradiction
                     </span>
                     <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--ash)" }}>
-                      {(analysis.conflicts || []).length} contradiction{(analysis.conflicts || []).length !== 1 ? "s" : ""} found
+                      {(safeAnalysis.conflicts || []).length} contradiction{(safeAnalysis.conflicts || []).length !== 1 ? "s" : ""} found
                     </span>
                   </div>
                   <button
@@ -480,7 +490,7 @@ export default function Dashboard() {
 
                 {conflictExpanded && (
                   <div style={{ paddingTop: "16px", borderTop: "1px solid rgba(240,68,82,0.15)" }}>
-                    {(analysis.conflicts || []).map((conflict) => (
+                    {(safeAnalysis.conflicts || []).map((conflict) => (
                       <div key={conflict.id} className="rounded-lg p-4 mb-3" style={{ background: "rgba(240,68,82,0.05)" }}>
                         <div className="flex items-center gap-2 mb-3 flex-wrap">
                           <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", color: "var(--flag-red)", textTransform: "uppercase" }}>
@@ -517,7 +527,7 @@ export default function Dashboard() {
                 </div>
                 <div className="card-scroll" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                   <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontWeight: 400, fontSize: "15px", lineHeight: 1.6, color: "var(--ash)", marginBottom: "16px" }}>
-                    {sanitizeText(analysis.executiveSummary)}
+                    {sanitizeText(safeAnalysis.executiveSummary)}
                   </p>
                   <div style={{ borderTop: "1px solid var(--rule)", paddingTop: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
                     <Leaf size={12} style={{ color: "var(--leaf)" }} aria-hidden="true" />
@@ -528,7 +538,7 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              {/* Web Research Context — real-time online findings */}
+              {/* Web Research Context ? real-time online findings */}
               {analysis.webResearchContext && (
                 <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '320px' }}>
                   <div style={{ flexShrink: 0 }}>
@@ -561,7 +571,7 @@ export default function Dashboard() {
                 </div>
                 <div className="card-scroll" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                   <div className="space-y-3">
-                    {(analysis.risks || []).length === 0 && (
+                    {(safeAnalysis.risks || []).length === 0 && (
                       <div className="flex flex-col items-center py-6 gap-2">
                         <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <span style={{ fontSize: "18px" }}>?</span>
@@ -570,7 +580,7 @@ export default function Dashboard() {
                         <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)", textAlign: "center" }}>GreenLens AI found no greenwashing signals in these claims.</p>
                       </div>
                     )}
-                    {(analysis.risks || []).map((risk) => (
+                    {(safeAnalysis.risks || []).map((risk) => (
                       <div key={risk.id} className="flex gap-3">
                         <RiskBadge variant={risk.level} />
                         <div className="flex-1 min-w-0">
@@ -596,13 +606,13 @@ export default function Dashboard() {
                   <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
                 </div>
                 <div className="card-scroll space-y-3" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-                  {(analysis.comparisonMatrix || []).map((row) => (
+                  {(safeAnalysis.comparisonMatrix || []).map((row) => (
                     <ClaimVsRealityRow key={row.field} row={row} />
                   ))}
                 </div>
               </Card>
 
-              {/* AI Recommendation — spans full width */}
+              {/* AI Recommendation ? spans full width */}
               <Card className="md:col-span-2" style={{ display: 'flex', flexDirection: 'column', background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
