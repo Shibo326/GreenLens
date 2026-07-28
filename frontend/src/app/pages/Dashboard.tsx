@@ -194,7 +194,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-center gap-1.5 pt-1">
             <Leaf size={12} style={{ color: "var(--leaf)" }} aria-hidden="true" />
             <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 500, color: "var(--ghost)" }}>
-              Powered by GreenLens AI  AMD MI300X
+              Powered by GreenLens AI · AMD MI300X
             </span>
           </div>
         </div>
@@ -529,7 +529,7 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              {/* Web Research Context  real-time online findings */}
+              {/* Web Research Context — real-time online findings */}
               {analysis.webResearchContext && (
                 <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '320px' }}>
                   <div style={{ flexShrink: 0 }}>

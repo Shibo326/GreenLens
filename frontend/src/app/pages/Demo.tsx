@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+ï»¿import { useEffect, useState } from "react";
 import { NavigationBar } from "../components/NavigationBar";
 import { Card } from "../components/Card";
 import { RiskBadge, EvidenceTag, EvidenceBox } from "../components/Badges";
@@ -31,7 +31,7 @@ const FALLBACK_ANALYSIS: Analysis = {
   analyzedAt: "2025-11-15T10:30:00.000Z",
   greenwashScore: 24,
   executiveSummary:
-    "GreenLens analysis of EcoTech Corporation's sustainability report and marketing materials reveals significant greenwashing across multiple claims. The company's 'carbon neutral' marketing implies zero total emissions, but their report confirms only Scope 1 emissions (3.9% of total footprint) are offset. Marketing materials claim '100% recycled packaging' while the sustainability report confirms only the outer box (45% by weight) uses recycled content — inner trays, plastic wrap, and blister packs are virgin materials. The '15% water reduction' claim omits that water-intensive processes were relocated to Mexico, increasing total usage by 8%. These discrepancies represent HIGH-severity greenwashing that would likely attract regulatory scrutiny under FTC Green Guides and the EU Green Claims Directive.",
+    "GreenLens analysis of EcoTech Corporation's sustainability report and marketing materials reveals significant greenwashing across multiple claims. The company's 'carbon neutral' marketing implies zero total emissions, but their report confirms only Scope 1 emissions (3.9% of total footprint) are offset. Marketing materials claim '100% recycled packaging' while the sustainability report confirms only the outer box (45% by weight) uses recycled content â€” inner trays, plastic wrap, and blister packs are virgin materials. The '15% water reduction' claim omits that water-intensive processes were relocated to Mexico, increasing total usage by 8%. These discrepancies represent HIGH-severity greenwashing that would likely attract regulatory scrutiny under FTC Green Guides and the EU Green Claims Directive.",
   risks: [
     {
       id: "r1",
@@ -45,7 +45,7 @@ const FALLBACK_ANALYSIS: Analysis = {
       id: "r2",
       level: "HIGH",
       description:
-        "'100% recycled packaging' claim is deceptive — sustainability report reveals only the outer box uses recycled content (153g of 340g = 45% by weight). Inner trays are virgin polystyrene, wrap is non-recyclable LDPE, accessories use PVC blister packs.",
+        "'100% recycled packaging' claim is deceptive â€” sustainability report reveals only the outer box uses recycled content (153g of 340g = 45% by weight). Inner trays are virgin polystyrene, wrap is non-recyclable LDPE, accessories use PVC blister packs.",
       sourceDocument: "EcoTech_SustainabilityReport_2025.pdf",
       category: "Packaging Deception",
     },
@@ -77,7 +77,7 @@ const FALLBACK_ANALYSIS: Analysis = {
       id: "r6",
       level: "LOW",
       description:
-        "Press release states EcoTech is 'one of the first major consumer electronics companies to reach net-zero emissions' — conflating carbon offsetting (credits) with actual emission elimination. This distinction matters for investor and consumer trust.",
+        "Press release states EcoTech is 'one of the first major consumer electronics companies to reach net-zero emissions' â€” conflating carbon offsetting (credits) with actual emission elimination. This distinction matters for investor and consumer trust.",
       sourceDocument: "EcoTech_PackagingClaims_Q4Campaign.pdf",
       category: "Misleading Framing",
     },
@@ -85,7 +85,7 @@ const FALLBACK_ANALYSIS: Analysis = {
   comparisonMatrix: [
     {
       field: "Carbon Neutrality Scope",
-      values: { "Marketing Claim": "Full carbon neutrality, zero emissions", "Actual (Report)": "Scope 1 only — 3.9% of total footprint" },
+      values: { "Marketing Claim": "Full carbon neutrality, zero emissions", "Actual (Report)": "Scope 1 only â€” 3.9% of total footprint" },
       winner: "",
     },
     {
@@ -125,7 +125,7 @@ const FALLBACK_ANALYSIS: Analysis = {
           "Scope 2 (purchased electricity) and Scope 3 (supply chain, product use, end-of-life) emissions are tracked but not included in our carbon neutrality claim. Total actual footprint: 448,400 tCO2e. Percentage offset: 3.9%.",
       },
       explanation:
-        "Marketing claims 'zero climate impact' and 'eliminated carbon footprint entirely' while the sustainability report explicitly states only Scope 1 (3.9% of total emissions) is offset. The remaining 96.1% (430,600 tCO2e) is unaddressed. This is a textbook example of scope manipulation — the most common corporate greenwashing tactic identified by the EU Green Claims Directive.",
+        "Marketing claims 'zero climate impact' and 'eliminated carbon footprint entirely' while the sustainability report explicitly states only Scope 1 (3.9% of total emissions) is offset. The remaining 96.1% (430,600 tCO2e) is unaddressed. This is a textbook example of scope manipulation â€” the most common corporate greenwashing tactic identified by the EU Green Claims Directive.",
       recommendedAction:
         "Immediately qualify all carbon neutrality claims to specify 'Scope 1 only' or face potential FTC enforcement action. Remove unqualified 'zero emissions' language from all marketing channels. Consider ACCC v. Clorox precedent ($5.5M fine for misleading 'eco-friendly' claims).",
     },
@@ -144,7 +144,7 @@ const FALLBACK_ANALYSIS: Analysis = {
           "Inner product tray: Virgin polystyrene foam. Plastic wrap: Standard LDPE film (not recyclable). Accessories packaging: PVC blister packs. Recycled content by weight: 45% (outer box only = 153g of 340g).",
       },
       explanation:
-        "The '100% recycled' claim applies only to the outer shipping box but is presented as covering all packaging. The sustainability report reveals 55% of packaging weight consists of virgin polystyrene, non-recyclable LDPE, and PVC — materials with significant environmental impact that directly contradict the 'eliminated virgin materials' claim.",
+        "The '100% recycled' claim applies only to the outer shipping box but is presented as covering all packaging. The sustainability report reveals 55% of packaging weight consists of virgin polystyrene, non-recyclable LDPE, and PVC â€” materials with significant environmental impact that directly contradict the 'eliminated virgin materials' claim.",
       recommendedAction:
         "Revise packaging claims to specify 'outer box made from 100% recycled cardboard' and disclose that inner packaging uses virgin materials. Under FTC Green Guides Section 260.13, unqualified '100% recycled' claims must apply to the entire product or package, not just one component.",
     },
@@ -169,7 +169,7 @@ const FALLBACK_ANALYSIS: Analysis = {
     },
   ],
   recommendation: {
-    title: "High Greenwashing Risk — Immediate Claim Revision Required",
+    title: "High Greenwashing Risk â€” Immediate Claim Revision Required",
     summary:
       "EcoTech's marketing materials contain multiple HIGH-severity greenwashing violations that directly contradict their own sustainability report data. The gap between claims and evidence is substantial and systemic, not incidental. Regulatory action is likely if these claims reach enforcement bodies.",
     nextSteps: [
@@ -205,7 +205,7 @@ const FALLBACK_MESSAGES: PreSeededMessage[] = [
     timestamp: "2025-11-15T10:32:02.000Z",
     structuredResponse: {
       answer:
-        "No. EcoTech's carbon neutrality claim is severely misleading. Their sustainability report explicitly states that only Scope 1 emissions are offset — that's 17,400 tCO2e out of a total footprint of 448,400 tCO2e. In other words, they've offset 3.9% of their actual carbon footprint and called it 'carbon neutral'. Their marketing says 'zero climate impact' and 'eliminated our carbon footprint entirely' — this is demonstrably false by their own data. Scope 2 (89,000 tCO2e from purchased electricity) and Scope 3 (342,000 tCO2e from supply chain, product use, and end-of-life) are completely unaddressed. Under FTC Green Guides Section 260.5, an unqualified 'carbon neutral' claim must account for all material emission sources unless clearly qualified. EcoTech's claim does neither — it implies total neutrality while covering less than 4% of actual emissions. This is the type of scope manipulation that resulted in regulatory action against Shell, TotalEnergies, and Santos in recent years.",
+        "No. EcoTech's carbon neutrality claim is severely misleading. Their sustainability report explicitly states that only Scope 1 emissions are offset â€” that's 17,400 tCO2e out of a total footprint of 448,400 tCO2e. In other words, they've offset 3.9% of their actual carbon footprint and called it 'carbon neutral'. Their marketing says 'zero climate impact' and 'eliminated our carbon footprint entirely' â€” this is demonstrably false by their own data. Scope 2 (89,000 tCO2e from purchased electricity) and Scope 3 (342,000 tCO2e from supply chain, product use, and end-of-life) are completely unaddressed. Under FTC Green Guides Section 260.5, an unqualified 'carbon neutral' claim must account for all material emission sources unless clearly qualified. EcoTech's claim does neither â€” it implies total neutrality while covering less than 4% of actual emissions. This is the type of scope manipulation that resulted in regulatory action against Shell, TotalEnergies, and Santos in recent years.",
       evidence: [
         {
           quote: "Total actual footprint: 448,400 tCO2e. Percentage offset: 3.9% (Scope 1 only)",
@@ -224,7 +224,7 @@ const FALLBACK_MESSAGES: PreSeededMessage[] = [
         },
       ],
       risks:
-        "HIGH — Unqualified carbon neutrality claims covering only 3.9% of actual emissions constitute misleading environmental marketing under multiple jurisdictions. FTC Green Guides require material qualification. The EU Green Claims Directive (effective 2026) will make such unsubstantiated claims explicitly illegal. ACCC has fined companies $5.5M+ for similar overstatements.",
+        "HIGH â€” Unqualified carbon neutrality claims covering only 3.9% of actual emissions constitute misleading environmental marketing under multiple jurisdictions. FTC Green Guides require material qualification. The EU Green Claims Directive (effective 2026) will make such unsubstantiated claims explicitly illegal. ACCC has fined companies $5.5M+ for similar overstatements.",
       recommendation:
         "Consumers should disregard EcoTech's 'carbon neutral' marketing as materially misleading. The company should immediately qualify all claims to state 'Scope 1 carbon neutral (3.9% of total footprint)' or face regulatory risk. Look for SBTi-validated targets covering all scopes as a credible alternative.",
     },
@@ -242,7 +242,7 @@ const FALLBACK_MESSAGES: PreSeededMessage[] = [
     timestamp: "2025-11-15T10:34:02.000Z",
     structuredResponse: {
       answer:
-        "The '100% recycled packaging' claim is another clear case of deceptive marketing. EcoTech's own sustainability report breaks down packaging composition: the outer shipping box (153g) uses post-consumer recycled cardboard, but the inner product tray is virgin polystyrene foam, the plastic wrap is non-recyclable LDPE film, and accessories come in PVC blister packs. By weight, recycled content accounts for only 45% of total packaging (153g out of 340g). The marketing claim that they've 'eliminated virgin materials from our packaging supply chain completely' is directly contradicted by their own data showing 55% virgin material content. Under FTC Green Guides Section 260.13, an unqualified 'recycled' claim must apply to the entire product. Claiming '100% recycled' when only the outer box qualifies is textbook deception — it's the packaging equivalent of claiming your car is 'electric' because the clock runs on a battery. PVC blister packs are particularly problematic as PVC is considered one of the most environmentally harmful plastics in terms of production and end-of-life toxicity.",
+        "The '100% recycled packaging' claim is another clear case of deceptive marketing. EcoTech's own sustainability report breaks down packaging composition: the outer shipping box (153g) uses post-consumer recycled cardboard, but the inner product tray is virgin polystyrene foam, the plastic wrap is non-recyclable LDPE film, and accessories come in PVC blister packs. By weight, recycled content accounts for only 45% of total packaging (153g out of 340g). The marketing claim that they've 'eliminated virgin materials from our packaging supply chain completely' is directly contradicted by their own data showing 55% virgin material content. Under FTC Green Guides Section 260.13, an unqualified 'recycled' claim must apply to the entire product. Claiming '100% recycled' when only the outer box qualifies is textbook deception â€” it's the packaging equivalent of claiming your car is 'electric' because the clock runs on a battery. PVC blister packs are particularly problematic as PVC is considered one of the most environmentally harmful plastics in terms of production and end-of-life toxicity.",
       evidence: [
         {
           quote: "Recycled content by weight: 45% (outer box only = 153g of 340g). Inner product tray: Virgin polystyrene foam. Plastic wrap: Standard LDPE film (not recyclable).",
@@ -256,7 +256,7 @@ const FALLBACK_MESSAGES: PreSeededMessage[] = [
         },
       ],
       risks:
-        "HIGH — Unqualified '100% recycled' claims that apply only to one component violate FTC Green Guides Section 260.13. The explicit statement about eliminating virgin materials is directly contradicted by reported data (55% virgin content by weight). This creates both regulatory liability and consumer trust risk.",
+        "HIGH â€” Unqualified '100% recycled' claims that apply only to one component violate FTC Green Guides Section 260.13. The explicit statement about eliminating virgin materials is directly contradicted by reported data (55% virgin content by weight). This creates both regulatory liability and consumer trust risk.",
       recommendation:
         "Consumers should verify what 'recycled packaging' actually means before trusting such claims. Look for specific percentages and which components are covered. EcoTech should revise claims to state 'outer box made from 100% recycled cardboard' and develop a roadmap to eliminate virgin polystyrene, LDPE, and PVC from their packaging entirely.",
     },
@@ -348,7 +348,7 @@ function DemoLoader() {
               transition={{ duration: 0.5, delay: 0.5 }}
               style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)" }}
             >
-              Loading GreenLens analysis…
+              Loading GreenLens analysisâ€¦
             </motion.div>
           </div>
 
@@ -390,7 +390,7 @@ export default function Demo() {
     getDemoData()
       .then((data) => { setDocuments(data.documents); setAnalysis(data.analysis); setPreSeededMessages(data.preSeededMessages ?? []); })
       .catch(() => {
-        console.info("[Demo] Backend unavailable — using offline fallback");
+        console.info("[Demo] Backend unavailable â€” using offline fallback");
         setDocuments(FALLBACK_DOCUMENTS);
         setAnalysis(FALLBACK_ANALYSIS);
         setPreSeededMessages(FALLBACK_MESSAGES);
@@ -446,7 +446,7 @@ export default function Demo() {
                 <div className="flex-1 min-w-0">
                   <div className="truncate" style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--paper)" }}>{doc.filename}</div>
                   <div style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "11px", color: "var(--leaf)" }}>
-                    {isImage ? "Image · OCR Complete" : "Processed"}
+                    {isImage ? "Image â€” OCR Complete" : "Processed"}
                   </div>
                 </div>
               </div>
@@ -480,7 +480,7 @@ export default function Demo() {
             Demo Mode
           </span>
           <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", fontWeight: 500, color: "var(--flag-amber)" }}>
-            — Pre-loaded sample sustainability claims
+            â€” Pre-loaded sample sustainability claims
           </span>
         </div>
         <Link to="/" style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", fontWeight: 500, color: "var(--leaf)", textDecoration: "none", whiteSpace: "nowrap" }}>
@@ -537,7 +537,7 @@ export default function Demo() {
                   Sample Greenwashing Analysis
                 </h2>
                 <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)" }}>
-                  {documents.length} documents · Demo data
+                  {documents.length} documents â€” Demo data
                 </span>
               </div>
             </div>
@@ -555,7 +555,7 @@ export default function Demo() {
                     What you're seeing
                   </h3>
                   <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--ash)", margin: 0 }}>
-                    This demo shows a complete greenwashing analysis of {documents.length} sample sustainability documents — cross-referencing marketing claims against reported data. 
+                    This demo shows a complete greenwashing analysis of {documents.length} sample sustainability documents â€” cross-referencing marketing claims against reported data. 
                     Below you'll see: <strong style={{ color: "var(--paper)" }}>cross-document contradiction detection</strong>, an <strong style={{ color: "var(--paper)" }}>executive summary</strong>, <strong style={{ color: "var(--paper)" }}>greenwash flag assessment</strong> with severity ratings, 
                     a <strong style={{ color: "var(--paper)" }}>claim vs. reality comparison</strong>, and an <strong style={{ color: "var(--paper)" }}>AI recommendation</strong> with actionable next steps. 
                     Scroll down to see the AI chat copilot in action.
@@ -572,7 +572,7 @@ export default function Demo() {
                     FEATURE 1
                   </span>
                   <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ash)" }}>
-                    Cross-Document Contradiction Detection — automatically finds claims that contradict the reported data
+                    Cross-Document Contradiction Detection â€” automatically finds claims that contradict the reported data
                   </span>
                 </div>
                 <div className="rounded-lg p-4 animate-slideDown" style={{ background: "var(--flag-red-dim)", border: "1px solid rgba(240,68,82,0.25)", borderLeft: "4px solid var(--flag-red)" }}>
@@ -614,7 +614,7 @@ export default function Demo() {
                   FEATURE 2-5
                 </span>
                 <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ash)" }}>
-                  AI-Generated Analysis — executive summary, greenwash scoring, claim vs. reality comparison, and recommendation
+                  AI-Generated Analysis â€” executive summary, greenwash scoring, claim vs. reality comparison, and recommendation
                 </span>
               </div>
             {/* Greenwash Score Gauge */}
@@ -693,7 +693,7 @@ export default function Demo() {
                   FEATURE 6
                 </span>
                 <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ash)" }}>
-                  AI Chat Copilot — ask follow-up questions in plain language, get answers grounded in the documents
+                  AI Chat Copilot â€” ask follow-up questions in plain language, get answers grounded in the documents
                 </span>
               </div>
             <div className="rounded-xl p-5 sm:p-6" style={{ background: "var(--lead)", border: "1px solid var(--rule)" }}>
