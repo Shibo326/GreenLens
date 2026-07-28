@@ -1,0 +1,85 @@
+<!--
+  Open this file in a browser to generate PWA icons for GreenLens.
+  Right-click each canvas → Save Image As → corresponding filename.
+  Alternatively, use any SVG-to-PNG tool with the SVG below.
+-->
+<!DOCTYPE html>
+<html>
+<head><title>GreenLens Icon Generator</title></head>
+<body style="background: #1a1a2e; padding: 40px; font-family: sans-serif; color: white;">
+<h1>GreenLens PWA Icons</h1>
+<p>Right-click each icon → "Save image as..." with the filename shown below it.</p>
+<div id="icons" style="display: flex; flex-wrap: wrap; gap: 20px;"></div>
+<script>
+const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+const container = document.getElementById('icons');
+
+sizes.forEach(size => {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  
+  // Background — dark green gradient
+  const gradient = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  gradient.addColorStop(0, '#0f2f1a');
+  gradient.addColorStop(1, '#0a1f0f');
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.roundRect(0, 0, size, size, size * 0.18);
+  ctx.fill();
+  
+  // Leaf icon (simplified)
+  const scale = size / 512;
+  ctx.save();
+  ctx.translate(size * 0.2, size * 0.2);
+  ctx.scale(scale * 0.6, scale * 0.6);
+  
+  // Magnifying glass circle
+  ctx.strokeStyle = '#22c55e';
+  ctx.lineWidth = 40;
+  ctx.beginPath();
+  ctx.arc(250, 230, 150, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  // Handle
+  ctx.lineWidth = 45;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(360, 340);
+  ctx.lineTo(480, 460);
+  ctx.stroke();
+  
+  // Leaf inside magnifier
+  ctx.fillStyle = '#22c55e';
+  ctx.beginPath();
+  ctx.moveTo(250, 140);
+  ctx.quadraticCurveTo(350, 200, 300, 300);
+  ctx.quadraticCurveTo(250, 260, 200, 300);
+  ctx.quadraticCurveTo(150, 200, 250, 140);
+  ctx.fill();
+  
+  // Leaf vein
+  ctx.strokeStyle = '#0a1f0f';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(250, 155);
+  ctx.lineTo(250, 280);
+  ctx.stroke();
+  
+  ctx.restore();
+  
+  // Label
+  const wrapper = document.createElement('div');
+  wrapper.style.textAlign = 'center';
+  wrapper.appendChild(canvas);
+  const label = document.createElement('p');
+  label.textContent = `icon-${size}x${size}.png`;
+  label.style.fontSize = '12px';
+  label.style.marginTop = '4px';
+  wrapper.appendChild(label);
+  container.appendChild(wrapper);
+});
+</script>
+</body>
+</html>

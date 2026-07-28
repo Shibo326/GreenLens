@@ -8,6 +8,10 @@
       <meta name="mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      <meta name="theme-color" content="#22c55e" />
+      <link rel="manifest" href="/manifest.json" />
+      <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+      <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
       <title>GreenLens — AI Greenwashing Detection</title>
       <meta name="description" content="Upload sustainability reports, packaging, and marketing claims. Ask anything in plain language. Get evidence-based greenwashing verdicts in under 90 seconds." />
       <meta name="robots" content="noindex, nofollow" />
@@ -22,6 +26,16 @@
       
       <div id="root"></div>
       <script type="module" src="/src/main.tsx"></script>
+      <script>
+        // Register PWA service worker
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then(reg => console.log('[GreenLens] SW registered:', reg.scope))
+              .catch(err => console.warn('[GreenLens] SW registration failed:', err));
+          });
+        }
+      </script>
       
     </body>
   </html>
