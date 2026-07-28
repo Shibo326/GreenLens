@@ -492,7 +492,7 @@ export default function Demo() {
         {/* Desktop sidebar */}
         <div
           className="hidden md:block shrink-0"
-          style={{ width: "300px", minHeight: "calc(100vh - 112px)", background: "var(--lead)", borderRight: "1px solid var(--rule)" }}
+          style={{ width: "260px", minHeight: "calc(100vh - 112px)", background: "var(--lead)", borderRight: "1px solid var(--rule)" }}
         >
           <SidebarContent />
         </div>

@@ -12,9 +12,11 @@ import {
   RefreshCw,
   Search,
   BarChart3,
+  ExternalLink,
 } from "lucide-react";
 import { Link } from "react-router";
-import { uploadDocuments, analyzeDocuments, warmupServer } from "../../lib/api";
+import { uploadDocuments, analyzeDocuments, warmupServer, fetchNews } from "../../lib/api";
+import type { NewsArticle } from "../../lib/api";
 import { toast } from "sonner";
 import { useAppDispatch } from "../../lib/store";
 import { motion, AnimatePresence } from "framer-motion";
@@ -77,6 +79,30 @@ export default function Landing() {
     const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') { setFiles([]); } };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Greenwashing News state
+  const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+  const [newsError, setNewsError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchNews();
+        if (!cancelled) {
+          setNewsArticles(data.articles.slice(0, 6));
+          setNewsLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setNewsError(true);
+          setNewsLoading(false);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
@@ -336,6 +362,7 @@ export default function Landing() {
                 fontSize: "15px",
                 fontWeight: 600,
                 boxShadow: "0 0 20px rgba(61, 220, 132, 0.3), 0 4px 12px rgba(0,0,0,0.3)",
+                animation: "pulseGlow 2.5s ease-in-out infinite",
               }}
             >
               <Upload size={16} />
@@ -585,13 +612,12 @@ export default function Landing() {
 
       {/* How It Works */}
       <section id="how-it-works" className="flex flex-col items-center px-4 py-20">
+        <div className="section-header mb-3">
+          <span style={{ fontSize: "clamp(12px, 2vw, 13px)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--leaf)", fontFamily: "'Inter', sans-serif" }}>
+            How it works
+          </span>
+        </div>
         <h2
-          className="section-header mb-3"
-          style={{ fontSize: "clamp(12px, 2vw, 13px)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--leaf)", fontFamily: "'Inter', sans-serif" }}
-        >
-          How it works
-        </h2>
-        <p
           style={{
             fontFamily: "'DM Sans', sans-serif",
             fontSize: "clamp(24px, 4vw, 32px)",
@@ -602,7 +628,7 @@ export default function Landing() {
           }}
         >
           Three steps to clarity
-        </p>
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full" style={{ maxWidth: "1040px" }}>
           {[
@@ -640,32 +666,218 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Greenwashing News */}
+      <section className="flex flex-col items-center px-4 sm:px-6 py-20 mx-auto" style={{ maxWidth: "1200px" }}>
+        <div className="section-header mb-3">
+          <span style={{ fontSize: "clamp(12px, 2vw, 13px)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--leaf)", fontFamily: "'Inter', sans-serif" }}>
+            Stay informed
+          </span>
+        </div>
+        <h2
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "clamp(24px, 4vw, 32px)",
+            fontWeight: 700,
+            color: "var(--paper)",
+            marginBottom: "12px",
+            textAlign: "center",
+          }}
+        >
+          Latest Greenwashing News
+        </h2>
+        <p
+          style={{
+            fontFamily: "'Inter', sans-serif",
+            fontSize: "15px",
+            color: "var(--ash)",
+            marginBottom: "48px",
+            textAlign: "center",
+            maxWidth: "560px",
+          }}
+        >
+          Stay informed with real enforcement actions and regulatory updates
+        </p>
+
+        {newsLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full" style={{ maxWidth: "1040px" }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="glass-card p-5"
+                style={{ borderLeft: "3px solid var(--rule)", animation: "pulse 1.5s ease-in-out infinite", animationDelay: `${i * 0.1}s` }}
+              >
+                <div style={{ width: "72px", height: "16px", borderRadius: "8px", background: "var(--graphite)", marginBottom: "12px" }} />
+                <div style={{ width: "85%", height: "18px", borderRadius: "4px", background: "var(--graphite)", marginBottom: "10px" }} />
+                <div style={{ width: "100%", height: "14px", borderRadius: "4px", background: "var(--graphite)", marginBottom: "6px" }} />
+                <div style={{ width: "60%", height: "14px", borderRadius: "4px", background: "var(--graphite)", marginBottom: "16px" }} />
+                <div style={{ width: "100px", height: "12px", borderRadius: "4px", background: "var(--graphite)" }} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {newsError && !newsLoading && (
+          <div
+            className="glass-card px-6 py-8 w-full flex flex-col items-center"
+            style={{ maxWidth: "480px", border: "1px solid var(--rule)" }}
+          >
+            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "var(--ghost)", textAlign: "center", margin: 0 }}>
+              Unable to load news
+            </p>
+          </div>
+        )}
+
+        {!newsLoading && !newsError && newsArticles.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full" style={{ maxWidth: "1040px" }}>
+            {newsArticles.map((article, idx) => {
+              const categoryColors: Record<string, { border: string; bg: string; text: string }> = {
+                enforcement: { border: "var(--flag-red)", bg: "var(--flag-red-dim)", text: "var(--flag-red)" },
+                regulation: { border: "var(--flag-amber)", bg: "var(--flag-amber-dim)", text: "var(--flag-amber)" },
+                greenwashing: { border: "var(--leaf)", bg: "var(--leaf-dim)", text: "var(--leaf)" },
+              };
+              const colors = categoryColors[article.category] ?? categoryColors.greenwashing;
+              const sourceDomain = (() => {
+                try { return new URL(article.url).hostname.replace("www.", ""); } catch { return article.source; }
+              })();
+
+              return (
+                <motion.div
+                  key={idx}
+                  className="glass-card hover-lift p-5"
+                  style={{ border: "1px solid var(--rule)", borderLeft: `3px solid ${colors.border}` }}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.4, delay: idx * 0.08 }}
+                >
+                  {/* Category badge */}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      letterSpacing: "0.04em",
+                      textTransform: "uppercase",
+                      color: colors.text,
+                      background: colors.bg,
+                      padding: "3px 8px",
+                      borderRadius: "6px",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    {article.category}
+                  </span>
+
+                  {/* Title */}
+                  <a
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Read article: ${article.title}`}
+                    style={{
+                      display: "block",
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: "15px",
+                      fontWeight: 700,
+                      color: "var(--paper)",
+                      textDecoration: "none",
+                      marginBottom: "8px",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {article.title}
+                  </a>
+
+                  {/* Snippet */}
+                  <p
+                    style={{
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: "13px",
+                      lineHeight: 1.5,
+                      color: "var(--ash)",
+                      margin: "0 0 14px 0",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {article.snippet}
+                  </p>
+
+                  {/* Source + View Source link */}
+                  <div className="flex items-center justify-between">
+                    <span
+                      style={{
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: "12px",
+                        color: "var(--ghost)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      {sourceDomain}
+                      <ExternalLink size={10} style={{ color: "var(--ghost)" }} aria-hidden="true" />
+                    </span>
+                    <a
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`View source for: ${article.title}`}
+                      style={{
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        color: "var(--leaf)",
+                        textDecoration: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "3px",
+                      }}
+                    >
+                      View Source <span aria-hidden="true">→</span>
+                    </a>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       {/* Demo CTA */}
-      <section className="flex justify-center px-4 pb-16">
+      <section className="flex justify-center px-4 pb-20">
         <div
-          className="flex flex-col items-center glass-card px-6 py-8 w-full"
+          className="flex flex-col items-center glass-card px-8 py-10 w-full"
           style={{ maxWidth: "min(600px, 100%)", border: "1px solid var(--leaf-border)" }}
         >
           <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(18px, 3vw, 22px)", fontWeight: 700, color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
             See it in action
           </h3>
-          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "15px", color: "var(--ash)", marginBottom: "20px", textAlign: "center" }}>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "15px", color: "var(--ash)", marginBottom: "24px", textAlign: "center" }}>
             Try with pre-loaded sample documents — no upload needed
           </p>
           <Link to="/demo">
-            <PrimaryButton>Try Demo</PrimaryButton>
+            <PrimaryButton style={{ padding: "14px 32px", fontSize: "15px", fontWeight: 600 }}>Try Demo</PrimaryButton>
           </Link>
         </div>
       </section>
 
       {/* Footer */}
       <footer
-        className="w-full py-4 flex items-center justify-center gap-2"
+        className="w-full py-5 flex flex-col items-center gap-2"
         style={{ borderTop: "1px solid var(--rule)" }}
       >
-        <Leaf size={12} style={{ color: "var(--ghost)" }} aria-hidden="true" />
-        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", fontWeight: 500, color: "var(--ghost)", textAlign: "center", margin: 0 }}>
-          GreenLens · AI-powered greenwashing detection
+        <div className="flex items-center gap-2">
+          <Leaf size={12} style={{ color: "var(--leaf)" }} aria-hidden="true" />
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ash)", textAlign: "center", margin: 0 }}>
+            GreenLens · AI-powered greenwashing detection
+          </p>
+        </div>
+        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", fontWeight: 400, color: "var(--ghost)", textAlign: "center", margin: 0 }}>
+          Powered by AMD MI300X · Built for YFS Build for Good Hackathon
         </p>
       </footer>
     </div>

@@ -34,7 +34,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ---- Import routers ----
-from routers import upload, analyze, chat, report, demo, quick_scan
+from routers import upload, analyze, chat, report, demo, quick_scan, news
 
 # ---- Rate Limiter ----
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
@@ -108,6 +108,7 @@ app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(report.router, prefix="/api", tags=["report"])
 app.include_router(demo.router, prefix="/api", tags=["demo"])
 app.include_router(quick_scan.router, prefix="/api", tags=["quick-scan"])
+app.include_router(news.router, prefix="/api", tags=["news"])
 
 # ---- Service Readiness Flag ----
 app.state.services_ready = False

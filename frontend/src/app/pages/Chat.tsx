@@ -445,7 +445,7 @@ export default function Chat() {
         {/* Desktop left panel */}
         <div
           className="hidden md:flex flex-col shrink-0"
-          style={{ width: "280px", background: "var(--lead)", borderRight: "1px solid var(--rule)", overflowY: "auto" }}
+          style={{ width: "260px", background: "var(--lead)", borderRight: "1px solid var(--rule)", overflowY: "auto" }}
         >
           <SidebarContent />
         </div>
@@ -1009,7 +1009,7 @@ export default function Chat() {
             </div>
             <div className="text-center mt-2">
               <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 500, color: "var(--ghost)" }}>
-                GreenLens only answers from your uploaded documents
+                GreenLens answers from your documents + real-time web research
               </span>
             </div>
           </div>

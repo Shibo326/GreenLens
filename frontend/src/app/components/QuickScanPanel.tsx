@@ -56,12 +56,12 @@ export function QuickScanPanel() {
       }}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-3 mb-4">
         <div
           style={{
-            width: "28px",
-            height: "28px",
-            borderRadius: "8px",
+            width: "36px",
+            height: "36px",
+            borderRadius: "10px",
             background: "var(--leaf-dim)",
             border: "1px solid var(--leaf-border)",
             display: "flex",
@@ -69,7 +69,7 @@ export function QuickScanPanel() {
             justifyContent: "center",
           }}
         >
-          <Sparkles size={14} style={{ color: "var(--leaf)" }} />
+          <Sparkles size={16} style={{ color: "var(--leaf)" }} />
         </div>
         <div>
           <h3

@@ -376,6 +376,39 @@ export async function getDemoData(): Promise<DemoResponse> {
 }
 
 /**
+ * Fetch latest greenwashing news articles.
+ * GET /api/news
+ */
+export interface NewsArticle {
+  title: string;
+  url: string;
+  snippet: string;
+  source: string;
+  category: string;
+}
+
+export interface NewsResponse {
+  articles: NewsArticle[];
+  lastUpdated: string;
+  source: string;
+}
+
+export async function fetchNews(): Promise<NewsResponse> {
+  const url = `${API_BASE_URL}/api/news`;
+  console.log(`[API] GET ${url}`);
+
+  const response = await fetch(url, { method: 'GET' });
+
+  console.log(`[API] GET ${url} → ${response.status}`);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch news');
+  }
+
+  return response.json() as Promise<NewsResponse>;
+}
+
+/**
  * Quick Scan — instant mini-verdict on a single sustainability claim.
  * No file upload required. Text-only entry point.
  * POST /api/quick-scan

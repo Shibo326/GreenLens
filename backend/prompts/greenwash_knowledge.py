@@ -34,6 +34,16 @@ GREENWASH_KNOWLEDGE = """
 
 8. H&M Conscious Collection (2022): Netherlands ASA ruling. "Conscious Choice" labels on fast fashion items with minimal actual sustainability improvements. Lesson: sustainability sub-brands within inherently unsustainable business models.
 
+9. NESTLÉ WATERS (2021): $570K settlement (US). "100% recycled" claims on water bottles when actual recycled content was only 5-25%. Lesson: "100%" is an absolute claim that requires absolute proof.
+
+10. BP (2019-ongoing): UK Advertising Standards Authority banned BP ads for misrepresenting climate action. Company spent more on green advertising than actual renewable investment. Lesson: ad spend vs. investment ratio is a key credibility indicator.
+
+PENALTY SCALE (for context — what's at stake):
+- EU: Up to 4% of annual global turnover per violation
+- UK: Up to 10% of global annual turnover (from April 2025, CMA direct enforcement)
+- US (FTC): Per-violation fines + corrective advertising orders
+- Australia: Up to AUD$50M per contravention for corporations
+
 ## THE 7 SINS OF GREENWASHING (TerraChoice Framework)
 When analyzing claims, check for these patterns:
 
@@ -89,14 +99,26 @@ When analyzing claims, check for these patterns:
 - "Organic cotton" in blended fabrics = the non-organic 60% is still conventional
 - "Recycled polyester" still sheds microplastics
 - "Carbon neutral delivery" = offset-based, not emission-eliminated
+- Shein produces 900x more products than a traditional store (Greenpeace 2025) — claiming sustainability while operating at this scale is inherently contradictory
+- H&M "Conscious Collection" — investigated by Netherlands ASA, found to overstate sustainability on scorecards
+- Fast fashion "take-back" schemes: Greenpeace investigation found most clothes collected are downcycled, burned, or shipped to landfills in Ghana/Chile/Kenya
+- Gen Z is the primary target of fast fashion greenwashing (TikTok/Instagram marketing with green messaging)
+- Greenpeace: fast fashion business model (100+ new styles/week) is "fundamentally incompatible with true sustainability" regardless of material choices
 - Red flag: any fast-fashion brand claiming to be "sustainable" while producing millions of garments
+- Red flag: "take-back" or "recycling" programs without transparency on what actually happens to returned clothes
 
 ### ENERGY / OIL & GAS
 - "Transitioning to renewables" while 90%+ revenue from fossil fuels
 - "Net zero by 2050" with no interim targets or capital allocation
 - "Clean energy" for natural gas (still emits CO2)
 - "Carbon capture" projects at tiny scale vs. actual emissions
+- Big Oil spends ~$750M/year collectively on green PR campaigns (InfluenceMap research)
+- Shell: 70% of communications about green energy, but only 10% of capital expenditure on low-carbon (highest discourse-action gap)
+- BP doubled its green-image Facebook/Instagram ad spend after UK government warned about misleading claims (Global Witness 2023)
+- Study (Li et al. 2022, PLOS ONE): BP, Chevron, ExxonMobil, Shell ALL show "mismatch between discourse, actions and investments" — green transition "is not occurring"
+- Climate Integrity Center (2025): Big Oil has pushed deceptive climate ads for 25+ years
 - Red flag: renewable energy investment highlighted but fossil expansion hidden
+- Red flag: "Net zero" targets that rely entirely on unproven carbon removal technology rather than actual emission cuts
 
 ### FOOD & BEVERAGE
 - "Natural" has no legal definition in most jurisdictions
