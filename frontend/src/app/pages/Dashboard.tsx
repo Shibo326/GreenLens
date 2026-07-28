@@ -4,7 +4,6 @@ import { Card } from "../components/Card";
 import { RiskBadge, EvidenceTag, EvidenceBox } from "../components/Badges";
 import { PrimaryButton, GhostButton } from "../components/Buttons";
 import { Link, useNavigate } from "react-router";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import {
   ArrowLeft,
   FileText,
@@ -16,7 +15,6 @@ import {
   PanelLeft,
   X,
   FileDown,
-  BarChart3,
   Globe,
 } from "lucide-react";
 import { exportReport, analyzeDocuments } from "../../lib/api";
@@ -603,181 +601,22 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              {/* Risk Distribution & Analytics */}
-              <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
+              {/* AI Recommendation — spans full width */}
+              <Card className="md:col-span-2" style={{ display: 'flex', flexDirection: 'column', background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Analytics Overview</h3>
-                    <BarChart3 size={18} style={{ color: "var(--ghost)" }} />
-                  </div>
-                  <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
-                </div>
-                <div className="card-scroll" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-                  {(() => {
-                    const high = analysis.risks.filter(r => r.level?.toUpperCase() === "HIGH").length;
-                    const medium = analysis.risks.filter(r => r.level?.toUpperCase() === "MEDIUM").length;
-                    const low = analysis.risks.filter(r => r.level?.toUpperCase() === "LOW").length;
-                    const totalRisks = analysis.risks.length;
-                    const totalConflicts = analysis.conflicts.length;
-                    const categories = [...new Set(analysis.risks.map(r => r.category))];
-                    const confidence = Math.round(analysis.recommendation.confidence * 100);
-
-                    const barData = [
-                      { name: "MISLEADING", count: high, color: "var(--flag-red)" },
-                      { name: "VAGUE", count: medium, color: "var(--flag-amber)" },
-                      { name: "UNVERIFIED", count: low, color: "var(--flag-blue)" },
-                    ];
-
-                    return (
-                      <div className="space-y-4">
-                        {/* Quick Stats Row */}
-                        <div className="grid grid-cols-3 gap-3">
-                          {[
-                            { label: "Total Flags", value: totalRisks, color: high > 0 ? "var(--flag-red)" : "var(--paper)" },
-                            { label: "Contradictions", value: totalConflicts, color: totalConflicts > 0 ? "var(--flag-red)" : "var(--leaf)" },
-                            { label: "Confidence", value: `${confidence}%`, color: confidence >= 70 ? "var(--leaf)" : confidence >= 40 ? "var(--flag-amber)" : "var(--flag-red)" },
-                          ].map(stat => (
-                            <div key={stat.label} className="rounded-lg p-3 text-center" style={{ background: "var(--graphite)", border: "1px solid var(--rule)" }}>
-                              <div style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "20px", fontWeight: 600, color: stat.color }}>{stat.value}</div>
-                              <div style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "10px", fontWeight: 500, color: "var(--ghost)", marginTop: "2px" }}>{stat.label}</div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Risk Distribution Chart */}
-                        <div>
-                          <div style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 600, color: "var(--ash)", marginBottom: "8px", letterSpacing: "0.04em" }}>
-                            FLAG DISTRIBUTION
-                          </div>
-                          <ResponsiveContainer width="100%" height={100}>
-                            <BarChart data={barData} barSize={32}>
-                              <XAxis dataKey="name" tick={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: 9, fill: "var(--ash)" }} axisLine={false} tickLine={false} interval={0} />
-                              <YAxis allowDecimals={false} tick={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: 10, fill: "var(--ash)" }} axisLine={false} tickLine={false} width={20} />
-                              <Tooltip
-                                cursor={{ fill: "rgba(61,220,132,0.06)" }}
-                                contentStyle={{ background: "var(--lead)", border: "1px solid var(--rule)", borderRadius: "8px", fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px" }}
-                                labelStyle={{ color: "var(--paper)" }}
-                                itemStyle={{ color: "var(--ash)" }}
-                              />
-                              <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                                {barData.map((entry, index) => (
-                                  <Cell key={index} fill={entry.color} />
-                                ))}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-
-                        {/* Risk Categories */}
-                        {categories.length > 0 && (
-                          <div>
-                            <div style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 600, color: "var(--ash)", marginBottom: "8px", letterSpacing: "0.04em" }}>
-                              FLAG CATEGORIES
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {categories.map(cat => (
-                                <span
-                                  key={cat}
-                                  className="px-2.5 py-1 rounded-full"
-                                  style={{
-                                    background: "var(--graphite)",
-                                    border: "1px solid var(--rule)",
-                                    fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
-                                    fontSize: "11px",
-                                    fontWeight: 500,
-                                    color: "var(--ash)",
-                                  }}
-                                >
-                                  {cat} ({analysis.risks.filter(r => r.category === cat).length})
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Document Coverage */}
-                        <div>
-                          <div style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 600, color: "var(--ash)", marginBottom: "8px", letterSpacing: "0.04em" }}>
-                            DOCUMENT COVERAGE
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", color: "var(--ash)" }}>
-                              {documents.length} document{documents.length !== 1 ? "s" : ""} analyzed
-                            </span>
-                            <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", color: "var(--ash)" }}>
-                              {analysis.comparisonMatrix.length} comparison fields
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </Card>
-
-              {/* AI Recommendation  spans full width */}
-              <Card className="md:col-span-2" style={{ display: 'flex', flexDirection: 'column', maxHeight: '320px', background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
-                <div style={{ flexShrink: 0 }}>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>AI Recommendation</h3>
+                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>What To Do Next</h3>
                     <Lightbulb size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--leaf-border)", margin: "12px 0" }} />
                 </div>
-                <div className="card-scroll" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-                  <div className="inline-block px-4 py-2 rounded-full mb-4" style={{ background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
-                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--leaf)" }}>
-                      {sanitizeText(analysis.recommendation.title)}
-                    </span>
-                  </div>
-                  {/* Confidence Score */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", fontWeight: 500, color: "var(--ash)" }}>
-                      AI Confidence
-                    </span>
-                    <div style={{ flex: 1, height: "6px", background: "var(--rule)", borderRadius: "3px", overflow: "hidden" }}>
-                      <div
-                        style={{
-                          height: "100%",
-                          width: `${Math.round(analysis.recommendation.confidence * 100)}%`,
-                          background: analysis.recommendation.confidence >= 0.7
-                            ? "var(--leaf)"
-                            : analysis.recommendation.confidence >= 0.4
-                            ? "var(--flag-amber)"
-                            : "var(--flag-red)",
-                          borderRadius: "3px",
-                          transition: "width 1s ease",
-                        }}
-                      />
-                    </div>
-                    <span style={{
-                      fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace",
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      color: analysis.recommendation.confidence >= 0.7 ? "var(--leaf)"
-                        : analysis.recommendation.confidence >= 0.4 ? "var(--flag-amber)"
-                        : "var(--flag-red)",
-                      minWidth: "36px",
-                      textAlign: "right",
-                    }}>
-                      {Math.round(analysis.recommendation.confidence * 100)}%
-                    </span>
-                  </div>
+                <div>
                   <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "15px", lineHeight: 1.6, color: "var(--ash)", marginBottom: "12px" }}>
-                    {sanitizeText(analysis.recommendation.summary)}
+                    Use the <strong style={{ color: "var(--leaf)" }}>Chat Copilot</strong> to ask specific questions about the greenwashing claims in your documents. The AI has already analyzed the content and can provide detailed, evidence-based answers.
                   </p>
-                  {analysis.recommendation.nextSteps.length > 0 && (
-                    <ul className="space-y-1 mb-4">
-                      {analysis.recommendation.nextSteps.map((step, i) => (
-                        <li key={i} style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--ash)", paddingLeft: "12px", position: "relative" }}>
-                          <span style={{ color: "var(--leaf)", marginRight: "6px" }}>&rarr;</span>{step}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                   <div style={{ borderTop: "1px solid var(--leaf-border)", paddingTop: "16px" }}>
                     <Link to="/chat" style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--leaf)", textDecoration: "none" }}>
-                      Ask follow-up questions ?
+                      Ask follow-up questions →
                     </Link>
                   </div>
                 </div>
