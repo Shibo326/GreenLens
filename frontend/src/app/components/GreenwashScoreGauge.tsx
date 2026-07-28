@@ -1,4 +1,6 @@
-﻿interface GreenwashScoreGaugeProps {
+import { useEffect, useState } from "react";
+
+interface GreenwashScoreGaugeProps {
   score?: number;
 }
 
@@ -10,89 +12,122 @@ function getBand(score: number): { label: string; color: string; dimColor: strin
 
 export function GreenwashScoreGauge({ score }: GreenwashScoreGaugeProps) {
   const isNeutral = score === undefined || score === null;
-  const displayScore = isNeutral ? "—" : score;
   const band = isNeutral
-    ? { label: "Awaiting Data", color: "var(--ghost)", dimColor: "rgba(78,97,87,0.08)" }
+    ? { label: "Awaiting analysis", color: "var(--ghost)", dimColor: "rgba(78,97,87,0.08)" }
     : getBand(score!);
 
-  const progress = isNeutral ? 0 : Math.min(100, Math.max(0, score!));
-  const circumference = Math.PI * 80;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
+  const targetProgress = isNeutral ? 0 : Math.min(100, Math.max(0, score!));
+
+  // Animate arc fill on mount
+  const [animatedProgress, setAnimatedProgress] = useState(0);
+
+  useEffect(() => {
+    // Small delay to trigger CSS transition from 0 to target
+    const timeout = setTimeout(() => {
+      setAnimatedProgress(targetProgress);
+    }, 50);
+    return () => clearTimeout(timeout);
+  }, [targetProgress]);
+
+  // Arc math: semi-circle from left to right (180 degrees)
+  // Center at (140, 120), radius 100
+  // The arc path goes from (40, 120) to (240, 120) — a 180-degree semi-circle
+  const radius = 100;
+  const cx = 140;
+  const cy = 120;
+  const arcLength = Math.PI * radius; // half circumference
+  const strokeDashoffset = arcLength - (animatedProgress / 100) * arcLength;
+
+  const displayScore = isNeutral ? "—" : score;
 
   return (
     <div
-      className="flex flex-col items-center justify-center rounded-xl p-8"
-      style={{
-        background: "rgba(19, 31, 25, 0.7)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        border: `1px solid ${isNeutral ? "var(--rule)" : band.color}44`,
-      }}
+      className="flex flex-col items-center justify-center"
+      style={{ maxWidth: "280px", margin: "0 auto" }}
       role="figure"
-      aria-label={`Greenwash credibility score: ${isNeutral ? "awaiting data" : `${score} out of 100, ${band.label}`}`}
+      aria-label={`Greenwash credibility score: ${isNeutral ? "awaiting analysis" : `${score} out of 100, ${band.label}`}`}
     >
-      {/* SVG Arc */}
-      <div className="relative" style={{ width: "200px", height: "110px", marginBottom: "12px" }}>
-        <svg viewBox="0 0 200 110" width="200" height="110" style={{ overflow: "visible" }}>
+      {/* SVG Semi-circle Arc */}
+      <div className="relative" style={{ width: "280px", height: "155px" }}>
+        <svg
+          viewBox="0 0 280 155"
+          width="280"
+          height="155"
+          style={{ overflow: "visible" }}
+        >
+          {/* Background track */}
           <path
-            d="M 10 100 A 90 90 0 0 1 190 100"
+            d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
             fill="none"
             stroke="var(--rule)"
-            strokeWidth="10"
+            strokeWidth="14"
             strokeLinecap="round"
           />
-          {!isNeutral && (
-            <path
-              d="M 10 100 A 90 90 0 0 1 190 100"
-              fill="none"
-              stroke={band.color}
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeDasharray={`${circumference}`}
-              strokeDashoffset={strokeDashoffset}
-              style={{ transition: "stroke-dashoffset 1s ease-out" }}
-            />
-          )}
+          {/* Animated fill arc */}
+          <path
+            d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
+            fill="none"
+            stroke={band.color}
+            strokeWidth="14"
+            strokeLinecap="round"
+            strokeDasharray={`${arcLength}`}
+            strokeDashoffset={strokeDashoffset}
+            style={{
+              transition: "stroke-dashoffset 1.5s ease-out, stroke 0.3s ease",
+            }}
+          />
         </svg>
+
+        {/* Score number centered below arc */}
         <div
           style={{
             position: "absolute",
             bottom: "0",
             left: "50%",
             transform: "translateX(-50%)",
-            fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 800,
-            fontSize: "56px",
-            color: isNeutral ? "var(--ghost)" : band.color,
-            lineHeight: 1,
+            textAlign: "center",
           }}
         >
-          {displayScore}
+          <span
+            style={{
+              fontFamily: "'Syne', sans-serif",
+              fontWeight: 800,
+              fontSize: "52px",
+              color: isNeutral ? "var(--ghost)" : "var(--paper)",
+              lineHeight: 1,
+              textShadow: isNeutral
+                ? "none"
+                : `0 0 24px ${band.color}44, 0 0 48px ${band.color}22`,
+            }}
+          >
+            {displayScore}
+          </span>
         </div>
       </div>
 
       {/* Band label */}
       <span
         style={{
-          fontFamily: "'Inter', sans-serif",
+          fontFamily: "'IBM Plex Sans', sans-serif",
           fontWeight: 600,
           fontSize: "14px",
-          letterSpacing: "0.06em",
+          letterSpacing: "0.04em",
           textTransform: "uppercase",
-          color: isNeutral ? "var(--ghost)" : band.color,
-          marginTop: "4px",
+          color: band.color,
+          marginTop: "8px",
         }}
       >
         {band.label}
       </span>
 
+      {/* Subtitle */}
       <span
         style={{
-          fontFamily: "'Inter', sans-serif",
+          fontFamily: "'IBM Plex Sans', sans-serif",
           fontWeight: 400,
           fontSize: "12px",
           color: "var(--ash)",
-          marginTop: "6px",
+          marginTop: "4px",
         }}
       >
         Greenwash Credibility Score

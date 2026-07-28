@@ -1,10 +1,12 @@
-﻿import { useRef, useState, useEffect, type DragEvent } from "react";
+import { useRef, useState, useEffect, type DragEvent } from "react";
 import { useNavigate } from "react-router";
 import { NavigationBar } from "../components/NavigationBar";
 import { PrimaryButton, GhostButton } from "../components/Buttons";
 import { DocumentStack } from "../components/DocumentStack";
+import { ClaimDissection } from "../components/ClaimDissection";
 import {
   Upload,
+  Camera,
   Cpu,
   Leaf,
   CheckCircle,
@@ -21,26 +23,28 @@ import { toast } from "sonner";
 import { useAppDispatch } from "../../lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { QuickScanPanel } from "../components/QuickScanPanel";
+import { OnboardingOverlay } from "../components/OnboardingOverlay";
 
 const LOADING_STAGES = [
-  { label: "Extracting text", icon: "📄" },
-  { label: "Embedding claims", icon: "⚡" },
-  { label: "AI analysis (5 parallel checks)", icon: "🧠" },
-  { label: "Detecting contradictions", icon: "🔍" },
-  { label: "Building greenwash report", icon: "📊" },
+  { label: "Extracting text", icon: "??" },
+  { label: "Embedding claims", icon: "?" },
+  { label: "AI analysis (5 parallel checks)", icon: "??" },
+  { label: "Detecting contradictions", icon: "??" },
+  { label: "Building greenwash report", icon: "??" },
 ];
 
 const SLOW_MESSAGES = [
-  { afterSeconds: 20, message: "Server is warming up — hang tight..." },
-  { afterSeconds: 40, message: "Still running — GreenLens AI is analyzing your claims..." },
-  { afterSeconds: 70, message: "Almost there — large documents take a bit longer..." },
-  { afterSeconds: 100, message: "Due to high demand, the server is warming up. Please retry — it should work on the next attempt!" },
+  { afterSeconds: 20, message: "Server is warming up � hang tight..." },
+  { afterSeconds: 40, message: "Still running � GreenLens AI is analyzing your claims..." },
+  { afterSeconds: 70, message: "Almost there � large documents take a bit longer..." },
+  { afterSeconds: 100, message: "Due to high demand, the server is warming up. Please retry � it should work on the next attempt!" },
 ];
 
 export default function Landing() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -56,6 +60,7 @@ export default function Landing() {
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
   const handleDrop = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); addFiles(Array.from(e.dataTransfer.files)); };
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => { if (e.target.files) { addFiles(Array.from(e.target.files)); e.target.value = ""; } };
+  const handleCameraInputChange = (e: React.ChangeEvent<HTMLInputElement>) => { if (e.target.files) { addFiles(Array.from(e.target.files)); e.target.value = ""; } };
 
   const addFiles = (incoming: File[]) => {
     setError(null);
@@ -65,7 +70,7 @@ export default function Landing() {
       return (["application/pdf", "image/png", "image/jpeg", "image/jpg"].includes(mime) || ["pdf", "png", "jpg", "jpeg"].includes(ext));
     });
     const rejected = incoming.length - accepted.length;
-    if (rejected > 0) setError(`${rejected} file(s) skipped — only PDF, PNG, and JPEG are supported.`);
+    if (rejected > 0) setError(`${rejected} file(s) skipped � only PDF, PNG, and JPEG are supported.`);
     setFiles((prev) => {
       const combined = [...prev, ...accepted];
       if (combined.length > 10) { setError("You can upload up to 10 files at a time."); return combined.slice(0, 10); }
@@ -155,10 +160,10 @@ export default function Landing() {
         } else {
           stageTimers.forEach(clearTimeout);
           setLoadingStage(2);
-          toast.loading('Reconnected — resuming analysis...', { id: toastId });
+          toast.loading('Reconnected � resuming analysis...', { id: toastId });
         }
         const analyzeResult = await analyzeDocuments(currentSessionId);
-        if (!analyzeResult.analysis) { throw new Error("Analysis returned empty — please try again"); }
+        if (!analyzeResult.analysis) { throw new Error("Analysis returned empty � please try again"); }
         dispatch({ type: "SET_ANALYSIS", payload: analyzeResult.analysis });
         setPendingSessionId(null);
         return true;
@@ -168,8 +173,8 @@ export default function Landing() {
         const isTimeout = lower.includes("timed out") || lower.includes("timeout");
         const isNetwork = lower.includes("network") || lower.includes("fetch") || lower.includes("failed to fetch");
         if (!isRetry && (isTimeout || isNetwork) && pendingSessionId) {
-          toast.loading('Connection dropped — auto-retrying...', { id: toastId });
-          setSlowMessage("Connection dropped — retrying automatically...");
+          toast.loading('Connection dropped � auto-retrying...', { id: toastId });
+          setSlowMessage("Connection dropped � retrying automatically...");
           await new Promise((r) => setTimeout(r, 3000));
           return doAnalyze(true);
         }
@@ -190,18 +195,18 @@ export default function Landing() {
         msg = pendingSessionId
           ? "Server is warming up. Your documents are still uploaded. Click 'Retry Analysis' to try again!"
           : "Server is warming up. Click 'Retry Analysis' to try again!";
-        toastMsg = "Server warming up — click Retry to try again";
+        toastMsg = "Server warming up � click Retry to try again";
       } else if (lower.includes("rate") || lower.includes("429") || lower.includes("quota")) {
         msg = "AI service is busy right now. Please wait 60 seconds and try again.";
         toastMsg = msg; setPendingSessionId(null);
       } else if (lower.includes("upload") || lower.includes("413")) {
-        msg = "Upload failed — check that your files are valid PDFs or images under 10MB.";
+        msg = "Upload failed � check that your files are valid PDFs or images under 10MB.";
         toastMsg = msg; setPendingSessionId(null);
       } else if (lower.includes("network") || lower.includes("fetch") || lower.includes("failed to fetch")) {
         msg = pendingSessionId
-          ? "Connection dropped — your documents are still on the server. Click 'Retry Analysis' to resume."
-          : "Connection error — check your internet and try again.";
-        toastMsg = "Network error — click Retry to resume";
+          ? "Connection dropped � your documents are still on the server. Click 'Retry Analysis' to resume."
+          : "Connection error � check your internet and try again.";
+        toastMsg = "Network error � click Retry to resume";
       } else {
         msg = "Analysis failed. Please try again. If it keeps happening, try with fewer documents.";
         toastMsg = msg; setPendingSessionId(null);
@@ -212,6 +217,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen page-enter" style={{ background: "var(--ink)" }}>
+      <OnboardingOverlay />
       <NavigationBar />
 
       {/* Hero Section */}
@@ -235,33 +241,7 @@ export default function Landing() {
           }}
         />
 
-        {/* Floating orbs */}
-        <div aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
-          {/* Orb 1 - large, slow */}
-          <div style={{
-            position: "absolute", top: "15%", left: "20%", width: "300px", height: "300px",
-            borderRadius: "50%", background: "radial-gradient(circle, rgba(61, 220, 132, 0.08) 0%, transparent 70%)",
-            animation: "floatOrb1 12s ease-in-out infinite", filter: "blur(40px)",
-          }} />
-          {/* Orb 2 - medium, offset */}
-          <div style={{
-            position: "absolute", top: "50%", right: "15%", width: "200px", height: "200px",
-            borderRadius: "50%", background: "radial-gradient(circle, rgba(110, 231, 168, 0.06) 0%, transparent 70%)",
-            animation: "floatOrb2 10s ease-in-out infinite", filter: "blur(30px)",
-          }} />
-          {/* Orb 3 - small accent */}
-          <div style={{
-            position: "absolute", bottom: "20%", left: "60%", width: "150px", height: "150px",
-            borderRadius: "50%", background: "radial-gradient(circle, rgba(61, 220, 132, 0.1) 0%, transparent 70%)",
-            animation: "floatOrb3 8s ease-in-out infinite", filter: "blur(20px)",
-          }} />
-          {/* Orb 4 - tiny particle */}
-          <div style={{
-            position: "absolute", top: "30%", right: "35%", width: "80px", height: "80px",
-            borderRadius: "50%", background: "rgba(61, 220, 132, 0.15)",
-            animation: "floatOrb2 14s ease-in-out infinite reverse", filter: "blur(20px)",
-          }} />
-        </div>
+
 
         {/* Top gradient fade */}
         <div aria-hidden="true" style={{
@@ -279,7 +259,7 @@ export default function Landing() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mb-3"
           style={{
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
             fontSize: "clamp(12px, 2vw, 13px)",
             fontWeight: 600,
             letterSpacing: "0.12em",
@@ -299,7 +279,7 @@ export default function Landing() {
           transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
           className="mb-6"
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Syne', 'DM Sans', sans-serif",
             fontWeight: 800,
             fontSize: "clamp(42px, 7vw, 76px)",
             lineHeight: 1.05,
@@ -331,7 +311,7 @@ export default function Landing() {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="mb-10"
           style={{
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
             fontWeight: 400,
             fontSize: "clamp(16px, 3vw, 19px)",
             lineHeight: 1.7,
@@ -353,7 +333,8 @@ export default function Landing() {
           className="flex flex-col sm:flex-row items-center gap-4 mb-8"
           style={{ position: "relative", zIndex: 1 }}
         >
-          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+          {/* Desktop order: Upload first, Quick Scan second */}
+          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className="hidden md:block">
             <PrimaryButton
               onClick={() => fileInputRef.current?.click()}
               style={{
@@ -369,7 +350,7 @@ export default function Landing() {
               Upload Documents
             </PrimaryButton>
           </motion.div>
-          <a href="#quick-scan">
+          <a href="#quick-scan" className="hidden md:block">
             <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
               <GhostButton style={{ height: "52px", padding: "14px 32px", fontSize: "15px", fontWeight: 600, borderColor: "var(--leaf-border)" }}>
                 <Search size={16} />
@@ -377,36 +358,33 @@ export default function Landing() {
               </GhostButton>
             </motion.div>
           </a>
-        </motion.div>
 
-        {/* Stats Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="flex items-center gap-8 sm:gap-12 mb-12"
-          style={{ position: "relative", zIndex: 1 }}
-        >
-          {[
-            { value: "< 90s", label: "Analysis time", color: "var(--paper)" },
-            { value: "0-100", label: "Greenwash Score", color: "var(--leaf)" },
-            { value: "100%", label: "Evidence-based", color: "var(--paper)" },
-          ].map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              className="flex flex-col items-center"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.9 + i * 0.1 }}
+          {/* Mobile order: Scan a Label first, Upload Documents second */}
+          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className="md:hidden">
+            <PrimaryButton
+              onClick={() => cameraInputRef.current?.click()}
+              style={{
+                height: "52px",
+                padding: "14px 32px",
+                fontSize: "15px",
+                fontWeight: 600,
+                boxShadow: "0 0 20px rgba(61, 220, 132, 0.3), 0 4px 12px rgba(0,0,0,0.3)",
+                animation: "pulseGlow 2.5s ease-in-out infinite",
+              }}
             >
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: stat.color, letterSpacing: "-0.02em" }}>
-                {stat.value}
-              </span>
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)", marginTop: "4px" }}>
-                {stat.label}
-              </span>
-            </motion.div>
-          ))}
+              <Camera size={16} />
+              Scan a Label 📸
+            </PrimaryButton>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className="md:hidden">
+            <GhostButton
+              onClick={() => fileInputRef.current?.click()}
+              style={{ height: "52px", padding: "14px 32px", fontSize: "15px", fontWeight: 600, borderColor: "var(--leaf-border)" }}
+            >
+              <Upload size={16} />
+              Upload Documents
+            </GhostButton>
+          </motion.div>
         </motion.div>
       </section>
 
@@ -420,6 +398,15 @@ export default function Landing() {
           style={{ display: "none" }}
           onChange={handleFileInputChange}
           aria-label="Select files to upload"
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: "none" }}
+          onChange={handleCameraInputChange}
+          aria-label="Take a photo of a label"
         />
 
         <div
@@ -453,28 +440,28 @@ export default function Landing() {
           {files.length === 0 ? (
             <>
               <Upload size={32} style={{ color: "var(--leaf)", marginBottom: "16px" }} aria-hidden="true" />
-              <h3 className="hidden md:block" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: "18px", color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
+              <h3 className="hidden md:block" style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontWeight: 700, fontSize: "18px", color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
                 Drop documents here
               </h3>
-              <h3 className="md:hidden" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: "18px", color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
+              <h3 className="md:hidden" style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontWeight: 600, fontSize: "18px", color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
                 Tap to select files
               </h3>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)", marginBottom: "12px", textAlign: "center" }}>
-                PDF · PNG · JPG — 2-5 recommended · 10 max
+              <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)", marginBottom: "12px", textAlign: "center" }}>
+                PDF � PNG � JPG � 2-5 recommended � 10 max
               </p>
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--leaf)" }}>
+              <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--leaf)" }}>
                 or browse files
               </span>
             </>
           ) : (
             <div style={{ width: "100%" }} onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--ash)" }}>
+                <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--ash)" }}>
                   {files.length} file{files.length !== 1 ? "s" : ""} selected
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                  style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--leaf)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                  style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--leaf)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
                 >
                   + Add more
                 </button>
@@ -487,14 +474,14 @@ export default function Landing() {
         {/* Error */}
         {error && (
           <div className="mt-3 w-full animate-slideDown" style={{ maxWidth: "640px" }} role="alert">
-            <div className="px-4 py-3 rounded-lg" style={{ background: "var(--flag-red-dim)", border: "1px solid rgba(240,68,82,0.25)", fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "var(--flag-red)" }}>
+            <div className="px-4 py-3 rounded-lg" style={{ background: "var(--flag-red-dim)", border: "1px solid rgba(240,68,82,0.25)", fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--flag-red)" }}>
               {error}
             </div>
             {pendingSessionId && (
               <motion.button
                 onClick={handleAnalyze}
                 className="mt-3 w-full flex items-center justify-center gap-2"
-                style={{ height: "48px", borderRadius: "var(--radius-btn)", background: "rgba(240,169,55,0.08)", border: "1px solid rgba(240,169,55,0.4)", cursor: "pointer", fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: "15px", color: "var(--flag-amber)" }}
+                style={{ height: "48px", borderRadius: "var(--radius-btn)", background: "rgba(240,169,55,0.08)", border: "1px solid rgba(240,169,55,0.4)", cursor: "pointer", fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontWeight: 600, fontSize: "15px", color: "var(--flag-amber)" }}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
@@ -502,7 +489,7 @@ export default function Landing() {
                 whileTap={{ scale: 0.98 }}
               >
                 <RefreshCw size={15} />
-                Retry Analysis — documents still uploaded
+                Retry Analysis � documents still uploaded
               </motion.button>
             )}
           </div>
@@ -517,9 +504,9 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <span style={{ fontSize: "14px", flexShrink: 0, marginTop: "1px" }}>⏱️</span>
-            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", lineHeight: 1.5, color: "var(--flag-amber)", margin: 0 }}>
-              <strong>{files.length} files detected.</strong> Analysis may take 2–4 minutes for large batches.
+            <span style={{ fontSize: "14px", flexShrink: 0, marginTop: "1px" }}>??</span>
+            <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", lineHeight: 1.5, color: "var(--flag-amber)", margin: 0 }}>
+              <strong>{files.length} files detected.</strong> Analysis may take 2�4 minutes for large batches.
             </p>
           </motion.div>
         )}
@@ -550,12 +537,12 @@ export default function Landing() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span aria-hidden="true" className="animate-voltPulse" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--leaf)", display: "inline-block" }} />
-                    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", fontWeight: 600, color: "var(--leaf)" }}>GreenLens AI Processing</span>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "13px", fontWeight: 600, color: "var(--ash)", marginLeft: "auto" }}>{elapsedSeconds}s</span>
+                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 600, color: "var(--leaf)" }}>GreenLens AI Processing</span>
+                    <span style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "13px", fontWeight: 600, color: "var(--ash)", marginLeft: "auto" }}>{elapsedSeconds}s</span>
                   </div>
                   <AnimatePresence mode="wait">
-                    <motion.span key={loadingStage} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.3 }} style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)", display: "block" }}>
-                      {LOADING_STAGES[loadingStage].label}…
+                    <motion.span key={loadingStage} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.3 }} style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)", display: "block" }}>
+                      {LOADING_STAGES[loadingStage].label}�
                     </motion.span>
                   </AnimatePresence>
                 </div>
@@ -570,8 +557,8 @@ export default function Landing() {
               {(slowMessage || files.length >= 5) && (
                 <AnimatePresence mode="wait">
                   <motion.div key={slowMessage ?? "batch"} className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: "var(--flag-amber-dim)", border: "1px solid rgba(240,169,55,0.2)" }} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-                    <span style={{ fontSize: "12px", flexShrink: 0 }}>⏱️</span>
-                    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "var(--flag-amber)", margin: 0 }}>{slowMessage || `Processing ${files.length} files — hang tight!`}</p>
+                    <span style={{ fontSize: "12px", flexShrink: 0 }}>??</span>
+                    <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--flag-amber)", margin: 0 }}>{slowMessage || `Processing ${files.length} files � hang tight!`}</p>
                   </motion.div>
                 </AnimatePresence>
               )}
@@ -587,7 +574,7 @@ export default function Landing() {
                     ) : (
                       <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid var(--rule)", flexShrink: 0 }} />
                     )}
-                    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: i === loadingStage ? 600 : 400, color: i < loadingStage ? "var(--leaf)" : i === loadingStage ? "var(--paper)" : "var(--ghost)", whiteSpace: "nowrap" }}>
+                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: i === loadingStage ? 600 : 400, color: i < loadingStage ? "var(--leaf)" : i === loadingStage ? "var(--paper)" : "var(--ghost)", whiteSpace: "nowrap" }}>
                       {stage.label}
                     </span>
                   </motion.div>
@@ -598,11 +585,11 @@ export default function Landing() {
         )}
       </section>
 
-      {/* Quick Scan Panel — styled as prominent search bar */}
+      {/* Quick Scan Panel � styled as prominent search bar */}
       <section id="quick-scan" className="flex flex-col items-center px-4 sm:px-6 py-12 mx-auto" style={{ maxWidth: "1200px" }}>
         <div className="flex items-center gap-3 mb-6" style={{ width: "100%", maxWidth: "640px" }}>
           <div style={{ flex: 1, height: "1px", background: "var(--rule)" }} />
-          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--ghost)", whiteSpace: "nowrap" }}>
+          <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--ghost)", whiteSpace: "nowrap" }}>
             or try instant scan
           </span>
           <div style={{ flex: 1, height: "1px", background: "var(--rule)" }} />
@@ -610,16 +597,50 @@ export default function Landing() {
         <QuickScanPanel />
       </section>
 
+      {/* Stats Divider — moved from hero for cleaner layout */}
+      <section className="flex flex-col items-center px-4 sm:px-6 pt-8 pb-4 mx-auto" style={{ maxWidth: "1200px" }}>
+        <div style={{ width: "100%", maxWidth: "640px", height: "1px", background: "linear-gradient(90deg, transparent, var(--rule), transparent)", marginBottom: "32px" }} />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.6 }}
+          className="flex items-center gap-8 sm:gap-12"
+        >
+          {[
+            { value: "< 90s", label: "Analysis time", color: "var(--paper)" },
+            { value: "0-100", label: "Greenwash Score", color: "var(--leaf)" },
+            { value: "100%", label: "Evidence-based", color: "var(--paper)" },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              className="flex flex-col items-center"
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+            >
+              <span style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: stat.color, letterSpacing: "-0.02em" }}>
+                {stat.value}
+              </span>
+              <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)", marginTop: "4px" }}>
+                {stat.label}
+              </span>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
       {/* How It Works */}
       <section id="how-it-works" className="flex flex-col items-center px-4 py-20">
         <div className="section-header mb-3">
-          <span style={{ fontSize: "clamp(12px, 2vw, 13px)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--leaf)", fontFamily: "'Inter', sans-serif" }}>
+          <span style={{ fontSize: "clamp(12px, 2vw, 13px)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--leaf)", fontFamily: "'IBM Plex Sans', 'Inter', sans-serif" }}>
             How it works
           </span>
         </div>
         <h2
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Syne', 'DM Sans', sans-serif",
             fontSize: "clamp(24px, 4vw, 32px)",
             fontWeight: 700,
             color: "var(--paper)",
@@ -659,8 +680,8 @@ export default function Landing() {
               >
                 <Icon size={22} style={{ color: "var(--leaf)" }} aria-hidden="true" />
               </div>
-              <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "8px" }}>{title}</h3>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--ash)", margin: 0 }}>{desc}</p>
+              <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "8px" }}>{title}</h3>
+              <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--ash)", margin: 0 }}>{desc}</p>
             </motion.div>
           ))}
         </div>
@@ -669,13 +690,13 @@ export default function Landing() {
       {/* Greenwashing News */}
       <section className="flex flex-col items-center px-4 sm:px-6 py-20 mx-auto" style={{ maxWidth: "1200px" }}>
         <div className="section-header mb-3">
-          <span style={{ fontSize: "clamp(12px, 2vw, 13px)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--leaf)", fontFamily: "'Inter', sans-serif" }}>
+          <span style={{ fontSize: "clamp(12px, 2vw, 13px)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--leaf)", fontFamily: "'IBM Plex Sans', 'Inter', sans-serif" }}>
             Stay informed
           </span>
         </div>
         <h2
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Syne', 'DM Sans', sans-serif",
             fontSize: "clamp(24px, 4vw, 32px)",
             fontWeight: 700,
             color: "var(--paper)",
@@ -687,7 +708,7 @@ export default function Landing() {
         </h2>
         <p
           style={{
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
             fontSize: "15px",
             color: "var(--ash)",
             marginBottom: "48px",
@@ -721,7 +742,7 @@ export default function Landing() {
             className="glass-card px-6 py-8 w-full flex flex-col items-center"
             style={{ maxWidth: "480px", border: "1px solid var(--rule)" }}
           >
-            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "var(--ghost)", textAlign: "center", margin: 0 }}>
+            <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--ghost)", textAlign: "center", margin: 0 }}>
               Unable to load news
             </p>
           </div>
@@ -754,7 +775,7 @@ export default function Landing() {
                   <span
                     style={{
                       display: "inline-block",
-                      fontFamily: "'Inter', sans-serif",
+                      fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
                       fontSize: "11px",
                       fontWeight: 600,
                       letterSpacing: "0.04em",
@@ -777,7 +798,7 @@ export default function Landing() {
                     aria-label={`Read article: ${article.title}`}
                     style={{
                       display: "block",
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Syne', 'DM Sans', sans-serif",
                       fontSize: "15px",
                       fontWeight: 700,
                       color: "var(--paper)",
@@ -792,7 +813,7 @@ export default function Landing() {
                   {/* Snippet */}
                   <p
                     style={{
-                      fontFamily: "'Inter', sans-serif",
+                      fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
                       fontSize: "13px",
                       lineHeight: 1.5,
                       color: "var(--ash)",
@@ -810,7 +831,7 @@ export default function Landing() {
                   <div className="flex items-center justify-between">
                     <span
                       style={{
-                        fontFamily: "'Inter', sans-serif",
+                        fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
                         fontSize: "12px",
                         color: "var(--ghost)",
                         display: "flex",
@@ -827,7 +848,7 @@ export default function Landing() {
                       rel="noopener noreferrer"
                       aria-label={`View source for: ${article.title}`}
                       style={{
-                        fontFamily: "'Inter', sans-serif",
+                        fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
                         fontSize: "12px",
                         fontWeight: 500,
                         color: "var(--leaf)",
@@ -837,7 +858,7 @@ export default function Landing() {
                         gap: "3px",
                       }}
                     >
-                      View Source <span aria-hidden="true">→</span>
+                      View Source <span aria-hidden="true">?</span>
                     </a>
                   </div>
                 </motion.div>
@@ -847,17 +868,39 @@ export default function Landing() {
         )}
       </section>
 
+      {/* Live Claim Dissection Demo */}
+      <section className="flex flex-col items-center px-4 pb-16">
+        <div className="section-header mb-3">
+          <span style={{ fontSize: "clamp(12px, 2vw, 13px)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--leaf)", fontFamily: "'Inter', sans-serif" }}>
+            Live Demo
+          </span>
+        </div>
+        <h2
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "clamp(20px, 3.5vw, 28px)",
+            fontWeight: 700,
+            color: "var(--paper)",
+            marginBottom: "32px",
+            textAlign: "center",
+          }}
+        >
+          Watch AI dissect greenwashing in real time
+        </h2>
+        <ClaimDissection />
+      </section>
+
       {/* Demo CTA */}
       <section className="flex justify-center px-4 pb-20">
         <div
           className="flex flex-col items-center glass-card px-8 py-10 w-full"
           style={{ maxWidth: "min(600px, 100%)", border: "1px solid var(--leaf-border)" }}
         >
-          <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(18px, 3vw, 22px)", fontWeight: 700, color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
+          <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "clamp(18px, 3vw, 22px)", fontWeight: 700, color: "var(--paper)", marginBottom: "8px", textAlign: "center" }}>
             See it in action
           </h3>
-          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "15px", color: "var(--ash)", marginBottom: "24px", textAlign: "center" }}>
-            Try with pre-loaded sample documents — no upload needed
+          <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "15px", color: "var(--ash)", marginBottom: "24px", textAlign: "center" }}>
+            Try with pre-loaded sample documents � no upload needed
           </p>
           <Link to="/demo">
             <PrimaryButton style={{ padding: "14px 32px", fontSize: "15px", fontWeight: 600 }}>Try Demo</PrimaryButton>
@@ -872,12 +915,12 @@ export default function Landing() {
       >
         <div className="flex items-center gap-2">
           <Leaf size={12} style={{ color: "var(--leaf)" }} aria-hidden="true" />
-          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ash)", textAlign: "center", margin: 0 }}>
-            GreenLens · AI-powered greenwashing detection
+          <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ash)", textAlign: "center", margin: 0 }}>
+            GreenLens � AI-powered greenwashing detection
           </p>
         </div>
-        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", fontWeight: 400, color: "var(--ghost)", textAlign: "center", margin: 0 }}>
-          Powered by AMD MI300X · Built for YFS Build for Good Hackathon
+        <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 400, color: "var(--ghost)", textAlign: "center", margin: 0 }}>
+          Powered by AMD MI300X � Built for YFS Build for Good Hackathon
         </p>
       </footer>
     </div>

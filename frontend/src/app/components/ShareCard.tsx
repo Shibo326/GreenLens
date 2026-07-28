@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Share2, Download, Check, Leaf } from "lucide-react";
+import { Share2, Check, Leaf } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ShareCardProps {
@@ -94,7 +94,7 @@ export function ShareCard({ score, misleadingCount, vagueCount, unverifiedCount,
                 {/* Logo */}
                 <div className="flex items-center gap-2 mb-6" style={{ position: "relative" }}>
                   <Leaf size={16} style={{ color: "#3DDC84" }} />
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "16px", fontWeight: 700, color: "#F3F0E6" }}>
+                  <span style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "16px", fontWeight: 700, color: "#F3F0E6" }}>
                     Green<span style={{ color: "#3DDC84" }}>Lens</span>
                   </span>
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "#4E6157", marginLeft: "auto" }}>REPORT CARD</span>
@@ -102,10 +102,10 @@ export function ShareCard({ score, misleadingCount, vagueCount, unverifiedCount,
 
                 {/* Score */}
                 <div className="text-center mb-4" style={{ position: "relative" }}>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "72px", fontWeight: 800, color: verdict.color, lineHeight: 1 }}>
+                  <div style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "72px", fontWeight: 800, color: verdict.color, lineHeight: 1 }}>
                     {score}
                   </div>
-                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "#9BAFA3", marginTop: "4px" }}>
+                  <div style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "#9BAFA3", marginTop: "4px" }}>
                     CREDIBILITY SCORE
                   </div>
                 </div>
@@ -132,16 +132,16 @@ export function ShareCard({ score, misleadingCount, vagueCount, unverifiedCount,
                 {/* Stats */}
                 <div className="flex justify-between px-2 mb-5" style={{ borderTop: "1px solid #24352C", paddingTop: "16px" }}>
                   <div className="text-center">
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "20px", fontWeight: 700, color: "#F04452" }}>{misleadingCount}</div>
-                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", color: "#4E6157" }}>MISLEADING</div>
+                    <div style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "20px", fontWeight: 700, color: "#F04452" }}>{misleadingCount}</div>
+                    <div style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "10px", color: "#4E6157" }}>MISLEADING</div>
                   </div>
                   <div className="text-center">
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "20px", fontWeight: 700, color: "#F0A937" }}>{vagueCount}</div>
-                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", color: "#4E6157" }}>VAGUE</div>
+                    <div style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "20px", fontWeight: 700, color: "#F0A937" }}>{vagueCount}</div>
+                    <div style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "10px", color: "#4E6157" }}>VAGUE</div>
                   </div>
                   <div className="text-center">
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "20px", fontWeight: 700, color: "#5FA8D3" }}>{unverifiedCount}</div>
-                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", color: "#4E6157" }}>UNVERIFIED</div>
+                    <div style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "20px", fontWeight: 700, color: "#5FA8D3" }}>{unverifiedCount}</div>
+                    <div style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "10px", color: "#4E6157" }}>UNVERIFIED</div>
                   </div>
                 </div>
 

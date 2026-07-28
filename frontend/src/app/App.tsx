@@ -43,7 +43,7 @@ export default function App() {
             background: 'var(--lead)',
             border: '1px solid var(--rule)',
             color: 'var(--paper)',
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
             fontSize: '14px',
           },
         }}

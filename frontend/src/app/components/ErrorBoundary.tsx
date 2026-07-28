@@ -52,7 +52,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div style={{ fontSize: "32px", marginBottom: "16px" }}>⚠️</div>
             <h2
               style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'Syne', 'DM Sans', sans-serif",
                 fontSize: "20px",
                 fontWeight: 700,
                 color: "var(--paper)",
@@ -63,7 +63,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </h2>
             <p
               style={{
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
                 fontSize: "14px",
                 color: "var(--ash)",
                 marginBottom: "20px",
@@ -80,7 +80,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 border: "none",
                 borderRadius: "var(--radius-btn)",
                 padding: "10px 24px",
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
                 fontSize: "14px",
                 fontWeight: 500,
                 cursor: "pointer",

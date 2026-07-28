@@ -220,14 +220,7 @@ button:active:not(:disabled) {
   gap: 10px;
 }
 
-.section-header::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--leaf);
-  flex-shrink: 0;
-}
+
 
 /* ── Hover lift utility ───────────────────────────────────────────────────── */
 .hover-lift {

@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavigationBar } from "../components/NavigationBar";
 import { GhostButton } from "../components/Buttons";
 import { EvidenceTag, EvidenceBox } from "../components/Badges";
@@ -250,7 +250,7 @@ export default function Chat() {
         (error) => {
           setIsStreaming(false);
           setStreamingAnswer("");
-          // Show error inline in chat — no toast needed (avoids double notification)
+          // Show error inline in chat � no toast needed (avoids double notification)
           const errMsg: AssistantMessage = {
             id: `err-${Date.now()}`,
             role: "assistant",
@@ -307,7 +307,7 @@ export default function Chat() {
 
   const handleExportChat = () => {
     if (!messages.length) return;
-    const lines: string[] = [`GreenLens AI — Chat Export\n${new Date().toLocaleString()}\n${'='.repeat(60)}\n`];
+    const lines: string[] = [`GreenLens AI � Chat Export\n${new Date().toLocaleString()}\n${'='.repeat(60)}\n`];
     for (const msg of messages) {
       if (msg.role === 'user') {
         lines.push(`[You]\n${msg.content}\n`);
@@ -316,7 +316,7 @@ export default function Chat() {
         lines.push(`[GreenLens AI]\n${sr.answer}`);
         if (sr.evidence.length) {
           lines.push(`\nEvidence:`);
-          sr.evidence.forEach(ev => lines.push(`  • "${ev.quote}" — ${ev.sourceDocument}`));
+          sr.evidence.forEach(ev => lines.push(`  � "${ev.quote}" � ${ev.sourceDocument}`));
         }
         if (sr.risks) lines.push(`\nRisk: ${sr.risks}`);
         if (sr.recommendation) lines.push(`\nRecommendation: ${sr.recommendation}`);
@@ -363,7 +363,7 @@ export default function Chat() {
     try {
       dispatch({ type: "RESET" });
       navigate("/");
-      toast.success("Session cleared — upload new documents to start fresh.");
+      toast.success("Session cleared � upload new documents to start fresh.");
     } catch {
       toast.error("Failed to reset session.");
     }
@@ -415,7 +415,7 @@ export default function Chat() {
               <div className="animate-dot-1 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
               <div className="animate-dot-2 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
               <div className="animate-dot-3 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
-              <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)" }}>Generating…</span>
+              <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)" }}>Generating�</span>
             </div>
           ) : (
             quickQuestions.map((q, idx) => (
@@ -459,7 +459,7 @@ export default function Chat() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-4 py-4" style={{ borderBottom: "1px solid var(--rule)" }}>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, color: "var(--paper)" }}>Documents & Questions</span>
+                <span style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, color: "var(--paper)" }}>Documents & Questions</span>
                 <button onClick={() => setSidebarOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ash)" }}>
                   <X size={18} />
                 </button>
@@ -513,12 +513,12 @@ export default function Chat() {
               </div>
 
               <div className="flex flex-col min-w-0">
-                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, color: "var(--paper)" }}>
+                <div style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, color: "var(--paper)" }}>
                   GreenLens Copilot
                 </div>
                 <div className="flex items-center gap-2">
                   <span style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "11px", fontWeight: 500, color: "var(--leaf)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "200px" }}>
-                    {docCount} doc{docCount !== 1 ? "s" : ""} · greenwashing analysis ready
+                    {docCount} doc{docCount !== 1 ? "s" : ""} � greenwashing analysis ready
                   </span>
                   {isThinking && (
                     <div className="flex items-center gap-1">
@@ -574,7 +574,7 @@ export default function Chat() {
               <div className="relative" ref={downloadRef}>
                 <GhostButton small onClick={() => setDownloadOpen(!downloadOpen)} disabled={isExporting}>
                   <Download size={14} />
-                  <span className="hidden sm:inline">{isExporting ? "Exporting…" : "Download"}</span>
+                  <span className="hidden sm:inline">{isExporting ? "Exporting�" : "Download"}</span>
                   <ChevronDown size={12} style={{ transform: downloadOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                 </GhostButton>
                 {downloadOpen && (
@@ -680,17 +680,17 @@ export default function Chat() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5" style={{ background: "var(--ink)" }}>
-            {/* Empty state — show inline suggested questions */}
+            {/* Empty state � show inline suggested questions */}
             {messages.length === 0 && !isThinking && !isStreaming && (
               <div className="flex flex-col items-center justify-center h-full py-8 animate-fadeIn">
                 <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
                   <Sparkles size={22} style={{ color: "var(--leaf)" }} />
                 </div>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px", textAlign: "center" }}>
+                <p style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)", marginBottom: "6px", textAlign: "center" }}>
                   Ask GreenLens anything about the greenwashing analysis
                 </p>
                 <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--ghost)", marginBottom: "24px", textAlign: "center" }}>
-                  {documents.length} document{documents.length !== 1 ? "s" : ""} loaded · greenwashing detection ready
+                  {documents.length} document{documents.length !== 1 ? "s" : ""} loaded � greenwashing detection ready
                 </p>
                 {/* Inline suggested questions grid */}
                 {quickQuestions.length > 0 && (
@@ -715,7 +715,7 @@ export default function Chat() {
                     <div className="animate-dot-1 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
                     <div className="animate-dot-2 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
                     <div className="animate-dot-3 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
-                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)" }}>Generating questions…</span>
+                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)" }}>Generating questions�</span>
                   </div>
                 )}
               </div>
@@ -793,7 +793,7 @@ export default function Chat() {
                                 <EvidenceBox quote={ev.quote} style={{ marginBottom: "6px" }} />
                                 <div className="flex items-center justify-between">
                                   <EvidenceTag filename={ev.sourceDocument} />
-                                  <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "10px", color: "var(--leaf)", fontWeight: 500 }}>View source →</span>
+                                  <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "10px", color: "var(--leaf)", fontWeight: 500 }}>View source ?</span>
                                 </div>
                               </div>
                             ))}
@@ -888,12 +888,13 @@ export default function Chat() {
             {/* Thinking indicator */}
             {isThinking && (
               <div className="flex justify-start animate-slideUp">
-                <div className="px-4 py-4 rounded-2xl" style={{ background: "var(--lead)", border: "1px solid var(--rule)", borderLeft: "3px solid var(--leaf)", borderRadius: "4px 16px 16px 16px" }}>
+                <div className="px-4 py-4 rounded-2xl" style={{ background: "var(--lead)", border: "1px solid var(--rule)", borderLeft: "3px solid var(--leaf)", borderRadius: "4px 16px 16px 16px", position: "relative", overflow: "hidden", minWidth: "260px" }}>
+                  <div className="scan-line" />
                   <div className="flex items-center gap-3">
                     <div className="animate-dot-1 w-2 h-2 rounded-full" style={{ background: "var(--leaf)", boxShadow: "0 0 6px rgba(61, 220, 132, 0.5)" }} />
                     <div className="animate-dot-2 w-2 h-2 rounded-full" style={{ background: "var(--leaf)", boxShadow: "0 0 6px rgba(61, 220, 132, 0.5)" }} />
                     <div className="animate-dot-3 w-2 h-2 rounded-full" style={{ background: "var(--leaf)", boxShadow: "0 0 6px rgba(61, 220, 132, 0.5)" }} />
-                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)" }}>GreenLens AI is thinking…</span>
+                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)" }}>Scanning documents & reasoning...</span>
                   </div>
                 </div>
               </div>
@@ -979,7 +980,7 @@ export default function Chat() {
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="Ask about these sustainability claims…"
+                placeholder="Ask about these sustainability claims�"
                 className="flex-1 bg-transparent border-none outline-none placeholder-ghost"
                 style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "15px", color: "var(--paper)", minWidth: 0 }}
                 value={inputValue}
@@ -994,7 +995,7 @@ export default function Chat() {
                 onClick={() => imageInputRef.current?.click()}
                 onMouseOver={(e) => { e.currentTarget.style.color = "var(--leaf)"; }}
                 onMouseOut={(e) => { e.currentTarget.style.color = "var(--ghost)"; }}
-                title="Snap & Check — attach image for analysis"
+                title="Snap & Check � attach image for analysis"
               >
                 <Camera size={18} />
               </button>

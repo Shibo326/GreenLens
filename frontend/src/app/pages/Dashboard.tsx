@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { NavigationBar } from "../components/NavigationBar";
 import { Card } from "../components/Card";
 import { RiskBadge, EvidenceTag, EvidenceBox } from "../components/Badges";
@@ -24,7 +24,11 @@ import { toast } from "sonner";
 import { useAppState, useAppDispatch } from "../../lib/store";
 import { sanitizeText } from "../../lib/sanitize";
 import { GreenwashScoreGauge } from "../components/GreenwashScoreGauge";
-import { ClaimVsRealityRow } from "../components/ClaimVsRealityRow";
+import { VerdictStamp } from "../components/VerdictStamp";
+import { ConfettiEffect } from "../components/ConfettiEffect";
+import { ShareCard } from "../components/ShareCard";
+import { ClaimSlider } from "../components/ClaimSlider";
+import { AchievementBadges } from "../components/AchievementBadges";
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
@@ -143,7 +147,7 @@ export default function Dashboard() {
                     {doc.filename}
                   </div>
                   <div style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "11px", color: doc.processingStatus === "completed" ? "var(--leaf)" : "var(--flag-amber)" }}>
-                    {doc.processingStatus === "completed" ? (isImage ? "Image · OCR Complete" : "Processed") : "Processing..."}
+                    {doc.processingStatus === "completed" ? (isImage ? "Image � OCR Complete" : "Processed") : "Processing..."}
                   </div>
                 </div>
               </div>
@@ -190,7 +194,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-center gap-1.5 pt-1">
             <Leaf size={12} style={{ color: "var(--leaf)" }} aria-hidden="true" />
             <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 500, color: "var(--ghost)" }}>
-              Powered by GreenLens AI · AMD MI300X
+              Powered by GreenLens AI � AMD MI300X
             </span>
           </div>
         </div>
@@ -245,7 +249,7 @@ export default function Dashboard() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-4 py-4" style={{ borderBottom: "1px solid var(--rule)" }}>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, color: "var(--paper)" }}>Documents</span>
+                <span style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, color: "var(--paper)" }}>Documents</span>
                 <button onClick={() => setSidebarOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ash)" }}>
                   <X size={18} />
                 </button>
@@ -263,11 +267,11 @@ export default function Dashboard() {
             style={{ background: "var(--ink)", borderBottom: "1px solid var(--rule)", position: "sticky", top: "52px", zIndex: 10 }}
           >
             <div className="flex items-center gap-2 min-w-0">
-              <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 700, color: "var(--paper)", whiteSpace: "nowrap" }}>
+              <h2 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 700, color: "var(--paper)", whiteSpace: "nowrap" }}>
                 Analysis Results
               </h2>
               <span className="hidden sm:inline" style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)" }}>
-                · Analyzed {analysis.analyzedAt ? new Date(analysis.analyzedAt).toLocaleString() : "just now"}
+                � Analyzed {analysis.analyzedAt ? new Date(analysis.analyzedAt).toLocaleString() : "just now"}
               </span>
               {documents[0]?.uploadedAt && analysis.analyzedAt && (() => {
                 const ms = new Date(analysis.analyzedAt).getTime() - new Date(documents[0].uploadedAt).getTime();
@@ -289,11 +293,21 @@ export default function Dashboard() {
                 {isReanalyzing ? (
                   <div className="flex items-center gap-1.5">
                     <div className="animate-spin-slow w-3 h-3 rounded-full" style={{ border: "2px solid var(--ghost)", borderTopColor: "var(--leaf)" }} />
-                    <span className="hidden sm:inline">Analyzing…</span>
+                    <span className="hidden sm:inline">Analyzing�</span>
                   </div>
-                ) : <><span className="hidden sm:inline">Re-analyze</span><span className="sm:hidden">↻</span></>}
+                ) : <><span className="hidden sm:inline">Re-analyze</span><span className="sm:hidden">?</span></>}
               </GhostButton>
               <Link to="/chat"><PrimaryButton small><span className="hidden sm:inline">Ask a Question</span><span className="sm:hidden">Chat</span></PrimaryButton></Link>
+              {/* Share Report Card */}
+              <div className="hidden sm:block">
+                <ShareCard
+                  score={analysis.greenwashScore ?? 50}
+                  misleadingCount={analysis.risks.filter(r => r.level === "HIGH").length}
+                  vagueCount={analysis.risks.filter(r => r.level === "MEDIUM").length}
+                  unverifiedCount={analysis.risks.filter(r => r.level === "LOW").length}
+                  documentNames={documents.map(d => d.filename)}
+                />
+              </div>
               {/* Export Dropdown */}
               <div className="relative" ref={exportDropdownRef}>
                 <GhostButton small onClick={() => setExportDropdownOpen(!exportDropdownOpen)} disabled={isExporting}>
@@ -368,15 +382,89 @@ export default function Dashboard() {
           {/* Content */}
           <div className="p-4 sm:p-6 md:p-8 space-y-6">
 
-            {/* Greenwash Score Gauge — HERO position */}
-            <GreenwashScoreGauge score={analysis.greenwashScore} />
+            {/* Confetti on first load */}
+            <ConfettiEffect />
+
+            {/* Key Finding Banner */}
+            {analysis && (() => {
+              const bannerScore = analysis.greenwashScore;
+              const bannerScoreDisplay = bannerScore != null ? bannerScore : "N/A";
+              const bannerBand = bannerScore == null
+                ? { label: "Awaiting analysis", color: "var(--ghost)" }
+                : bannerScore <= 30
+                  ? { label: "Mostly Greenwashing", color: "var(--flag-red)" }
+                  : bannerScore <= 60
+                    ? { label: "Vague / Mixed Signals", color: "var(--flag-amber)" }
+                    : { label: "Credible", color: "var(--leaf)" };
+              const topRiskRaw = analysis.risks[0]?.description;
+              const topRisk = topRiskRaw
+                ? (topRiskRaw.split(".")[0] || topRiskRaw).slice(0, 100) + (topRiskRaw.length > 100 ? "…" : "")
+                : "See the full breakdown below.";
+
+              return (
+                <div
+                  id="key-finding-banner"
+                  className="rounded-xl"
+                  style={{
+                    background: "var(--leaf-dim)",
+                    border: "1px solid var(--leaf-border)",
+                    borderLeft: `4px solid ${bannerBand.color}`,
+                    padding: "16px",
+                  }}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--ash)", margin: 0 }}>
+                      This analysis scored{" "}
+                      <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: bannerBand.color }}>
+                        {bannerScoreDisplay}/100
+                      </span>
+                      {" — "}
+                      <span style={{ fontWeight: 600, color: bannerBand.color }}>{bannerBand.label}</span>.{" "}
+                      <span style={{ color: "var(--ash)" }}>{topRisk}</span>
+                    </p>
+                    <a
+                      href="#contradiction-section"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const target = document.getElementById("contradiction-section") || document.getElementById("greenwash-flags-section");
+                        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                      style={{
+                        fontFamily: "'IBM Plex Sans', sans-serif",
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        color: "var(--leaf)",
+                        textDecoration: "none",
+                        whiteSpace: "nowrap",
+                        cursor: "pointer",
+                      }}
+                    >
+                      See details ↓
+                    </a>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Greenwash Score Gauge — HERO position with Verdict Stamp */}
+            <div style={{ position: "relative" }}>
+              <GreenwashScoreGauge score={analysis.greenwashScore} />
+              {analysis.greenwashScore !== undefined && <VerdictStamp score={analysis.greenwashScore} />}
+            </div>
+
+            {/* Achievement Badges */}
+            <AchievementBadges
+              documentsAnalyzed={documents.length}
+              contradictionsFound={analysis.conflicts.length}
+              flagsFound={analysis.risks.length}
+            />
             {hasConflicts && (
-              <div className="rounded-lg p-4 animate-slideDown" style={{ background: "var(--flag-red-dim)", border: "1px solid rgba(240,68,82,0.25)", borderLeft: "4px solid var(--flag-red)" }}>
+              <div id="contradiction-section" className="rounded-lg p-4 animate-slideDown" style={{ background: "var(--flag-red-dim)", border: "1px solid rgba(240,68,82,0.25)", borderLeft: "4px solid var(--flag-red)" }}>
                 <div className="flex items-start sm:items-center justify-between gap-3 mb-4 flex-wrap">
                   <div className="flex items-center gap-3 flex-wrap">
                     <AlertTriangle size={20} style={{ color: "var(--flag-red)", flexShrink: 0 }} aria-hidden="true" />
-                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, letterSpacing: "0.02em", textTransform: "uppercase", color: "var(--flag-red)" }}>
-                      ⚠️ Contradiction
+                    <span style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "15px", fontWeight: 700, letterSpacing: "0.02em", textTransform: "uppercase", color: "var(--flag-red)" }}>
+                      ?? Contradiction
                     </span>
                     <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--ash)" }}>
                       {analysis.conflicts.length} contradiction{analysis.conflicts.length !== 1 ? "s" : ""} found
@@ -417,13 +505,13 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Analysis Cards Grid — 2-column on desktop */}
+            {/* Analysis Cards Grid � 2-column on desktop */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Executive Summary */}
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Executive Summary</h3>
+                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Executive Summary</h3>
                     <FileText size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -441,12 +529,12 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              {/* Web Research Context — real-time online findings */}
+              {/* Web Research Context � real-time online findings */}
               {analysis.webResearchContext && (
                 <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '320px' }}>
                   <div style={{ flexShrink: 0 }}>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Web Research</h3>
+                      <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Web Research</h3>
                       <Globe size={18} style={{ color: "var(--ghost)" }} />
                     </div>
                     <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -463,10 +551,11 @@ export default function Dashboard() {
               )}
 
               {/* Greenwash Flags */}
+              <div id="greenwash-flags-section">
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Greenwash Flags</h3>
+                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Greenwash Flags</h3>
                     <AlertTriangle size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -476,7 +565,7 @@ export default function Dashboard() {
                     {analysis.risks.length === 0 && (
                       <div className="flex flex-col items-center py-6 gap-2">
                         <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: "18px" }}>✓</span>
+                          <span style={{ fontSize: "18px" }}>?</span>
                         </div>
                         <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--leaf)", fontWeight: 500 }}>No greenwash flags</p>
                         <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)", textAlign: "center" }}>GreenLens AI found no greenwashing signals in these claims.</p>
@@ -496,19 +585,20 @@ export default function Dashboard() {
                   </div>
                 </div>
               </Card>
+              </div>
 
               {/* Claim vs. Reality */}
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Claim vs. Reality</h3>
+                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Claim vs. Reality</h3>
                     <Scale size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
                 </div>
                 <div className="card-scroll space-y-3" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                   {analysis.comparisonMatrix.map((row) => (
-                    <ClaimVsRealityRow key={row.field} row={row} />
+                    <ClaimSlider key={row.field} row={row} />
                   ))}
                 </div>
               </Card>
@@ -517,7 +607,7 @@ export default function Dashboard() {
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Analytics Overview</h3>
+                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>Analytics Overview</h3>
                     <BarChart3 size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--rule)", margin: "12px 0" }} />
@@ -625,11 +715,11 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              {/* AI Recommendation — spans full width */}
+              {/* AI Recommendation � spans full width */}
               <Card className="md:col-span-2" style={{ display: 'flex', flexDirection: 'column', maxHeight: '320px', background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>AI Recommendation</h3>
+                    <h3 style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--paper)" }}>AI Recommendation</h3>
                     <Lightbulb size={18} style={{ color: "var(--ghost)" }} />
                   </div>
                   <div style={{ height: "1px", background: "var(--leaf-border)", margin: "12px 0" }} />
@@ -687,7 +777,7 @@ export default function Dashboard() {
                   )}
                   <div style={{ borderTop: "1px solid var(--leaf-border)", paddingTop: "16px" }}>
                     <Link to="/chat" style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--leaf)", textDecoration: "none" }}>
-                      Ask follow-up questions →
+                      Ask follow-up questions ?
                     </Link>
                   </div>
                 </div>

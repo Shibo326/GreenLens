@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Sparkles, Loader, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { quickScan } from "../../lib/api";
 import type { QuickScanResponse } from "../../lib/types";
@@ -74,7 +74,7 @@ export function QuickScanPanel() {
         <div>
           <h3
             style={{
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: "'Syne', 'DM Sans', sans-serif",
               fontSize: "16px",
               fontWeight: 700,
               color: "var(--paper)",

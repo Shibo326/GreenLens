@@ -155,7 +155,7 @@ export function MarkdownText({ text, style, className }: MarkdownTextProps) {
     <div
       className={className}
       style={{
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
         fontSize: "15px",
         color: "var(--paper)",
         letterSpacing: "-0.01em",

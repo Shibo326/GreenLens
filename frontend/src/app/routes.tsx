@@ -7,6 +7,7 @@ const Landing = lazy(() => import("./pages/Landing"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Chat = lazy(() => import("./pages/Chat"));
 const Demo = lazy(() => import("./pages/Demo"));
+const Learn = lazy(() => import("./pages/Learn"));
 
 // Professional loading fallback with GreenLens branding
 function PageLoader() {
@@ -38,7 +39,7 @@ function PageLoader() {
         />
         <span
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Syne', 'DM Sans', sans-serif",
             fontSize: "18px",
             fontWeight: 700,
             color: "var(--paper)",
@@ -122,7 +123,7 @@ function RouteErrorBoundary() {
         <div style={{ fontSize: "32px", marginBottom: "16px" }}>⚠️</div>
         <h2
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Syne', 'DM Sans', sans-serif",
             fontSize: "20px",
             fontWeight: 700,
             color: "var(--paper)",
@@ -133,7 +134,7 @@ function RouteErrorBoundary() {
         </h2>
         <p
           style={{
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
             fontSize: "14px",
             color: "var(--ash)",
             marginBottom: "20px",
@@ -151,7 +152,7 @@ function RouteErrorBoundary() {
               border: "none",
               borderRadius: "var(--radius-btn)",
               padding: "10px 24px",
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
               fontSize: "14px",
               fontWeight: 500,
               cursor: "pointer",
@@ -167,7 +168,7 @@ function RouteErrorBoundary() {
               border: "1px solid var(--rule)",
               borderRadius: "var(--radius-btn)",
               padding: "10px 24px",
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
               fontSize: "14px",
               fontWeight: 500,
               cursor: "pointer",
@@ -219,6 +220,15 @@ export const router = createBrowserRouter([
     element: (
       <SuspenseWrapper>
         <Demo />
+      </SuspenseWrapper>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/learn",
+    element: (
+      <SuspenseWrapper>
+        <Learn />
       </SuspenseWrapper>
     ),
     errorElement: <RouteErrorBoundary />,

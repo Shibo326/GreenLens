@@ -112,7 +112,7 @@ function PaperCard({ file, index, onRemove }: PaperCardProps) {
             )}
           </div>
           <span style={{
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace",
             fontSize: "10px",
             fontWeight: 600,
             letterSpacing: "0.05em",
@@ -126,7 +126,7 @@ function PaperCard({ file, index, onRemove }: PaperCardProps) {
         {/* Filename */}
         <div
           style={{
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
             fontSize: "13px",
             fontWeight: 500,
             color: "var(--paper)",
@@ -144,7 +144,7 @@ function PaperCard({ file, index, onRemove }: PaperCardProps) {
         {/* File size */}
         <div
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace",
             fontSize: "11px",
             color: "var(--ghost)",
           }}

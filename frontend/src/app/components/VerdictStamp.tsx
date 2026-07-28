@@ -43,7 +43,7 @@ export function VerdictStamp({ score }: VerdictStampProps) {
         <span style={{ fontSize: "16px" }}>{verdict.emoji}</span>
         <span
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Syne', 'DM Sans', sans-serif",
             fontSize: "clamp(14px, 2.5vw, 18px)",
             fontWeight: 800,
             letterSpacing: "0.1em",

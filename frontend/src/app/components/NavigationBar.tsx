@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
 import { Menu, X, Leaf, Zap } from "lucide-react";
 
@@ -56,7 +56,7 @@ export function NavigationBar({ showDemo = true }: NavigationBarProps) {
             <Leaf size={18} style={{ color: "var(--leaf)" }} aria-hidden="true" />
             <span
               style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'Syne', 'DM Sans', sans-serif",
                 fontSize: "18px",
                 color: "var(--paper)",
                 fontWeight: 700,
@@ -96,6 +96,30 @@ export function NavigationBar({ showDemo = true }: NavigationBarProps) {
             >
               How it works
             </button>
+            <Link
+              to="/learn"
+              style={{
+                fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                fontSize: "13px",
+                fontWeight: 500,
+                color: "var(--ash)",
+                textDecoration: "none",
+                padding: "4px 0",
+                transition: "color 0.15s",
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.color = "var(--paper)";
+                e.currentTarget.style.textDecoration = "underline";
+                e.currentTarget.style.textUnderlineOffset = "4px";
+                e.currentTarget.style.textDecorationColor = "var(--leaf)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.color = "var(--ash)";
+                e.currentTarget.style.textDecoration = "none";
+              }}
+            >
+              Learn
+            </Link>
           </div>
         </div>
 
@@ -191,6 +215,25 @@ export function NavigationBar({ showDemo = true }: NavigationBarProps) {
           >
             How it works
           </button>
+          <Link to="/learn" onClick={() => setMenuOpen(false)}>
+            <button
+              className="w-full px-4 py-3 rounded-lg border"
+              style={{
+                background: "transparent",
+                borderColor: "var(--rule)",
+                color: "var(--ash)",
+                fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                fontSize: "15px",
+                fontWeight: 500,
+                cursor: "pointer",
+                borderRadius: "var(--radius-btn)",
+                minHeight: "44px",
+              }}
+              role="menuitem"
+            >
+              Learn
+            </button>
+          </Link>
           <Link to="/demo" onClick={() => setMenuOpen(false)}>
             <button
               className="w-full px-4 py-3 rounded-lg border"
