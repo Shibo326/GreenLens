@@ -928,13 +928,37 @@ export default function Landing() {
               return (
                 <motion.div
                   key={idx}
-                  className="glass-card hover-lift p-5"
-                  style={{ border: "1px solid var(--rule)", borderLeft: `3px solid ${colors.border}` }}
+                  className="glass-card hover-lift"
+                  style={{ border: "1px solid var(--rule)", borderLeft: `3px solid ${colors.border}`, overflow: "hidden" }}
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: idx * 0.08 }}
                 >
+                  {/* Thumbnail image */}
+                  <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ display: "block", position: "relative", height: "140px", overflow: "hidden" }}>
+                    <img
+                      src={`https://picsum.photos/seed/${encodeURIComponent(article.title.slice(0, 20))}/600/280`}
+                      alt=""
+                      loading="lazy"
+                      style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.4) saturate(0.7)", transition: "filter 0.3s ease" }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                    <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${colors.bg} 0%, transparent 60%)`, pointerEvents: "none" }} />
+                    <div style={{ position: "absolute", bottom: "12px", left: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <img
+                        src={`https://www.google.com/s2/favicons?domain=${article.source}&sz=32`}
+                        alt=""
+                        width={20}
+                        height={20}
+                        style={{ borderRadius: "4px", border: "1px solid rgba(255,255,255,0.2)" }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>{article.source}</span>
+                    </div>
+                  </a>
+
+                  <div style={{ padding: "16px 20px 20px" }}>
                   {/* Category badge */}
                   <span
                     style={{
@@ -1000,9 +1024,17 @@ export default function Landing() {
                         color: "var(--ghost)",
                         display: "flex",
                         alignItems: "center",
-                        gap: "4px",
+                        gap: "6px",
                       }}
                     >
+                      <img
+                        src={`https://www.google.com/s2/favicons?domain=${sourceDomain}&sz=32`}
+                        alt={sourceDomain}
+                        width={16}
+                        height={16}
+                        style={{ borderRadius: "3px", opacity: 0.85 }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
                       {sourceDomain}
                       <ExternalLink size={10} style={{ color: "var(--ghost)" }} aria-hidden="true" />
                     </span>
@@ -1022,8 +1054,9 @@ export default function Landing() {
                         gap: "3px",
                       }}
                     >
-                      View Source <span aria-hidden="true">?</span>
+                      View Source <span aria-hidden="true">→</span>
                     </a>
+                  </div>
                   </div>
                 </motion.div>
               );

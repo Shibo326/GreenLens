@@ -18,24 +18,20 @@ export function GreenwashScoreGauge({ score }: GreenwashScoreGaugeProps) {
 
   const targetProgress = isNeutral ? 0 : Math.min(100, Math.max(0, score!));
 
-  // Animate arc fill on mount
   const [animatedProgress, setAnimatedProgress] = useState(0);
 
   useEffect(() => {
-    // Small delay to trigger CSS transition from 0 to target
     const timeout = setTimeout(() => {
       setAnimatedProgress(targetProgress);
-    }, 50);
+    }, 100);
     return () => clearTimeout(timeout);
   }, [targetProgress]);
 
-  // Arc math: semi-circle from left to right (180 degrees)
-  // Center at (140, 120), radius 100
-  // The arc path goes from (40, 120) to (240, 120) — a 180-degree semi-circle
-  const radius = 100;
-  const cx = 140;
-  const cy = 120;
-  const arcLength = Math.PI * radius; // half circumference
+  // Arc math — semi-circle
+  const radius = 90;
+  const cx = 150;
+  const cy = 110;
+  const arcLength = Math.PI * radius;
   const strokeDashoffset = arcLength - (animatedProgress / 100) * arcLength;
 
   const displayScore = isNeutral ? "—" : score;
@@ -43,24 +39,52 @@ export function GreenwashScoreGauge({ score }: GreenwashScoreGaugeProps) {
   return (
     <div
       className="flex flex-col items-center justify-center"
-      style={{ maxWidth: "280px", margin: "0 auto" }}
+      style={{
+        maxWidth: "340px",
+        width: "100%",
+        margin: "0 auto",
+        padding: "28px 24px 20px",
+        background: "var(--lead)",
+        border: "1px solid var(--rule)",
+        borderRadius: "16px",
+        position: "relative",
+        overflow: "hidden",
+      }}
       role="figure"
       aria-label={`Greenwash credibility score: ${isNeutral ? "awaiting analysis" : `${score} out of 100, ${band.label}`}`}
     >
+      {/* Subtle glow behind the gauge */}
+      {!isNeutral && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: "20%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "200px",
+            height: "120px",
+            background: `radial-gradient(ellipse at center, ${band.color}15 0%, transparent 70%)`,
+            filter: "blur(30px)",
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
       {/* SVG Semi-circle Arc */}
-      <div className="relative" style={{ width: "280px", height: "155px" }}>
+      <div className="relative" style={{ width: "300px", height: "160px" }}>
         <svg
-          viewBox="0 0 280 155"
-          width="280"
-          height="155"
+          viewBox="0 0 300 160"
+          width="300"
+          height="160"
           style={{ overflow: "visible" }}
         >
           {/* Background track */}
           <path
             d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
             fill="none"
-            stroke="var(--rule)"
-            strokeWidth="14"
+            stroke="var(--graphite)"
+            strokeWidth="18"
             strokeLinecap="round"
           />
           {/* Animated fill arc */}
@@ -68,21 +92,26 @@ export function GreenwashScoreGauge({ score }: GreenwashScoreGaugeProps) {
             d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
             fill="none"
             stroke={band.color}
-            strokeWidth="14"
+            strokeWidth="18"
             strokeLinecap="round"
             strokeDasharray={`${arcLength}`}
             strokeDashoffset={strokeDashoffset}
             style={{
-              transition: "stroke-dashoffset 1.5s ease-out, stroke 0.3s ease",
+              transition: "stroke-dashoffset 1.8s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.4s ease",
+              filter: isNeutral ? "none" : `drop-shadow(0 0 8px ${band.color}66)`,
             }}
           />
+          {/* Tick marks for 0, 50, 100 */}
+          <text x={cx - radius - 5} y={cy + 20} textAnchor="middle" fill="var(--ghost)" fontSize="11" fontFamily="'IBM Plex Sans', sans-serif">0</text>
+          <text x={cx} y={cy - radius + 5} textAnchor="middle" fill="var(--ghost)" fontSize="11" fontFamily="'IBM Plex Sans', sans-serif">50</text>
+          <text x={cx + radius + 5} y={cy + 20} textAnchor="middle" fill="var(--ghost)" fontSize="11" fontFamily="'IBM Plex Sans', sans-serif">100</text>
         </svg>
 
-        {/* Score number centered below arc */}
+        {/* Score number centered in the arc */}
         <div
           style={{
             position: "absolute",
-            bottom: "0",
+            bottom: "8px",
             left: "50%",
             transform: "translateX(-50%)",
             textAlign: "center",
@@ -90,18 +119,32 @@ export function GreenwashScoreGauge({ score }: GreenwashScoreGaugeProps) {
         >
           <span
             style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Syne', 'DM Sans', sans-serif",
               fontWeight: 800,
-              fontSize: "52px",
+              fontSize: "64px",
               color: isNeutral ? "var(--ghost)" : "var(--paper)",
               lineHeight: 1,
+              letterSpacing: "-0.03em",
               textShadow: isNeutral
                 ? "none"
-                : `0 0 24px ${band.color}44, 0 0 48px ${band.color}22`,
+                : `0 0 20px ${band.color}55, 0 4px 12px rgba(0,0,0,0.3)`,
             }}
           >
             {displayScore}
           </span>
+          {!isNeutral && (
+            <span
+              style={{
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontWeight: 400,
+                fontSize: "16px",
+                color: "var(--ash)",
+                marginLeft: "2px",
+              }}
+            >
+              /100
+            </span>
+          )}
         </div>
       </div>
 
@@ -109,12 +152,12 @@ export function GreenwashScoreGauge({ score }: GreenwashScoreGaugeProps) {
       <span
         style={{
           fontFamily: "'IBM Plex Sans', sans-serif",
-          fontWeight: 600,
-          fontSize: "14px",
-          letterSpacing: "0.04em",
+          fontWeight: 700,
+          fontSize: "15px",
+          letterSpacing: "0.06em",
           textTransform: "uppercase",
           color: band.color,
-          marginTop: "8px",
+          marginTop: "4px",
         }}
       >
         {band.label}
@@ -126,8 +169,8 @@ export function GreenwashScoreGauge({ score }: GreenwashScoreGaugeProps) {
           fontFamily: "'IBM Plex Sans', sans-serif",
           fontWeight: 400,
           fontSize: "12px",
-          color: "var(--ash)",
-          marginTop: "4px",
+          color: "var(--ghost)",
+          marginTop: "6px",
         }}
       >
         Greenwash Credibility Score
