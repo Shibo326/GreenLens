@@ -25,11 +25,18 @@ Also provide a Greenwash Score from 0-100:
 - 31-60: MEDIUM RISK — vague claims, some unverified assertions, partial evidence
 - 61-100: LOW RISK — claims are specific, measurable, third-party verified, data-consistent
 
-Return ONLY valid JSON:
+Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
 {{
   "executiveSummary": "<4-6 sentence sustainability verdict: overall credibility assessment, most serious greenwash flag found, specific claim-vs-data example, and recommended consumer action>",
   "greenwashScore": <integer 0-100>
-}}"""
+}}
+
+CRITICAL RULES:
+- Do NOT include your reasoning, thinking process, or analysis steps in the output
+- The executiveSummary must be a clean, readable paragraph for end users
+- Do NOT start with phrases like "Let me think", "Based on", "I'd say", or cost calculations
+- Write as if you are presenting a final verdict to a consumer — professional and clear
+- If you cannot determine a score, use 50""""""
 
 
 def _format_chunks(chunks: list[Chunk], max_chunks_per_doc: int = 3) -> str:

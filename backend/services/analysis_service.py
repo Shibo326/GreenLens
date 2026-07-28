@@ -438,7 +438,13 @@ Return ONLY valid JSON (no preamble, no explanation, just the JSON object):
   "executiveSummary": "<4-6 sentence sustainability verdict: overall credibility, most serious greenwash flag, specific claim-vs-data example, recommended consumer action>",
   "greenwashScore": <integer 0-100>,
   "suggestedQuestions": ["question1", "question2", "question3", "question4", "question5"]
-}}"""
+}}
+
+CRITICAL RULES:
+- Do NOT include reasoning, thinking process, or internal analysis in the JSON values
+- The executiveSummary must be a clean professional paragraph for consumers — NOT your thought process
+- Do NOT start executiveSummary with "Let me think", "I'd say", "Based on my analysis", cost calculations, or meta-commentary
+- Write the summary as a final published verdict, not a draft"""
 
         # PREMIUM model (deepseek-v4-pro) for nuanced summary; 800 tokens is enough
         raw = await self.llm_service.complete(
