@@ -89,9 +89,17 @@ export default function Landing() {
   // Greenwashing News state
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
-  const [newsError, setNewsError] = useState(false);
 
 
+
+  const FALLBACK_NEWS: NewsArticle[] = [
+    { title: "H&M faces lawsuit over greenwashing claims on clothing labels", url: "https://www.bbc.com/news/business-62240314", snippet: "H&M is facing a lawsuit in the US over claims that environmental scorecards on its products are misleading, constituting greenwashing.", source: "bbc.com", category: "enforcement" },
+    { title: "Shell and BP ads banned for greenwashing by UK regulator", url: "https://www.theguardian.com/business/2023/jun/14/shell-bp-ads-banned-greenwashing-uk-regulator", snippet: "The UK Advertising Standards Authority banned ads from Shell and BP for giving a misleading impression of the companies' environmental efforts.", source: "theguardian.com", category: "enforcement" },
+    { title: "EU agrees ban on greenwashing and misleading product labels", url: "https://www.reuters.com/sustainability/eu-agrees-ban-greenwashing-misleading-product-labels-2024-01-17/", snippet: "European Union lawmakers approved a directive banning generic environmental claims like 'eco-friendly' or 'green' without proof.", source: "reuters.com", category: "regulation" },
+    { title: "Keurig to pay $3 million for misleading recyclability claims", url: "https://www.ftc.gov/news-events/news/press-releases/2022/01/keurig-canada-pay-3-million-penalty-misleading-recyclability-claims", snippet: "Keurig Canada agreed to pay a $3 million penalty for making false or misleading claims that its single-use K-Cup pods could be recycled.", source: "ftc.gov", category: "enforcement" },
+    { title: "SEC charges Goldman Sachs asset management for ESG greenwashing", url: "https://www.cnbc.com/2022/11/22/sec-fines-goldman-sachs-4-million-over-esg-fund-claims.html", snippet: "Goldman Sachs was fined $4 million by the SEC for failing to follow its own ESG policies and procedures in its mutual funds.", source: "cnbc.com", category: "enforcement" },
+    { title: "Airlines face greenwashing crackdown over carbon offset claims", url: "https://www.bbc.com/news/science-environment-67074917", snippet: "Airlines are under increased scrutiny for selling carbon offsets that environmental groups say do little to reduce actual emissions from flights.", source: "bbc.com", category: "regulation" },
+  ];
 
   useEffect(() => {
     let cancelled = false;
@@ -104,7 +112,7 @@ export default function Landing() {
         }
       } catch {
         if (!cancelled) {
-          setNewsError(true);
+          setNewsArticles(FALLBACK_NEWS);
           setNewsLoading(false);
         }
       }
@@ -743,18 +751,7 @@ export default function Landing() {
           </div>
         )}
 
-        {newsError && !newsLoading && (
-          <div
-            className="glass-card px-6 py-8 w-full flex flex-col items-center"
-            style={{ maxWidth: "480px", border: "1px solid var(--rule)" }}
-          >
-            <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--ghost)", textAlign: "center", margin: 0 }}>
-              Unable to load news
-            </p>
-          </div>
-        )}
-
-        {!newsLoading && !newsError && newsArticles.length > 0 && (
+        {!newsLoading && newsArticles.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full" style={{ maxWidth: "1040px" }}>
             {newsArticles.map((article, idx) => {
               const categoryColors: Record<string, { border: string; bg: string; text: string }> = {

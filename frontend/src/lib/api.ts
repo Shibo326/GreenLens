@@ -8,7 +8,7 @@ import type {
 
 export const API_BASE_URL: string =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ??
-  'http://localhost:8000';
+  'https://greenlens-production-73e1.up.railway.app';
 
 /**
  * fetch() wrapper with a configurable timeout.
