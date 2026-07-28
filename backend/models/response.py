@@ -198,6 +198,7 @@ class ChatResponse(BaseModel):
     role: Literal["assistant"]
     structuredResponse: StructuredAIResponse
     processingTimeMs: int
+    sources: list[SourceLink] = []
 
 
 class ReportRequest(BaseModel):

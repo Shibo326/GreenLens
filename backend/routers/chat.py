@@ -116,8 +116,10 @@ async def chat(request: ChatRequest):
 
     # --- Fetch web context for richer chat responses ---
     from services import web_search
+    web_sources = []
     try:
-        web_context = await web_search.search(f"greenwashing sustainability {question[:150]}")
+        web_context, raw_sources = await web_search.search_with_sources(f"greenwashing sustainability {question[:150]}")
+        web_sources = raw_sources  # list of {title, url, snippet}
     except Exception:
         web_context = ""
 
@@ -328,11 +330,20 @@ async def chat(request: ChatRequest):
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
+    # Build source links from web search results
+    from models.response import SourceLink
+    source_links = [
+        SourceLink(title=s.get("title", ""), url=s.get("url", ""), snippet=s.get("snippet", ""))
+        for s in web_sources
+        if s.get("url")
+    ][:5]  # max 5 sources
+
     response = ChatResponse(
         messageId=str(uuid.uuid4()),
         role="assistant",
         structuredResponse=structured_response,
         processingTimeMs=elapsed_ms,
+        sources=source_links,
     )
     return JSONResponse(
         content=response.model_dump(mode="json"),

@@ -144,6 +144,7 @@ RESPONSE RULES:
    - "Regulatory context:" for knowledge about FTC/EU/ACCC rules
    - "General knowledge:" for sustainability facts not from the documents
    - "Red flag 🚩:" when identifying a greenwashing pattern
+   - If WEB RESEARCH CONTEXT is provided above, reference those sources by name/title in your answer when relevant. The system will automatically attach the source links for the user.
 
 OUTPUT FORMAT — Return ONLY valid JSON (no preamble, no explanation outside the JSON, start your response with the opening brace {{):
 {{
