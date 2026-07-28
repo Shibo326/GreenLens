@@ -101,6 +101,65 @@ async def warmup():
     return {"status": "warm", "service": "greenlens-api"}
 
 
+@router.get("/diagnose")
+async def diagnose_llm():
+    """
+    Diagnostic endpoint — tests each LLM model tier with a minimal prompt.
+    Hit this from browser: https://your-railway-url/api/diagnose
+    Returns which models work and which fail, with error details.
+    """
+    import os
+    from services.llm_service import LLMService
+
+    svc_err = _check_services()
+    if svc_err:
+        return svc_err
+
+    results = {}
+    llm = _analysis_service.llm_service
+
+    tiers = {
+        "premium": llm._model_premium,
+        "quality": llm._model_quality,
+        "fast": llm._model_fast,
+    }
+
+    for tier_name, model_id in tiers.items():
+        try:
+            response = await llm.complete(
+                "You are a test assistant.",
+                "Reply with exactly: OK",
+                max_tokens=10,
+                temperature=0.0,
+                tier=tier_name,
+            )
+            results[tier_name] = {
+                "status": "OK",
+                "model": model_id,
+                "response": response.strip()[:50],
+            }
+        except Exception as e:
+            results[tier_name] = {
+                "status": "FAILED",
+                "model": model_id,
+                "error": str(e)[:200],
+            }
+
+    # Summary
+    working = [k for k, v in results.items() if v["status"] == "OK"]
+    failed = [k for k, v in results.items() if v["status"] == "FAILED"]
+
+    return {
+        "summary": f"{len(working)}/3 models working",
+        "working_tiers": working,
+        "failed_tiers": failed,
+        "endpoint": os.getenv("FIREWORKS_ENDPOINT", "")[:50],
+        "api_key_set": bool(os.getenv("FIREWORKS_API_KEY")),
+        "api_key_prefix": os.getenv("FIREWORKS_API_KEY", "")[:8] + "...",
+        "details": results,
+    }
+
+
 @router.post("/analyze")
 @limiter.limit("10/minute")
 async def analyze_documents(request: Request, body: AnalyzeRequest):

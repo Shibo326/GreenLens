@@ -114,7 +114,8 @@ class LLMService:
         tier: str = "quality",
     ) -> str:
         """
-        Send a completion request to Fireworks AI with automatic rate-limit retry.
+        Send a completion request to Fireworks AI with automatic rate-limit retry
+        and model fallback on 404.
 
         Args:
             fast: Legacy param. If True, uses FAST tier. Overridden by `tier`.
@@ -127,23 +128,44 @@ class LLMService:
         if fast and tier == "quality":
             tier = "fast"
 
-        async with self._semaphore:
-            for attempt in range(3):
-                try:
-                    return await self._call_fireworks(
-                        system_prompt, user_prompt, max_tokens, temperature, tier=tier
-                    )
-                except LLMRateLimitError:
-                    if attempt < 2:
-                        wait = (attempt + 1) * 2  # 2s then 4s
-                        logger.warning(
-                            f"[Fireworks] Rate limited, retry {attempt + 1}/3 in {wait}s..."
+        # Build fallback chain: requested tier first, then others
+        tier_order = [tier]
+        for t in ["fast", "quality", "premium"]:
+            if t not in tier_order:
+                tier_order.append(t)
+
+        last_error = None
+        for try_tier in tier_order:
+            async with self._semaphore:
+                for attempt in range(3):
+                    try:
+                        return await self._call_fireworks(
+                            system_prompt, user_prompt, max_tokens, temperature, tier=try_tier
                         )
-                        await asyncio.sleep(wait)
-                    else:
-                        logger.error("[Fireworks] Rate limit — all retries exhausted")
-                        raise
-        raise LLMRateLimitError("Max retries exceeded")
+                    except LLMRateLimitError:
+                        if attempt < 2:
+                            wait = (attempt + 1) * 2
+                            logger.warning(
+                                f"[Fireworks] Rate limited on tier={try_tier}, retry {attempt + 1}/3 in {wait}s..."
+                            )
+                            await asyncio.sleep(wait)
+                        else:
+                            last_error = LLMRateLimitError(f"Rate limit exhausted for tier={try_tier}")
+                            break  # Try next tier
+                    except LLMParseError as e:
+                        if "404" in str(e):
+                            logger.warning(f"[Fireworks] Model 404 for tier={try_tier}, trying fallback...")
+                            last_error = e
+                            break  # Try next tier
+                        raise  # Non-404 parse errors are not retryable
+                else:
+                    continue  # Inner loop completed without break = success was returned above
+                continue  # break from inner = try next tier
+
+        # All tiers exhausted
+        if last_error:
+            raise last_error
+        raise LLMRateLimitError("All model tiers exhausted")
 
     async def single_mega_call(
         self,
