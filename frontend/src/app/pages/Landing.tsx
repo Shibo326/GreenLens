@@ -560,7 +560,7 @@ export default function Landing() {
                   </div>
                   <AnimatePresence mode="wait">
                     <motion.span key={loadingStage} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.3 }} style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)", display: "block" }}>
-                      {LOADING_STAGES[loadingStage].label}
+                      {LOADING_STAGES[loadingStage]?.label ?? "Processing..."}
                     </motion.span>
                   </AnimatePresence>
                 </div>
@@ -593,7 +593,7 @@ export default function Landing() {
                       <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid var(--rule)", flexShrink: 0 }} />
                     )}
                     <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: i === loadingStage ? 600 : 400, color: i < loadingStage ? "var(--leaf)" : i === loadingStage ? "var(--paper)" : "var(--ghost)", whiteSpace: "nowrap" }}>
-                      {stage.label}
+                      {stage?.label ?? ""}
                     </span>
                   </motion.div>
                 ))}
@@ -624,7 +624,7 @@ export default function Landing() {
             { value: "100%", label: "Evidence-based", color: "var(--paper)" },
           ].map((stat, i) => (
             <motion.div
-              key={stat.label}
+              key={stat?.label ?? `stat-${i}`}
               className="flex flex-col items-center"
               initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -635,7 +635,7 @@ export default function Landing() {
                 {stat.value}
               </span>
               <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)", marginTop: "4px" }}>
-                {stat.label}
+                {stat?.label ?? ""}
               </span>
             </motion.div>
           ))}
@@ -751,6 +751,7 @@ export default function Landing() {
         {!newsLoading && newsArticles.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full" style={{ maxWidth: "1040px" }}>
             {newsArticles.map((article, idx) => {
+              if (!article || !article.title) return null;
               const categoryColors: Record<string, { border: string; bg: string; text: string }> = {
                 enforcement: { border: "var(--flag-red)", bg: "var(--flag-red-dim)", text: "var(--flag-red)" },
                 regulation: { border: "var(--flag-amber)", bg: "var(--flag-amber-dim)", text: "var(--flag-amber)" },
