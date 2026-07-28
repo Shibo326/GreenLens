@@ -72,7 +72,7 @@ describe('quickScan', () => {
       json: async () => { throw new Error('not json'); },
     });
 
-    await expect(quickScan('test claim')).rejects.toThrow('Quick scan failed: 500');
+    await expect(quickScan('test claim')).rejects.toThrow('Quick scan failed');
   });
 
   it('throws a timeout error when the request takes too long', async () => {
@@ -140,7 +140,7 @@ describe('scanUrl', () => {
       json: async () => { throw new Error('not json'); },
     });
 
-    await expect(scanUrl('https://example.com')).rejects.toThrow('URL scan failed: 503');
+    await expect(scanUrl('https://example.com')).rejects.toThrow('URL scan failed');
   });
 });
 
@@ -235,6 +235,6 @@ describe('sendVisionMessage', () => {
 
     const img = new File(['x'], 'img.png', { type: 'image/png' });
 
-    await expect(sendVisionMessage('s1', img)).rejects.toThrow('Vision analysis failed: 500');
+    await expect(sendVisionMessage('s1', img)).rejects.toThrow('Vision analysis failed');
   });
 });

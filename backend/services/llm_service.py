@@ -66,9 +66,14 @@ class LLMService:
         self._model_vision = os.getenv("FIREWORKS_MODEL_VISION", "")
 
         # 3-tier models — read from env vars so they can be overridden per-deployment
-        self._model_premium = os.getenv("FIREWORKS_MODEL_PREMIUM", _MODEL_PREMIUM_DEFAULT)
+        # If PREMIUM is not set, falls back to QUALITY model
+        self._model_premium = os.getenv("FIREWORKS_MODEL_PREMIUM", "")
         self._model_quality = os.getenv("FIREWORKS_MODEL_QUALITY", _MODEL_QUALITY_DEFAULT)
         self._model_fast = os.getenv("FIREWORKS_MODEL_FAST", _MODEL_FAST_DEFAULT)
+
+        # If premium isn't configured, use quality model for premium tier too
+        if not self._model_premium:
+            self._model_premium = self._model_quality
 
         # Legacy fallback: if only FIREWORKS_MODEL is set, use it for all tiers
         legacy_model = os.getenv("FIREWORKS_MODEL", "")
