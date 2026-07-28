@@ -46,10 +46,24 @@ function loadPersistedState(): AppState {
     if (!raw) return initialState;
     const saved = JSON.parse(raw) as Partial<AppState>;
     if (!saved.sessionId) return initialState;
+    
+    // Sanitize analysis from storage (may have been stored with incomplete data)
+    let analysis = saved.analysis || null;
+    if (analysis) {
+      analysis = {
+        ...analysis,
+        risks: analysis.risks || [],
+        conflicts: analysis.conflicts || [],
+        comparisonMatrix: analysis.comparisonMatrix || [],
+        recommendation: analysis.recommendation || { title: "Analysis Complete", summary: "Review findings below.", nextSteps: [], confidence: 0.5 },
+        suggestedQuestions: analysis.suggestedQuestions || [],
+      };
+    }
+    
     return {
       sessionId: saved.sessionId ?? null,
       documents: saved.documents ?? [],
-      analysis: saved.analysis ?? null,
+      analysis: analysis,
       messages: saved.messages ?? [],
       isLoading: false,
       error: null,
@@ -109,7 +123,17 @@ function appReducer(state: AppState, action: AppAction): AppState {
       newState = { ...state, documents: action.payload };
       break;
     case 'SET_ANALYSIS':
-      newState = { ...state, analysis: action.payload };
+      // Ensure all required sub-fields exist (API may return partial data on timeout)
+      const rawAnalysis = action.payload;
+      const safePayload = rawAnalysis ? {
+        ...rawAnalysis,
+        risks: rawAnalysis.risks || [],
+        conflicts: rawAnalysis.conflicts || [],
+        comparisonMatrix: rawAnalysis.comparisonMatrix || [],
+        recommendation: rawAnalysis.recommendation || { title: "Analysis Complete", summary: "Review findings below.", nextSteps: [], confidence: 0.5 },
+        suggestedQuestions: rawAnalysis.suggestedQuestions || [],
+      } : null;
+      newState = { ...state, analysis: safePayload };
       break;
     case 'SET_LOADING':
       newState = { ...state, isLoading: action.payload };
