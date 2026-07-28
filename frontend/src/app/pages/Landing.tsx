@@ -226,28 +226,7 @@ export default function Landing() {
         className="flex flex-col items-center justify-center text-center px-4 sm:px-6 mx-auto relative"
         style={{ minHeight: "70vh", maxWidth: "100%", paddingTop: "60px", paddingBottom: "40px", overflow: "hidden" }}
       >
-        {/* === VIDEO BACKGROUND === */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            zIndex: 0,
-            opacity: 0.3,
-            filter: "saturate(0.6) brightness(0.4)",
-            pointerEvents: "none",
-          }}
-        >
-          <source src="https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4" type="video/mp4" />
-        </video>
-        {/* Dark overlay on top of video */}
+        {/* Dark gradient overlay */}
         <div
           aria-hidden="true"
           style={{

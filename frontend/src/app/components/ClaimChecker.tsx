@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Info,
+  Image as ImageIcon,
 } from "lucide-react";
 import { quickScan, scanUrl, uploadDocuments, analyzeDocuments } from "../../lib/api";
 import { useAppDispatch } from "../../lib/store";
@@ -147,6 +148,7 @@ export function ClaimChecker() {
 
   // Photo tab state
   const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [photoLoading, setPhotoLoading] = useState(false);
@@ -440,63 +442,105 @@ export function ClaimChecker() {
             onChange={handleImageSelected}
             aria-label="Take a photo or select an image"
           />
+          <input
+            ref={galleryRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handleImageSelected}
+            aria-label="Choose image from gallery"
+          />
 
           {!selectedImage ? (
-            <button
-              onClick={() => cameraRef.current?.click()}
-              className="w-full flex flex-col items-center justify-center gap-3 rounded-lg"
-              style={{
-                minHeight: "140px",
-                background: "var(--graphite)",
-                border: "2px dashed var(--rule)",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                padding: "24px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "var(--leaf-border)";
-                e.currentTarget.style.background = "rgba(61,220,132,0.04)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "var(--rule)";
-                e.currentTarget.style.background = "var(--graphite)";
-              }}
-            >
-              <div
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => cameraRef.current?.click()}
+                className="w-full flex flex-col items-center justify-center gap-3 rounded-lg"
                 style={{
-                  width: "48px",
+                  minHeight: "120px",
+                  background: "var(--graphite)",
+                  border: "2px dashed var(--rule)",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  padding: "20px",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--leaf-border)";
+                  e.currentTarget.style.background = "rgba(61,220,132,0.04)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--rule)";
+                  e.currentTarget.style.background = "var(--graphite)";
+                }}
+              >
+                <div
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "12px",
+                    background: "var(--leaf-dim)",
+                    border: "1px solid var(--leaf-border)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Camera size={22} style={{ color: "var(--leaf)" }} />
+                </div>
+                <span
+                  style={{
+                    fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: "var(--paper)",
+                  }}
+                >
+                  📸 Take a Photo
+                </span>
+                <span
+                  style={{
+                    fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                    fontSize: "12px",
+                    color: "var(--ghost)",
+                    textAlign: "center",
+                  }}
+                >
+                  Point your camera at any product label or packaging claim
+                </span>
+              </button>
+
+              <button
+                onClick={() => galleryRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 rounded-lg"
+                style={{
                   height: "48px",
-                  borderRadius: "12px",
-                  background: "var(--leaf-dim)",
-                  border: "1px solid var(--leaf-border)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  background: "var(--graphite)",
+                  border: "1px solid var(--rule)",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--leaf-border)";
+                  e.currentTarget.style.background = "rgba(61,220,132,0.04)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--rule)";
+                  e.currentTarget.style.background = "var(--graphite)";
                 }}
               >
-                <Camera size={22} style={{ color: "var(--leaf)" }} />
-              </div>
-              <span
-                style={{
-                  fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  color: "var(--paper)",
-                }}
-              >
-                📸 Take a Photo
-              </span>
-              <span
-                style={{
-                  fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
-                  fontSize: "12px",
-                  color: "var(--ghost)",
-                  textAlign: "center",
-                }}
-              >
-                Point your camera at any product label or packaging claim
-              </span>
-            </button>
+                <ImageIcon size={16} style={{ color: "var(--leaf)" }} />
+                <span
+                  style={{
+                    fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "var(--paper)",
+                  }}
+                >
+                  Open Gallery
+                </span>
+              </button>
+            </div>
           ) : (
             <div className="space-y-3">
               {/* Image preview */}
