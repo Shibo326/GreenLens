@@ -24,7 +24,7 @@ _vector_store: VectorStore | None = None
 _session_manager: SessionManager | None = None
 
 # Constants
-MAX_FILE_COUNT = 10
+MAX_FILE_COUNT = 3
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 ACCEPTED_MIME_TYPES = {
     "application/pdf",
@@ -73,7 +73,7 @@ async def upload_documents(
     if len(files) == 0:
         return _err(400, "At least one file is required.", "TOO_MANY_FILES", "Please select at least one file to upload.")
     if len(files) > MAX_FILE_COUNT:
-        return _err(400, "You can upload up to 10 files at a time.", "TOO_MANY_FILES", "Please reduce to 10 or fewer files per upload.")
+        return _err(400, "You can upload up to 3 files at a time.", "TOO_MANY_FILES", "Please reduce to 3 or fewer files per upload.")
 
     session_id = str(uuid.uuid4())
     uploaded_documents: list[UploadedDocument] = []

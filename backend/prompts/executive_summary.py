@@ -36,7 +36,7 @@ CRITICAL RULES:
 - The executiveSummary must be a clean, readable paragraph for end users
 - Do NOT start with phrases like "Let me think", "Based on", "I'd say", or cost calculations
 - Write as if you are presenting a final verdict to a consumer — professional and clear
-- If you cannot determine a score, use 50""""""
+- If you cannot determine a score, use 50"""
 
 
 def _format_chunks(chunks: list[Chunk], max_chunks_per_doc: int = 3) -> str:

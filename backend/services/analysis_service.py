@@ -22,8 +22,8 @@ from services.session_manager import SessionManager
 logger = logging.getLogger(__name__)
 
 # Timeout for individual LLM calls (seconds)
-# deepseek-v4-pro reasoning model may need more time than deepseek-v4-flash
-LLM_CALL_TIMEOUT = 120
+# deepseek-v4-pro reasoning model needs generous time for multi-doc analysis
+LLM_CALL_TIMEOUT = 180
 
 # Prompt for comparison matrix — Claim vs Reality analysis for greenwashing detection
 COMPARISON_MATRIX_PROMPT = """Based on the document content above, create a Claim vs. Reality comparison matrix that exposes gaps between what the company SAYS and what the DATA SHOWS.
@@ -116,8 +116,8 @@ class AnalysisService:
         """
         system_prompt = get_system_prompt(doc_names)
 
-        if self._single_call_mode or len(doc_names) >= 3:
-            mode_reason = "SINGLE_CALL_MODE env" if self._single_call_mode else f"auto-switched (3+ docs: {len(doc_names)})"
+        if self._single_call_mode:
+            mode_reason = "SINGLE_CALL_MODE env"
             logger.info(
                 f"[SINGLE_CALL_MODE] Starting single-mega-call analysis for session {session_id} "
                 f"({len(chunks)} chunks, {len(doc_names)} documents) — reason: {mode_reason}"
@@ -157,13 +157,11 @@ class AnalysisService:
             web_context = ""
             web_sources = []
 
-        # --- Run the 5 analysis calls in parallel ---
+        # --- Run analysis calls with rate-limit-safe staggering ---
+        # Phase 1: Summary + Risks (most important — run first)
         (
             summary_and_questions_result,
             risks_result,
-            matrix_result,
-            recommendation_result,
-            conflicts_result,
         ) = await asyncio.gather(
             self._with_timeout(
                 self._generate_summary_and_questions(system_prompt, chunks, web_context=web_context),
@@ -173,6 +171,18 @@ class AnalysisService:
                 self._generate_risks(system_prompt, chunks, web_context=web_context),
                 "risks",
             ),
+            return_exceptions=True,
+        )
+
+        # Brief pause to avoid rate limit burst on Fireworks
+        await asyncio.sleep(1)
+
+        # Phase 2: Matrix + Recommendation + Conflicts (secondary)
+        (
+            matrix_result,
+            recommendation_result,
+            conflicts_result,
+        ) = await asyncio.gather(
             self._with_timeout(
                 self._generate_comparison_matrix(system_prompt, chunks, doc_names, web_context=web_context),
                 "comparison_matrix",
@@ -342,6 +352,43 @@ class AnalysisService:
             )
 
     @staticmethod
+    def _format_chunks_generous(chunks: list["Chunk"]) -> str:
+        """
+        Format chunks with generous limits for the executive summary call.
+        Single-doc gets up to 8 chunks at 1200 chars for deeper analysis.
+        Multi-doc gets up to 4 chunks per doc at 1000 chars.
+        """
+        if not chunks:
+            return "(no document content available)"
+
+        unique_docs = list(dict.fromkeys(c.source_document for c in chunks))
+        num_docs = len(unique_docs)
+        if num_docs == 1:
+            effective_max = 8
+            max_chars = 1200
+        elif num_docs == 2:
+            effective_max = 5
+            max_chars = 1000
+        else:
+            effective_max = 4
+            max_chars = 900
+
+        sections = []
+        current_doc = None
+        doc_chunk_count: dict[str, int] = {}
+        for chunk in chunks:
+            doc = chunk.source_document
+            count = doc_chunk_count.get(doc, 0)
+            if count >= effective_max:
+                continue
+            doc_chunk_count[doc] = count + 1
+            if doc != current_doc:
+                current_doc = doc
+                sections.append(f"\n=== {current_doc} ===")
+            sections.append(chunk.text[:max_chars])
+        return "\n".join(sections)
+
+    @staticmethod
     def _clamp_greenwash_score(raw_score, risks=None, matrix=None) -> int | None:
         """
         Clamp greenwashScore to [0, 100].
@@ -406,14 +453,14 @@ class AnalysisService:
     ) -> tuple[str, list[str], int | None]:
         """
         Generate executive summary, suggested questions, AND greenwashScore in a single LLM call.
-        Uses the QUALITY model (deepseek-v4-pro) for deep reasoning.
+        Uses the PREMIUM model (deepseek-v4-pro) for deep reasoning.
         Merging these saves one full LLM round-trip (10-60s).
 
         If web_context is provided, real-time online sources are cross-referenced
         to improve the accuracy of the verdict and greenwash score.
         """
-        from prompts.executive_summary import _format_chunks
-        context = _format_chunks(chunks)
+        # Format chunks with generous limits — this is the most important call
+        context = self._format_chunks_generous(chunks)
         doc_names = list(dict.fromkeys(c.source_document for c in chunks))
         doc_list = ", ".join(doc_names) if doc_names else "the uploaded document"
 

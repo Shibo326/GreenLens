@@ -86,8 +86,8 @@ class LLMService:
         # Single-call mode: combine ALL analysis into ONE LLM call for extreme speed
         self._single_call_mode = os.getenv("SINGLE_CALL_MODE", "false").lower() == "true"
 
-        # Semaphore: cap concurrent LLM calls at 5 (we have 3 models now, can handle more)
-        self._semaphore = asyncio.Semaphore(5)
+        # Semaphore: cap concurrent LLM calls at 3 to avoid Fireworks rate-limit cascades
+        self._semaphore = asyncio.Semaphore(3)
 
         # Persistent async HTTP client — avoids TCP handshake overhead on every call.
         self._client = httpx.AsyncClient(
@@ -160,40 +160,50 @@ class LLMService:
         Returns a dict with all analysis fields, or raises on failure.
         """
         doc_list = ", ".join(doc_names)
-        mega_prompt = f"""Analyze these documents and return ALL of the following in ONE JSON response.
+        mega_prompt = f"""Analyze these sustainability/environmental documents for GREENWASHING and return ALL of the following in ONE JSON response.
 
 DOCUMENTS: {doc_list}
 
 {context}
 
+Your job: Identify misleading sustainability claims, vague environmental promises, contradictions between documents, and gaps between marketing claims and actual data.
+
 Return ONLY valid JSON with ALL these keys:
 {{
-  "executiveSummary": "<4-6 sentence executive briefing with specific figures, urgency, and recommended direction>",
+  "executiveSummary": "<4-6 sentence greenwashing verdict: overall credibility score rationale, most serious greenwash red flag, specific claim-vs-data example, recommended consumer action>",
+  "greenwashScore": <integer 0-100 where 0=total greenwashing, 100=fully credible>,
   "risks": [
     {{
       "id": "r1",
       "level": "HIGH|MEDIUM|LOW",
-      "description": "<specific risk>",
-      "sourceDocument": "<filename>",
-      "category": "<category>"
+      "description": "<specific greenwashing risk or misleading claim identified>",
+      "sourceDocument": "<filename where this was found>",
+      "category": "<Misleading Claim|Vague Language|Missing Evidence|Contradiction|Cherry-Picking>"
     }}
   ],
   "comparisonMatrix": [
     {{
-      "field": "<comparison dimension>",
-      "values": {{"<DocName>": "<value>"}},
-      "winner": "<best option or null>"
+      "field": "<specific sustainability topic e.g. 'Carbon Offset Coverage'>",
+      "values": {{"They Say": "<marketing claim>", "Data Shows": "<what data actually reveals>"}},
+      "winner": "<'They Say' if claim is credible, 'Data Shows' if data contradicts, or null>"
     }}
   ],
   "recommendation": {{
-    "title": "<action title>",
-    "summary": "<2-3 sentence recommendation>",
+    "title": "<action title for consumer/watchdog>",
+    "summary": "<2-3 sentence recommendation on how to respond to these claims>",
     "nextSteps": ["step1", "step2", "step3"],
-    "confidence": 0.8
+    "confidence": <0.0-1.0 how confident you are in this analysis>
   }},
   "suggestedQuestions": ["question1", "question2", "question3", "question4", "question5"],
   "conflicts": []
-}}"""
+}}
+
+SCORING GUIDE for greenwashScore:
+- 0-30: HIGH RISK — multiple misleading claims, major contradictions, no third-party verification
+- 31-60: MEDIUM RISK — vague claims, some unverified assertions, partial evidence gaps
+- 61-100: LOW RISK — claims are specific, measurable, third-party verified, data-consistent
+
+You MUST identify at least 3 risks and 3 comparison rows. Sustainability documents ALWAYS have claims that can be scrutinized."""
 
         raw = await self.complete(system_prompt, mega_prompt, max_tokens=max_tokens, fast=False)
         raw = _strip_json_fences(raw)
@@ -327,6 +337,18 @@ Return ONLY valid JSON with ALL these keys:
             exc_str = str(exc).lower()
             if "429" in exc_str or "rate limit" in exc_str:
                 raise LLMRateLimitError(f"Fireworks rate limit: {exc}") from exc
+            # Model not found (404) — try falling back to a different tier
+            if "404" in str(exc.response.status_code):
+                logger.error(
+                    f"[Fireworks] Model '{model}' returned 404. "
+                    f"Check that the model ID is correct and available on your account. "
+                    f"Full error: {exc}"
+                )
+                raise LLMParseError(
+                    f"Model '{model}' not found on Fireworks AI (404). "
+                    f"Verify FIREWORKS_MODEL_PREMIUM, FIREWORKS_MODEL_QUALITY, and FIREWORKS_MODEL_FAST "
+                    f"environment variables point to valid model IDs."
+                ) from exc
             raise
 
         data = response.json()
@@ -375,7 +397,7 @@ Return ONLY valid JSON with ALL these keys:
 def _strip_json_fences(text: str) -> str:
     """Remove markdown code fences, thinking tags, and extract JSON from verbose LLM responses.
 
-    gpt-oss-120b often prefixes responses with prose like 'Here is the JSON:' or
+    Some models often prefix responses with prose like 'Here is the JSON:' or
     'Based on my analysis, here is the result:' before the actual JSON block.
     This function strips all such preamble and returns only the JSON content.
     """

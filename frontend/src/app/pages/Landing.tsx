@@ -73,7 +73,7 @@ export default function Landing() {
     if (rejected > 0) setError(`${rejected} file(s) skipped — only PDF, PNG, and JPEG are supported.`);
     setFiles((prev) => {
       const combined = [...prev, ...accepted];
-      if (combined.length > 10) { setError("You can upload up to 10 files at a time."); return combined.slice(0, 10); }
+      if (combined.length > 3) { setError("You can upload up to 3 files at a time."); return combined.slice(0, 3); }
       return combined;
     });
   };

@@ -144,9 +144,9 @@ def test_session_creation_round_trip(embedding_service, vector_store, session_ma
 # ---- Unit tests for file validation ----
 
 def test_file_count_limit():
-    """File count validation: max 10 files."""
+    """File count validation: max 3 files."""
     from routers.upload import MAX_FILE_COUNT
-    assert MAX_FILE_COUNT == 10
+    assert MAX_FILE_COUNT == 3
 
 
 def test_file_size_limit():

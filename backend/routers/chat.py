@@ -326,7 +326,17 @@ async def chat(request: ChatRequest):
 
     except Exception as e:
         logger.error(f"Chat LLM error for session {session_id}: {e}", exc_info=True)
-        return _err(502, f"Chat service error: {type(e).__name__}: {str(e)[:120]}", "STREAM_FAILED", "The AI service encountered an error. Please try again.")
+        # Don't expose internal API URLs or model IDs to end users
+        err_str = str(e).lower()
+        if "404" in err_str or "not found" in err_str:
+            user_msg = "The AI model is temporarily unavailable. Please try again in a moment."
+        elif "rate limit" in err_str or "429" in err_str:
+            user_msg = "AI service is busy. Please wait a moment and try again."
+        elif "timeout" in err_str:
+            user_msg = "The AI took too long to respond. Please try a shorter question."
+        else:
+            user_msg = "The AI service encountered an error. Please try again."
+        return _err(502, user_msg, "STREAM_FAILED", "If this persists, try refreshing the page or starting a new session.")
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
@@ -608,7 +618,16 @@ async def chat_stream(request: ChatRequest):
 
         except Exception as e:
             logger.error(f"Stream error for session {session_id}: {e}", exc_info=True)
-            yield f"data: {json.dumps({'type': 'error', 'code': 'STREAM_FAILED', 'error': str(e)[:120], 'suggestion': 'The AI service encountered an error. Please try again.'})}\n\n"
+            err_str = str(e).lower()
+            if "404" in err_str or "not found" in err_str:
+                user_msg = "The AI model is temporarily unavailable. Please try again in a moment."
+            elif "rate limit" in err_str or "429" in err_str:
+                user_msg = "AI service is busy. Please wait a moment and try again."
+            elif "timeout" in err_str:
+                user_msg = "The AI took too long to respond. Please try a shorter question."
+            else:
+                user_msg = "The AI service encountered an error. Please try again."
+            yield f"data: {json.dumps({'type': 'error', 'code': 'STREAM_FAILED', 'error': user_msg, 'suggestion': 'If this persists, try refreshing the page or starting a new session.'})}\n\n"
 
     return StreamingResponse(
         generate(),
