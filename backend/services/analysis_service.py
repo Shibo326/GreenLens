@@ -494,9 +494,10 @@ CRITICAL RULES:
 - Do NOT start executiveSummary with "Let me think", "I'd say", "Based on my analysis", cost calculations, or meta-commentary
 - Write the summary as a final published verdict, not a draft"""
 
-        # PREMIUM model (deepseek-v4-pro) for nuanced summary; 800 tokens is enough
+        # Use QUALITY model (kimi-k2p6) — it produces clean JSON without reasoning artifacts.
+        # deepseek-v4-pro often embeds reasoning text inside JSON values which corrupts output.
         raw = await self.llm_service.complete(
-            system_prompt, merged_prompt, max_tokens=800, tier="premium"
+            system_prompt, merged_prompt, max_tokens=800, tier="quality"
         )
         raw = _strip_json_fences(raw)
 
@@ -508,16 +509,57 @@ CRITICAL RULES:
 
         try:
             data = json.loads(raw)
-            summary = data.get("executiveSummary", raw)
+            summary = data.get("executiveSummary", "")
             greenwash_score = data.get("greenwashScore")
             questions = data.get("suggestedQuestions", [])
             if not isinstance(questions, list):
                 questions = []
             questions = [q for q in questions if isinstance(q, str)][:6]
+
+            # Post-processing: strip reasoning artifacts from summary
+            # deepseek models sometimes embed their thinking in the JSON value itself
+            bad_starts = [
+                "We are asked", "Let me", "I need to", "First,", "The document",
+                "Based on my analysis", "I'd say", "Looking at", "Output must be",
+                "We need to", "Let's analyze",
+            ]
+            if summary:
+                for bs in bad_starts:
+                    if summary.strip().startswith(bs):
+                        # The entire summary is reasoning — use a generic fallback
+                        logger.warning(f"[summary] LLM leaked reasoning into executiveSummary (starts with '{bs}'). Regenerating.")
+                        summary = ""
+                        break
+
+            if not summary:
+                # Fallback: ask the fast model for a clean summary
+                try:
+                    fallback_raw = await self.llm_service.complete(
+                        system_prompt,
+                        merged_prompt + "\n\nCRITICAL: Output ONLY the JSON. The executiveSummary must be a FINAL VERDICT paragraph, NOT your thinking process.",
+                        max_tokens=600,
+                        tier="fast",
+                    )
+                    fallback_raw = _strip_json_fences(fallback_raw)
+                    if fallback_raw and fallback_raw[0] not in ('{', '['):
+                        bi = fallback_raw.find('{')
+                        if bi != -1:
+                            fallback_raw = fallback_raw[bi:fallback_raw.rfind('}') + 1]
+                    fallback_data = json.loads(fallback_raw)
+                    summary = fallback_data.get("executiveSummary", "Analysis complete. Please review flags and recommendations below.")
+                    if not greenwash_score:
+                        greenwash_score = fallback_data.get("greenwashScore")
+                    if not questions:
+                        questions = fallback_data.get("suggestedQuestions", [])
+                except Exception as fb_err:
+                    logger.warning(f"[summary] Fallback also failed: {fb_err}")
+                    summary = "Analysis complete. Please review the greenwash flags and recommendations below for detailed findings."
+
             return summary, questions, greenwash_score
         except json.JSONDecodeError:
-            # Fallback: treat the whole response as a summary, no questions
-            return raw.strip(), [], None
+            # JSON parsing completely failed — don't show raw reasoning to users
+            logger.warning(f"[summary] JSON parse failed. Raw first 200: {raw[:200]!r}")
+            return "Analysis complete. Please review the greenwash flags and recommendations below for detailed findings.", [], None
 
     async def _generate_risks(
         self,
@@ -531,7 +573,7 @@ CRITICAL RULES:
         # and needs extra headroom to output 5-8 detailed risk items without truncation.
         # Temperature 0.0 for maximum consistency in risk identification.
         raw = await self.llm_service.complete(
-            system_prompt, user_prompt, max_tokens=1500, temperature=0.0, tier="premium"
+            system_prompt, user_prompt, max_tokens=1500, temperature=0.0, tier="quality"
         )
         logger.info(f"[risks] raw LLM response: {len(raw)} chars, first 500: {raw[:500]!r}")
         raw = _strip_json_fences(raw)
@@ -588,7 +630,7 @@ CRITICAL RULES:
             )
             try:
                 raw2 = await self.llm_service.complete(
-                    system_prompt, retry_prompt, max_tokens=1500, tier="premium"
+                    system_prompt, retry_prompt, max_tokens=1500, tier="quality"
                 )
                 raw2 = _strip_json_fences(raw2)
                 logger.info(f"[risks] retry response, first 200: {raw2[:200]!r}")
@@ -628,7 +670,7 @@ CRITICAL RULES:
             )
             try:
                 raw_retry = await self.llm_service.complete(
-                    system_prompt, retry_prompt, max_tokens=1500, temperature=0.0, tier="premium"
+                    system_prompt, retry_prompt, max_tokens=1500, temperature=0.0, tier="quality"
                 )
                 raw_retry = _strip_json_fences(raw_retry)
                 brace_s = raw_retry.find("{")
@@ -756,7 +798,7 @@ DOCUMENT CONTEXT:
         """
         user_prompt = build_recommendation_prompt(chunks, web_context=web_context)
         raw = await self.llm_service.complete(
-            system_prompt, user_prompt, max_tokens=800, tier="premium"
+            system_prompt, user_prompt, max_tokens=800, tier="quality"
         )
         raw = _strip_json_fences(raw)
 
