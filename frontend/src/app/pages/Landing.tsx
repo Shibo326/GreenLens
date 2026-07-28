@@ -26,18 +26,15 @@ import { ClaimChecker } from "../components/ClaimChecker";
 import { OnboardingOverlay } from "../components/OnboardingOverlay";
 
 const LOADING_STAGES = [
-  { label: "Extracting text", icon: "\u{1F4C4}" },
-  { label: "Embedding claims", icon: "\u{1F50D}" },
-  { label: "AI greenwash analysis", icon: "\u{1F916}" },
-  { label: "Cross-referencing claims", icon: "\u{26A0}" },
-  { label: "Building report", icon: "\u{1F4CA}" },
+  { label: "Uploading document", icon: "\u{1F4C4}" },
+  { label: "Reading & embedding claims", icon: "\u{1F50D}" },
+  { label: "AI greenwash detection", icon: "\u{1F916}" },
 ];
 
 const SLOW_MESSAGES = [
-  { afterSeconds: 20, message: "Server is warming up — hang tight..." },
-  { afterSeconds: 40, message: "Still running — GreenLens AI is analyzing your claims..." },
-  { afterSeconds: 70, message: "Almost there — large documents take a bit longer..." },
-  { afterSeconds: 100, message: "Due to high demand, the server is warming up. Please retry — it should work on the next attempt!" },
+  { afterSeconds: 30, message: "AI is analyzing — this takes 30-60 seconds..." },
+  { afterSeconds: 60, message: "Still processing — almost done..." },
+  { afterSeconds: 90, message: "Taking longer than usual. Please wait or retry." },
 ];
 
 export default function Landing() {
@@ -137,9 +134,9 @@ export default function Landing() {
         const next = prev + 1;
         const msg = [...SLOW_MESSAGES].reverse().find((m) => next >= m.afterSeconds);
         setSlowMessage(msg?.message ?? null);
-        if (next === 100 && !hasShownTimeoutToast) {
+        if (next === 90 && !hasShownTimeoutToast) {
           hasShownTimeoutToast = true;
-          toast.warning("Due to high demand, the server is still warming up. If it doesn't complete soon, please retry.", { duration: 12000 });
+          toast.warning("Taking longer than usual. If it doesn't complete soon, please retry.", { duration: 12000 });
         }
         return next;
       });
