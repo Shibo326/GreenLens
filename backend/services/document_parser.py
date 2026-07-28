@@ -5,8 +5,8 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 # Performance: cap document text to prevent huge files from slowing analysis.
-# ~12000 chars ≈ 3000 words — enough for sustainability report key sections.
-MAX_DOC_CHARS = 12000
+# ~20000 chars ≈ 5000 words — gives the LLM more document content for better analysis.
+MAX_DOC_CHARS = 20000
 
 
 class ExtractionError(Exception):

@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import os
 from datetime import datetime
 
 from models.document import Chunk
@@ -10,7 +9,6 @@ from models.response import (
     ComparisonRow,
     Recommendation,
     Risk,
-    SourceLink,
 )
 from prompts.recommendation import build_recommendation_prompt
 from prompts.risk_analysis import build_risk_prompt
@@ -75,18 +73,13 @@ class AnalysisService:
     """
     Orchestrates the full multi-document AI analysis pipeline.
 
-    Performance-optimized architecture:
-    - Tiered model routing: deepseek-v4-pro for reasoning, deepseek-v4-flash for structured tasks
-    - SINGLE_CALL_MODE: combine all analysis into 1 call (set SINGLE_CALL_MODE=true in env)
-    - All 5 LLM calls run in parallel (no batching)
-    - Web research enrichment: real-time online data to cross-reference claims
-    - Suggested questions merged into executive summary call (saves 1 call)
-    - Conflict detection consolidated to 1 call for ALL docs (saves N*(N-1)/2 - 1 calls)
-    - Per-call timeout of 80s with graceful partial results
-    - Token budgets tuned per call type
+    Architecture: SINGLE MEGA-CALL mode for ALL sessions.
+    - 1 LLM call instead of 5 (no rate limit issues)
+    - The model sees ALL context at once (better reasoning)
+    - Less chance of JSON parse failures across multiple calls
+    - Web search is NOT used during analysis (only in chat copilot)
 
-    Total LLM calls: 5 parallel (was 6+ sequential/batched, up to 34 with pairwise conflicts)
-    SINGLE_CALL_MODE: 1 call total (emergency speed fallback)
+    Total LLM calls: 1 (single mega-call via quality tier)
     """
 
     def __init__(
@@ -98,7 +91,6 @@ class AnalysisService:
         self.llm_service = llm_service
         self.conflict_engine = conflict_engine
         self.session_manager = session_manager
-        self._single_call_mode = os.getenv("SINGLE_CALL_MODE", "false").lower() == "true"
 
     async def run_full_analysis(
         self,
@@ -107,142 +99,23 @@ class AnalysisService:
         doc_names: list[str],
     ) -> AnalysisResult:
         """
-        Run the complete analysis pipeline.
+        Run the complete analysis pipeline using SINGLE MEGA-CALL mode.
 
-        Normal mode: 5 parallel LLM calls (tiered models).
-        SINGLE_CALL_MODE: 1 mega LLM call (extreme speed, lower quality).
+        Always uses a single LLM call for all analysis because:
+        1. Only 1 API call instead of 5 (no rate limit issues)
+        2. The model sees ALL context at once (better reasoning)
+        3. Less chance of JSON parse failures across multiple calls
 
-        Target: <35s wall time for 2 documents in normal mode.
+        The chat copilot works fine with single calls — analysis should too.
         """
         system_prompt = get_system_prompt(doc_names)
 
-        if self._single_call_mode:
-            mode_reason = "SINGLE_CALL_MODE env"
-            logger.info(
-                f"[SINGLE_CALL_MODE] Starting single-mega-call analysis for session {session_id} "
-                f"({len(chunks)} chunks, {len(doc_names)} documents) — reason: {mode_reason}"
-            )
-            return await self._run_single_call_analysis(session_id, system_prompt, chunks, doc_names)
-
         logger.info(
-            f"Starting full analysis for session {session_id} "
-            f"({len(chunks)} chunks, {len(doc_names)} documents) — 5 parallel LLM calls "
-            f"[quality: deepseek-v4-pro, fast: deepseek-v4-flash, timeout: {LLM_CALL_TIMEOUT}s]"
+            f"[SINGLE_CALL_MODE] Starting single-mega-call analysis for session {session_id} "
+            f"({len(chunks)} chunks, {len(doc_names)} documents)"
         )
 
-        if chunks:
-            logger.debug(f"First chunk: {chunks[0].source_document} ({len(chunks)} chunks)")
-        else:
-            logger.warning("No document chunks — extraction may have failed")
-
-        # --- Fetch web context for richer analysis (runs before parallel calls) ---
-        web_context = ""
-        web_sources: list[SourceLink] = []
-        try:
-            from services import web_search
-            # Extract company/topic from document names for targeted search
-            company_hint = " ".join(
-                name.replace(".pdf", "").replace("_", " ").replace("-", " ")
-                for name in doc_names[:2]
-            )[:100]
-            web_context, raw_sources = await web_search.search_with_sources(
-                f"greenwashing {company_hint} sustainability claims"
-            )
-            web_sources = [
-                SourceLink(title=s["title"], url=s["url"], snippet=s["snippet"])
-                for s in raw_sources
-            ]
-        except Exception as e:
-            logger.warning(f"[analysis] Web search failed (non-fatal): {e}")
-            web_context = ""
-            web_sources = []
-
-        # --- Run analysis calls with rate-limit-safe staggering ---
-        # Phase 1: Summary + Risks (most important — run first)
-        (
-            summary_and_questions_result,
-            risks_result,
-        ) = await asyncio.gather(
-            self._with_timeout(
-                self._generate_summary_and_questions(system_prompt, chunks, web_context=web_context),
-                "summary+questions",
-            ),
-            self._with_timeout(
-                self._generate_risks(system_prompt, chunks, web_context=web_context),
-                "risks",
-            ),
-            return_exceptions=True,
-        )
-
-        # Brief pause to avoid rate limit burst on Fireworks
-        await asyncio.sleep(1)
-
-        # Phase 2: Matrix + Recommendation + Conflicts (secondary)
-        (
-            matrix_result,
-            recommendation_result,
-            conflicts_result,
-        ) = await asyncio.gather(
-            self._with_timeout(
-                self._generate_comparison_matrix(system_prompt, chunks, doc_names, web_context=web_context),
-                "comparison_matrix",
-            ),
-            self._with_timeout(
-                self._generate_recommendation(system_prompt, chunks, web_context=web_context),
-                "recommendation",
-            ),
-            self._with_timeout(
-                self.conflict_engine.detect(chunks, doc_names),
-                "conflicts",
-            ),
-            return_exceptions=True,
-        )
-
-        # Unpack summary + questions + greenwashScore
-        if isinstance(summary_and_questions_result, Exception):
-            logger.warning(f"Summary generation failed, using fallback: {summary_and_questions_result}")
-            summary_result = f"Analysis of {len(doc_names)} document(s): {', '.join(doc_names)}. The AI summary could not be generated — please review individual sections below for detailed findings."
-            suggested_questions = ["What are the key claims?", "Are there any greenwash flags?", "What contradictions exist?"]
-            greenwash_score = None
-        else:
-            summary_result, suggested_questions, greenwash_score = summary_and_questions_result
-
-        if isinstance(risks_result, Exception):
-            logger.warning(f"Risk analysis failed, using empty: {risks_result}")
-            risks_result = []
-
-        if isinstance(matrix_result, Exception):
-            logger.warning(f"Comparison matrix failed, using empty: {matrix_result}")
-            matrix_result = []
-
-        if isinstance(recommendation_result, Exception):
-            logger.warning(f"Recommendation failed, using fallback: {recommendation_result}")
-            recommendation_result = Recommendation(
-                title="Analysis Incomplete",
-                summary="The AI analysis could not be fully completed. This may be due to API limits or service issues. Please try again.",
-                nextSteps=["Retry the analysis", "Check if documents contain readable text", "Try uploading fewer documents"],
-                confidence=0.3,
-            )
-
-        if isinstance(conflicts_result, Exception):
-            logger.warning(f"Conflict detection failed, using empty: {conflicts_result}")
-            conflicts_result = []
-
-        analysis = AnalysisResult(
-            analyzedAt=datetime.utcnow(),
-            executiveSummary=summary_result,
-            greenwashScore=self._clamp_greenwash_score(greenwash_score, risks=risks_result, matrix=matrix_result),
-            risks=risks_result,
-            comparisonMatrix=matrix_result,
-            conflicts=conflicts_result,
-            recommendation=recommendation_result,
-            suggestedQuestions=suggested_questions,
-            sources=web_sources,
-        )
-
-        self.session_manager.store_analysis(session_id, analysis)
-        logger.info(f"Analysis complete for session {session_id}")
-        return analysis
+        return await self._run_single_call_analysis(session_id, system_prompt, chunks, doc_names)
 
     async def _run_single_call_analysis(
         self,

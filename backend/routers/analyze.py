@@ -81,7 +81,7 @@ async def suggest_questions(request: Request, body: AnalyzeRequest):
         doc_names = [c.source_document for c in chunks]
         doc_names = list(dict.fromkeys(doc_names))  # dedupe preserving order
         system_prompt = get_system_prompt(doc_names)
-        _, questions = await analysis_service._generate_summary_and_questions(
+        _, questions, _ = await analysis_service._generate_summary_and_questions(
             system_prompt, chunks
         )
     except Exception as e:
