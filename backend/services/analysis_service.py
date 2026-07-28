@@ -218,10 +218,10 @@ class AnalysisService:
         if isinstance(recommendation_result, Exception):
             logger.warning(f"Recommendation failed, using fallback: {recommendation_result}")
             recommendation_result = Recommendation(
-                title="Analysis Complete",
-                summary="Please review the identified risks and document comparison for details.",
-                nextSteps=["Review identified risks", "Compare claims vs. data", "Ask the AI Copilot"],
-                confidence=0.6,
+                title="Analysis Incomplete",
+                summary="The AI analysis could not be fully completed. This may be due to API limits or service issues. Please try again.",
+                nextSteps=["Retry the analysis", "Check if documents contain readable text", "Try uploading fewer documents"],
+                confidence=0.3,
             )
 
         if isinstance(conflicts_result, Exception):
