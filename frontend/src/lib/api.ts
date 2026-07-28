@@ -434,6 +434,30 @@ export async function quickScan(claim: string): Promise<QuickScanResponse> {
 }
 
 /**
+ * URL Scan — fetch a web page and analyze it for greenwashing claims.
+ * POST /api/url-scan
+ */
+export async function scanUrl(url: string): Promise<QuickScanResponse> {
+  const endpoint = `${API_BASE_URL}/api/url-scan`;
+  console.log(`[API] POST ${endpoint} — url="${url}"`);
+
+  const response = await fetchWithTimeout(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  }, 30000);
+
+  console.log(`[API] POST ${endpoint} → ${response.status}`);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'URL scan failed' }));
+    throw new Error(error.error ?? `URL scan failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<QuickScanResponse>;
+}
+
+/**
  * Snap & Check — send an image (product label, packaging) to the vision-capable
  * chat endpoint for greenwashing analysis.
  * POST /api/chat/vision — multipart/form-data

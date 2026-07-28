@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { NavigationBar } from "../components/NavigationBar";
 import { Card } from "../components/Card";
 import { RiskBadge, EvidenceTag, EvidenceBox } from "../components/Badges";
@@ -147,7 +147,7 @@ export default function Dashboard() {
                     {doc.filename}
                   </div>
                   <div style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "11px", color: doc.processingStatus === "completed" ? "var(--leaf)" : "var(--flag-amber)" }}>
-                    {doc.processingStatus === "completed" ? (isImage ? "Image � OCR Complete" : "Processed") : "Processing..."}
+                    {doc.processingStatus === "completed" ? (isImage ? "Image OCR Complete" : "Processed") : "Processing..."}
                   </div>
                 </div>
               </div>
@@ -194,7 +194,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-center gap-1.5 pt-1">
             <Leaf size={12} style={{ color: "var(--leaf)" }} aria-hidden="true" />
             <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 500, color: "var(--ghost)" }}>
-              Powered by GreenLens AI � AMD MI300X
+              Powered by GreenLens AI  AMD MI300X
             </span>
           </div>
         </div>
@@ -271,7 +271,7 @@ export default function Dashboard() {
                 Analysis Results
               </h2>
               <span className="hidden sm:inline" style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ghost)" }}>
-                � Analyzed {analysis.analyzedAt ? new Date(analysis.analyzedAt).toLocaleString() : "just now"}
+                Analyzed {analysis.analyzedAt ? new Date(analysis.analyzedAt).toLocaleString() : "just now"}
               </span>
               {documents[0]?.uploadedAt && analysis.analyzedAt && (() => {
                 const ms = new Date(analysis.analyzedAt).getTime() - new Date(documents[0].uploadedAt).getTime();
@@ -293,7 +293,7 @@ export default function Dashboard() {
                 {isReanalyzing ? (
                   <div className="flex items-center gap-1.5">
                     <div className="animate-spin-slow w-3 h-3 rounded-full" style={{ border: "2px solid var(--ghost)", borderTopColor: "var(--leaf)" }} />
-                    <span className="hidden sm:inline">Analyzing�</span>
+                    <span className="hidden sm:inline">Analyzing</span>
                   </div>
                 ) : <><span className="hidden sm:inline">Re-analyze</span><span className="sm:hidden">?</span></>}
               </GhostButton>
@@ -505,7 +505,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Analysis Cards Grid � 2-column on desktop */}
+            {/* Analysis Cards Grid 2-column on desktop */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Executive Summary */}
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
@@ -529,7 +529,7 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              {/* Web Research Context � real-time online findings */}
+              {/* Web Research Context  real-time online findings */}
               {analysis.webResearchContext && (
                 <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '320px' }}>
                   <div style={{ flexShrink: 0 }}>
@@ -715,7 +715,7 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              {/* AI Recommendation � spans full width */}
+              {/* AI Recommendation  spans full width */}
               <Card className="md:col-span-2" style={{ display: 'flex', flexDirection: 'column', maxHeight: '320px', background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)" }}>
                 <div style={{ flexShrink: 0 }}>
                   <div className="flex items-center justify-between mb-3">

@@ -34,7 +34,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ---- Import routers ----
-from routers import upload, analyze, chat, report, demo, quick_scan, news
+from routers import upload, analyze, chat, report, demo, quick_scan, news, url_scan
 
 # ---- Rate Limiter ----
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
@@ -109,6 +109,7 @@ app.include_router(report.router, prefix="/api", tags=["report"])
 app.include_router(demo.router, prefix="/api", tags=["demo"])
 app.include_router(quick_scan.router, prefix="/api", tags=["quick-scan"])
 app.include_router(news.router, prefix="/api", tags=["news"])
+app.include_router(url_scan.router, prefix="/api", tags=["url-scan"])
 
 # ---- Service Readiness Flag ----
 app.state.services_ready = False
@@ -276,6 +277,8 @@ async def startup_event():
         report._session_manager = session_manager
 
         quick_scan._llm_service = llm_service
+
+        url_scan._llm_service = llm_service
 
         logger.info("All services initialized — GreenLens AI is ready!")
 

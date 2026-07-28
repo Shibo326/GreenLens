@@ -15,10 +15,12 @@ import {
   Search,
   BarChart3,
   ExternalLink,
+  Globe,
 } from "lucide-react";
 import { Link } from "react-router";
-import { uploadDocuments, analyzeDocuments, warmupServer, fetchNews } from "../../lib/api";
+import { uploadDocuments, analyzeDocuments, warmupServer, fetchNews, scanUrl } from "../../lib/api";
 import type { NewsArticle } from "../../lib/api";
+import type { QuickScanResponse } from "../../lib/types";
 import { toast } from "sonner";
 import { useAppDispatch } from "../../lib/store";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,10 +36,10 @@ const LOADING_STAGES = [
 ];
 
 const SLOW_MESSAGES = [
-  { afterSeconds: 20, message: "Server is warming up � hang tight..." },
-  { afterSeconds: 40, message: "Still running � GreenLens AI is analyzing your claims..." },
-  { afterSeconds: 70, message: "Almost there � large documents take a bit longer..." },
-  { afterSeconds: 100, message: "Due to high demand, the server is warming up. Please retry � it should work on the next attempt!" },
+  { afterSeconds: 20, message: "Server is warming up  hang tight..." },
+  { afterSeconds: 40, message: "Still running  GreenLens AI is analyzing your claims..." },
+  { afterSeconds: 70, message: "Almost there  large documents take a bit longer..." },
+  { afterSeconds: 100, message: "Due to high demand, the server is warming up. Please retry  it should work on the next attempt!" },
 ];
 
 export default function Landing() {
@@ -70,7 +72,7 @@ export default function Landing() {
       return (["application/pdf", "image/png", "image/jpeg", "image/jpg"].includes(mime) || ["pdf", "png", "jpg", "jpeg"].includes(ext));
     });
     const rejected = incoming.length - accepted.length;
-    if (rejected > 0) setError(`${rejected} file(s) skipped � only PDF, PNG, and JPEG are supported.`);
+    if (rejected > 0) setError(`${rejected} file(s) skipped  only PDF, PNG, and JPEG are supported.`);
     setFiles((prev) => {
       const combined = [...prev, ...accepted];
       if (combined.length > 10) { setError("You can upload up to 10 files at a time."); return combined.slice(0, 10); }
@@ -90,6 +92,33 @@ export default function Landing() {
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState(false);
+
+  // URL Scanner state
+  const [urlInput, setUrlInput] = useState("");
+  const [urlLoading, setUrlLoading] = useState(false);
+  const [urlResult, setUrlResult] = useState<QuickScanResponse | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
+
+  const handleUrlScan = async () => {
+    const trimmed = urlInput.trim();
+    if (!trimmed || urlLoading) return;
+    setUrlLoading(true);
+    setUrlError(null);
+    setUrlResult(null);
+    try {
+      const response = await scanUrl(trimmed);
+      setUrlResult(response);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "URL scan failed.";
+      if (msg.toLowerCase().includes("fetch") || msg.toLowerCase().includes("network")) {
+        setUrlError("Backend not reachable. Start the backend server or check your connection.");
+      } else {
+        setUrlError(msg);
+      }
+    } finally {
+      setUrlLoading(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -160,10 +189,10 @@ export default function Landing() {
         } else {
           stageTimers.forEach(clearTimeout);
           setLoadingStage(2);
-          toast.loading('Reconnected � resuming analysis...', { id: toastId });
+          toast.loading('Reconnected resuming analysis...', { id: toastId });
         }
         const analyzeResult = await analyzeDocuments(currentSessionId);
-        if (!analyzeResult.analysis) { throw new Error("Analysis returned empty � please try again"); }
+        if (!analyzeResult.analysis) { throw new Error("Analysis returned empty please try again"); }
         dispatch({ type: "SET_ANALYSIS", payload: analyzeResult.analysis });
         setPendingSessionId(null);
         return true;
@@ -173,8 +202,7 @@ export default function Landing() {
         const isTimeout = lower.includes("timed out") || lower.includes("timeout");
         const isNetwork = lower.includes("network") || lower.includes("fetch") || lower.includes("failed to fetch");
         if (!isRetry && (isTimeout || isNetwork) && pendingSessionId) {
-          toast.loading('Connection dropped � auto-retrying...', { id: toastId });
-          setSlowMessage("Connection dropped � retrying automatically...");
+          toast.loading('Connection dropped — retrying automatically...', { id: toastId });
           await new Promise((r) => setTimeout(r, 3000));
           return doAnalyze(true);
         }
@@ -195,18 +223,18 @@ export default function Landing() {
         msg = pendingSessionId
           ? "Server is warming up. Your documents are still uploaded. Click 'Retry Analysis' to try again!"
           : "Server is warming up. Click 'Retry Analysis' to try again!";
-        toastMsg = "Server warming up � click Retry to try again";
+        toastMsg = "Server warming up  click Retry to try again";
       } else if (lower.includes("rate") || lower.includes("429") || lower.includes("quota")) {
         msg = "AI service is busy right now. Please wait 60 seconds and try again.";
         toastMsg = msg; setPendingSessionId(null);
       } else if (lower.includes("upload") || lower.includes("413")) {
-        msg = "Upload failed � check that your files are valid PDFs or images under 10MB.";
+        msg = "Upload failed  check that your files are valid PDFs or images under 10MB.";
         toastMsg = msg; setPendingSessionId(null);
       } else if (lower.includes("network") || lower.includes("fetch") || lower.includes("failed to fetch")) {
         msg = pendingSessionId
-          ? "Connection dropped � your documents are still on the server. Click 'Retry Analysis' to resume."
-          : "Connection error � check your internet and try again.";
-        toastMsg = "Network error � click Retry to resume";
+          ? "Connection dropped your documents are still on the server. Click 'Retry Analysis' to resume."
+          : "Connection error  check your internet and try again.";
+        toastMsg = "Network error  click Retry to resume";
       } else {
         msg = "Analysis failed. Please try again. If it keeps happening, try with fewer documents.";
         toastMsg = msg; setPendingSessionId(null);
@@ -447,7 +475,7 @@ export default function Landing() {
                 Tap to select files
               </h3>
               <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)", marginBottom: "12px", textAlign: "center" }}>
-                PDF � PNG � JPG � 2-5 recommended � 10 max
+                Try with pre-loaded sample documents  no upload needed
               </p>
               <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--leaf)" }}>
                 or browse files
@@ -489,7 +517,7 @@ export default function Landing() {
                 whileTap={{ scale: 0.98 }}
               >
                 <RefreshCw size={15} />
-                Retry Analysis � documents still uploaded
+                Retry Analysis  documents still uploaded
               </motion.button>
             )}
           </div>
@@ -506,7 +534,7 @@ export default function Landing() {
           >
             <span style={{ fontSize: "14px", flexShrink: 0, marginTop: "1px" }}>??</span>
             <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", lineHeight: 1.5, color: "var(--flag-amber)", margin: 0 }}>
-              <strong>{files.length} files detected.</strong> Analysis may take 2�4 minutes for large batches.
+              <strong>{files.length} files detected.</strong> Analysis may take 24 minutes for large batches.
             </p>
           </motion.div>
         )}
@@ -542,7 +570,7 @@ export default function Landing() {
                   </div>
                   <AnimatePresence mode="wait">
                     <motion.span key={loadingStage} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.3 }} style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)", display: "block" }}>
-                      {LOADING_STAGES[loadingStage].label}�
+                      {LOADING_STAGES[loadingStage].label}
                     </motion.span>
                   </AnimatePresence>
                 </div>
@@ -558,7 +586,7 @@ export default function Landing() {
                 <AnimatePresence mode="wait">
                   <motion.div key={slowMessage ?? "batch"} className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: "var(--flag-amber-dim)", border: "1px solid rgba(240,169,55,0.2)" }} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
                     <span style={{ fontSize: "12px", flexShrink: 0 }}>??</span>
-                    <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--flag-amber)", margin: 0 }}>{slowMessage || `Processing ${files.length} files � hang tight!`}</p>
+                    <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--flag-amber)", margin: 0 }}>{slowMessage || `Processing ${files.length} files  hang tight!`}</p>
                   </motion.div>
                 </AnimatePresence>
               )}
@@ -585,7 +613,7 @@ export default function Landing() {
         )}
       </section>
 
-      {/* Quick Scan Panel � styled as prominent search bar */}
+      {/* Quick Scan Panel styled as prominent search bar */}
       <section id="quick-scan" className="flex flex-col items-center px-4 sm:px-6 py-12 mx-auto" style={{ maxWidth: "1200px" }}>
         <div className="flex items-center gap-3 mb-6" style={{ width: "100%", maxWidth: "640px" }}>
           <div style={{ flex: 1, height: "1px", background: "var(--rule)" }} />
@@ -595,6 +623,142 @@ export default function Landing() {
           <div style={{ flex: 1, height: "1px", background: "var(--rule)" }} />
         </div>
         <QuickScanPanel />
+
+        {/* URL Scanner — compact alternative entry point */}
+        <div
+          className="mt-6 rounded-xl p-4"
+          style={{
+            background: "var(--lead)",
+            border: "1px solid var(--rule)",
+            maxWidth: "600px",
+            width: "100%",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Globe size={14} style={{ color: "var(--ghost)" }} />
+            <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 600, color: "var(--ghost)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              or paste a URL
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              placeholder="https://company.com/sustainability"
+              className="flex-1 rounded-lg px-4 py-2.5"
+              style={{
+                background: "var(--graphite)",
+                border: "1px solid var(--rule)",
+                color: "var(--paper)",
+                fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                fontSize: "14px",
+                outline: "none",
+                transition: "border-color 0.2s",
+                minWidth: 0,
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "var(--leaf-border)"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "var(--rule)"; }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void handleUrlScan();
+                }
+              }}
+              disabled={urlLoading}
+            />
+            <button
+              onClick={() => void handleUrlScan()}
+              disabled={!urlInput.trim() || urlLoading}
+              className="flex items-center gap-2 rounded-lg px-4"
+              style={{
+                height: "42px",
+                background: !urlInput.trim() || urlLoading ? "var(--graphite)" : "transparent",
+                border: `1px solid ${!urlInput.trim() || urlLoading ? "var(--rule)" : "var(--leaf-border)"}`,
+                color: !urlInput.trim() || urlLoading ? "var(--ghost)" : "var(--leaf)",
+                fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                fontSize: "13px",
+                fontWeight: 600,
+                cursor: !urlInput.trim() || urlLoading ? "not-allowed" : "pointer",
+                transition: "all 0.2s",
+                opacity: !urlInput.trim() || urlLoading ? 0.6 : 1,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {urlLoading ? (
+                <>
+                  <Loader size={14} className="animate-spin-slow" />
+                  Scanning...
+                </>
+              ) : (
+                <>
+                  <Globe size={14} />
+                  Scan URL
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* URL Error */}
+          {urlError && (
+            <div
+              className="mt-3 px-4 py-3 rounded-lg"
+              style={{
+                background: "var(--flag-red-dim)",
+                border: "1px solid rgba(240,68,82,0.25)",
+                fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                fontSize: "13px",
+                color: "var(--flag-red)",
+              }}
+            >
+              {urlError}
+            </div>
+          )}
+
+          {/* URL Result */}
+          {urlResult && (
+            <div className="mt-4 space-y-3 animate-slideUp">
+              <div className="rounded-lg p-4" style={{ background: "var(--graphite)", border: "1px solid var(--rule)" }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ghost)", marginBottom: "8px" }}>
+                  VERDICT
+                </div>
+                <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", lineHeight: 1.6, color: "var(--paper)", margin: 0 }}>
+                  {urlResult.verdict}
+                </p>
+              </div>
+              {urlResult.whatToLookFor && urlResult.whatToLookFor.length > 0 && (
+                <div className="rounded-lg p-4" style={{ background: "var(--graphite)", border: "1px solid var(--rule)" }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ghost)", marginBottom: "8px" }}>
+                    WHAT TO LOOK FOR
+                  </div>
+                  <ul className="space-y-1.5" style={{ margin: 0, paddingLeft: "16px" }}>
+                    {urlResult.whatToLookFor.map((item, i) => (
+                      <li key={i} style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", lineHeight: 1.5, color: "var(--ash)" }}>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {urlResult.confidence && (
+                <div
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg"
+                  style={{
+                    background: urlResult.confidence === "HIGH" ? "var(--leaf-dim)" : urlResult.confidence === "MEDIUM" ? "var(--flag-amber-dim)" : "var(--flag-red-dim)",
+                    border: `1px solid ${urlResult.confidence === "HIGH" ? "var(--leaf-border)" : urlResult.confidence === "MEDIUM" ? "rgba(240,169,55,0.25)" : "rgba(240,68,82,0.25)"}`,
+                    color: urlResult.confidence === "HIGH" ? "var(--leaf)" : urlResult.confidence === "MEDIUM" ? "var(--flag-amber)" : "var(--flag-red)",
+                    fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                  }}
+                >
+                  <CheckCircle size={14} />
+                  Confidence: {urlResult.confidence}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Stats Divider — moved from hero for cleaner layout */}
@@ -900,7 +1064,7 @@ export default function Landing() {
             See it in action
           </h3>
           <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "15px", color: "var(--ash)", marginBottom: "24px", textAlign: "center" }}>
-            Try with pre-loaded sample documents � no upload needed
+            Try with pre-loaded sample documents  no upload needed
           </p>
           <Link to="/demo">
             <PrimaryButton style={{ padding: "14px 32px", fontSize: "15px", fontWeight: 600 }}>Try Demo</PrimaryButton>
@@ -916,11 +1080,11 @@ export default function Landing() {
         <div className="flex items-center gap-2">
           <Leaf size={12} style={{ color: "var(--leaf)" }} aria-hidden="true" />
           <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "var(--ash)", textAlign: "center", margin: 0 }}>
-            GreenLens � AI-powered greenwashing detection
+            GreenLens  AI-powered greenwashing detection
           </p>
         </div>
         <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 400, color: "var(--ghost)", textAlign: "center", margin: 0 }}>
-          Powered by AMD MI300X � Built for YFS Build for Good Hackathon
+          Powered by AMD MI300X  Built for YFS Build for Good Hackathon
         </p>
       </footer>
     </div>
