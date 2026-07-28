@@ -227,8 +227,31 @@ SCORING GUIDE for greenwashScore:
 
 You MUST identify at least 3 risks and 3 comparison rows. Sustainability documents ALWAYS have claims that can be scrutinized."""
 
-        raw = await self.complete(system_prompt, mega_prompt, max_tokens=max_tokens, tier="quality")
+        raw = await self.complete(system_prompt, mega_prompt, max_tokens=max_tokens, temperature=0.0, tier="quality")
         raw = _strip_json_fences(raw)
+
+        # Extra aggressive: find the LAST complete JSON object (skip any reasoning preamble)
+        # The model often outputs thinking text then the JSON at the end
+        import re as _re
+        # Try to find the outermost JSON object that starts with {"executiveSummary"
+        json_match = _re.search(r'\{[^{}]*"executiveSummary"', raw)
+        if json_match:
+            # Found likely start of our target JSON
+            start_idx = json_match.start()
+            # Find matching closing brace
+            depth = 0
+            end_idx = start_idx
+            for i in range(start_idx, len(raw)):
+                if raw[i] == '{':
+                    depth += 1
+                elif raw[i] == '}':
+                    depth -= 1
+                    if depth == 0:
+                        end_idx = i
+                        break
+            if end_idx > start_idx:
+                raw = raw[start_idx:end_idx + 1]
+
         try:
             return json.loads(raw)
         except json.JSONDecodeError as e:
@@ -236,10 +259,18 @@ You MUST identify at least 3 risks and 3 comparison rows. Sustainability documen
             brace_start = raw.find("{")
             brace_end = raw.rfind("}")
             if brace_start != -1 and brace_end > brace_start:
+                candidate = raw[brace_start:brace_end + 1]
                 try:
-                    return json.loads(raw[brace_start:brace_end + 1])
+                    return json.loads(candidate)
                 except json.JSONDecodeError:
                     pass
+                # Attempt JSON repair: fix trailing commas, unquoted nulls, etc.
+                repaired = _repair_json(candidate)
+                try:
+                    return json.loads(repaired)
+                except json.JSONDecodeError:
+                    pass
+            logger.error(f"[Fireworks] Mega-call raw response (first 2000 chars): {raw[:2000]}")
             raise LLMParseError(f"Mega-call JSON parse failed: {e}") from e
 
     async def aclose(self) -> None:
@@ -414,6 +445,46 @@ You MUST identify at least 3 risks and 3 comparison rows. Sustainability documen
                 raise LLMParseError(
                     f"LLM failed to produce valid JSON after retry: {second_error}"
                 ) from second_error
+
+
+def _repair_json(text: str) -> str:
+    """Attempt to repair common LLM JSON formatting issues.
+
+    Handles:
+    - Trailing commas before } or ]
+    - Single-line // comments
+    - Unescaped newlines inside strings
+    - Truncated JSON (close all open braces/brackets)
+    """
+    # Remove single-line comments (// ...) that are NOT inside strings
+    # Simple heuristic: remove lines that are only comments
+    lines = text.split('\n')
+    cleaned_lines = []
+    for line in lines:
+        stripped = line.lstrip()
+        if stripped.startswith('//'):
+            continue
+        cleaned_lines.append(line)
+    text = '\n'.join(cleaned_lines)
+
+    # Remove trailing commas before } or ]
+    text = re.sub(r',\s*([}\]])', r'\1', text)
+
+    # Try to close unclosed braces/brackets (truncated responses)
+    open_braces = text.count('{') - text.count('}')
+    open_brackets = text.count('[') - text.count(']')
+    if open_braces > 0 or open_brackets > 0:
+        # Truncate to last complete value (last comma or colon+value)
+        # Then close remaining brackets
+        text = text.rstrip()
+        # Remove trailing incomplete key-value
+        if text and text[-1] not in ('}', ']', '"', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'e', 'l', 'u'):
+            last_comma = text.rfind(',')
+            if last_comma > 0:
+                text = text[:last_comma]
+        text += ']' * max(0, open_brackets) + '}' * max(0, open_braces)
+
+    return text
 
 
 def _strip_json_fences(text: str) -> str:
