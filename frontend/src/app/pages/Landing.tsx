@@ -28,9 +28,9 @@ import { OnboardingOverlay } from "../components/OnboardingOverlay";
 const LOADING_STAGES = [
   { label: "Extracting text", icon: "\u{1F4C4}" },
   { label: "Embedding claims", icon: "\u{1F50D}" },
-  { label: "AI analysis (5 parallel checks)", icon: "\u{1F916}" },
-  { label: "Detecting contradictions", icon: "\u{26A0}" },
-  { label: "Building greenwash report", icon: "\u{1F4CA}" },
+  { label: "AI greenwash analysis", icon: "\u{1F916}" },
+  { label: "Cross-referencing claims", icon: "\u{26A0}" },
+  { label: "Building report", icon: "\u{1F4CA}" },
 ];
 
 const SLOW_MESSAGES = [
