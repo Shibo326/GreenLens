@@ -230,9 +230,9 @@ SCORING GUIDE for greenwashScore:
 - 31-60: MEDIUM RISK — vague claims, some unverified assertions, partial evidence gaps
 - 61-100: LOW RISK — claims are specific, measurable, third-party verified, data-consistent
 
-You MUST identify at least 3 risks and 3 comparison rows. Sustainability documents ALWAYS have claims that can be scrutinized.
+You MUST identify 3-5 risks and 3 comparison rows. Keep descriptions SHORT (max 30 words each).
 
-CRITICAL: Output ONLY the JSON object. Do NOT include any thinking, reasoning, preamble, or explanation. Start your response with {{ and end with }}."""
+CRITICAL: Output ONLY the JSON object. No thinking, no reasoning, no preamble. Start with {{ end with }}."""
 
         # Call Fireworks directly (skip fallback chain to avoid 90s+ delay on failures)
         # IMPORTANT: Set FIREWORKS_MODEL_FAST=accounts/fireworks/models/deepseek-v4-flash on Railway!

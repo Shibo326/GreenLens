@@ -108,7 +108,13 @@ class AnalysisService:
 
         The chat copilot works fine with single calls — analysis should too.
         """
-        system_prompt = get_system_prompt(doc_names)
+        # Use a SHORT system prompt for the mega-call to save tokens for output
+        # (The full 17K char prompt is used for chat, not analysis)
+        system_prompt = (
+            "You are GreenLens AI, a greenwashing detection expert. "
+            "Analyze sustainability documents and return structured JSON. "
+            "Be specific, cite evidence, identify misleading claims."
+        )
 
         logger.info(
             f"[SINGLE_CALL_MODE] Starting single-mega-call analysis for session {session_id} "
