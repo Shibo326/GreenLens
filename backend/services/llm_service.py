@@ -96,7 +96,7 @@ class LLMService:
 
         # Persistent async HTTP client — avoids TCP handshake overhead on every call.
         self._client = httpx.AsyncClient(
-            timeout=120.0,
+            timeout=180.0,
             limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
         )
 
@@ -230,9 +230,14 @@ SCORING GUIDE for greenwashScore:
 - 31-60: MEDIUM RISK — vague claims, some unverified assertions, partial evidence gaps
 - 61-100: LOW RISK — claims are specific, measurable, third-party verified, data-consistent
 
-You MUST identify at least 3 risks and 3 comparison rows. Sustainability documents ALWAYS have claims that can be scrutinized."""
+You MUST identify at least 3 risks and 3 comparison rows. Sustainability documents ALWAYS have claims that can be scrutinized.
 
-        raw = await self.complete(system_prompt, mega_prompt, max_tokens=max_tokens, temperature=0.0, tier="premium")
+CRITICAL: Output ONLY the JSON object. Do NOT include any thinking, reasoning, preamble, or explanation. Start your response with {{ and end with }}."""
+
+        # Use FAST tier (deepseek-v4-flash) — reasoning models (kimi-k2p6) waste tokens
+        # on <think> blocks before producing JSON, often causing truncation/parse failures.
+        # Flash produces clean JSON directly and is 3-5x faster.
+        raw = await self.complete(system_prompt, mega_prompt, max_tokens=max_tokens, temperature=0.0, tier="fast")
         raw = _strip_json_fences(raw)
 
         # Extra aggressive: find the LAST complete JSON object (skip any reasoning preamble)
