@@ -55,20 +55,40 @@ export function GreenwashScoreGauge({ score }: GreenwashScoreGaugeProps) {
     >
       {/* Subtle glow behind the gauge */}
       {!isNeutral && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            top: "20%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "200px",
-            height: "120px",
-            background: `radial-gradient(ellipse at center, ${band.color}15 0%, transparent 70%)`,
-            filter: "blur(30px)",
-            pointerEvents: "none",
-          }}
-        />
+        <>
+          <div
+            aria-hidden="true"
+            className="morph-blob"
+            style={{
+              position: "absolute",
+              top: "15%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "220px",
+              height: "140px",
+              background: `radial-gradient(ellipse at center, ${band.color}20 0%, transparent 70%)`,
+              filter: "blur(40px)",
+              pointerEvents: "none",
+            }}
+          />
+          {/* Outer glow ring */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -55%)",
+              width: "200px",
+              height: "200px",
+              borderRadius: "50%",
+              background: `conic-gradient(from 0deg, transparent, ${band.color}15, transparent, ${band.color}10, transparent)`,
+              animation: "conicSpin 6s linear infinite",
+              pointerEvents: "none",
+              opacity: 0.6,
+            }}
+          />
+        </>
       )}
 
       {/* SVG Semi-circle Arc */}

@@ -244,6 +244,9 @@ export default function Landing() {
         />
 
         {/* === ANIMATED BACKGROUND === */}
+        {/* Aurora glow */}
+        <div className="aurora-bg" aria-hidden="true" style={{ zIndex: 0 }} />
+        
         {/* Grid pattern */}
         <div
           aria-hidden="true"
@@ -310,8 +313,10 @@ export default function Landing() {
         >
           See through the{" "}
           <span
+            className="text-shimmer"
             style={{
-              background: "linear-gradient(135deg, var(--leaf) 0%, #6ee7a8 100%)",
+              background: "linear-gradient(90deg, var(--leaf), #6ee7a8, #b8f5d0, #6ee7a8, var(--leaf))",
+              backgroundSize: "200% auto",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -428,7 +433,7 @@ export default function Landing() {
         />
 
         <div
-          className="flex flex-col items-center justify-center w-full animate-slideUp"
+          className="flex flex-col items-center justify-center w-full animate-slideUp gradient-border"
           style={{
             maxWidth: "640px",
             minHeight: files.length > 0 ? "auto" : "220px",

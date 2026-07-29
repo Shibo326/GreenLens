@@ -12,6 +12,8 @@ fetch(`${API_BASE_URL}/health`, { method: "GET" }).catch(() => {});
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
     <AppProvider>
+      {/* Subtle film grain texture for premium depth */}
+      <div className="noise-overlay" aria-hidden="true" />
       <App />
     </AppProvider>
   </ErrorBoundary>

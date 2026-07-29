@@ -515,7 +515,7 @@ export default function Dashboard() {
             )}
 
             {/* Analysis Cards Grid 2-column on desktop */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 stagger-in">
               {/* Executive Summary */}
               <Card style={{ display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
                 <div style={{ flexShrink: 0 }}>
