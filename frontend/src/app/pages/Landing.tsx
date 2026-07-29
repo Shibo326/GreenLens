@@ -344,8 +344,7 @@ export default function Landing() {
             zIndex: 3,
           }}
         >
-          Upload sustainability reports, packaging claims, and marketing materials.
-          Ask anything in plain language. Get evidence-based greenwashing verdicts in under 90 seconds.
+          Companies spend billions looking green. We built an AI that reads their reports and tells you if it's real — or just marketing. Upload any sustainability document and get the truth in 60 seconds.
         </motion.p>
 
         {/* CTA Buttons */}
