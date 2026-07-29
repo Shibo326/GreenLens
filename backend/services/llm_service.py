@@ -193,53 +193,30 @@ DOCUMENTS: {doc_list}
 
 {context}
 
-Your job: Identify misleading sustainability claims, vague environmental promises, contradictions between documents, and gaps between marketing claims and actual data.
+Your job: Identify misleading sustainability claims and gaps between marketing claims and actual data.
 
-Return ONLY valid JSON with ALL these keys:
+Return ONLY valid JSON with ALL these keys (keep ALL values SHORT and concise):
 {{
-  "executiveSummary": "<4-6 sentence greenwashing verdict: overall credibility score rationale, most serious greenwash red flag, specific claim-vs-data example, recommended consumer action>",
-  "greenwashScore": <integer 0-100 where 0=total greenwashing, 100=fully credible>,
-  "risks": [
-    {{
-      "id": "r1",
-      "level": "HIGH|MEDIUM|LOW",
-      "description": "<specific greenwashing risk or misleading claim identified>",
-      "sourceDocument": "<filename where this was found>",
-      "category": "<Misleading Claim|Vague Language|Missing Evidence|Contradiction|Cherry-Picking>"
-    }}
-  ],
+  "executiveSummary": "<3 sentences max: credibility verdict, worst finding, consumer action>",
+  "greenwashScore": <integer 5-95>,
   "comparisonMatrix": [
-    {{
-      "field": "<specific sustainability topic e.g. 'Carbon Offset Coverage'>",
-      "values": {{"They Say": "<marketing claim>", "Data Shows": "<what data actually reveals>"}},
-      "winner": "<'They Say' if claim is credible, 'Data Shows' if data contradicts, or null>"
-    }}
+    {{"field": "<topic>", "values": {{"They Say": "<claim max 15 words>", "Data Shows": "<reality max 15 words>"}}, "winner": "Data Shows"}},
+    {{"field": "<topic>", "values": {{"They Say": "<claim max 15 words>", "Data Shows": "<reality max 15 words>"}}, "winner": "Data Shows"}},
+    {{"field": "<topic>", "values": {{"They Say": "<claim max 15 words>", "Data Shows": "<reality max 15 words>"}}, "winner": null}}
   ],
-  "recommendation": {{
-    "title": "<action title for consumer/watchdog>",
-    "summary": "<2-3 sentence recommendation on how to respond to these claims>",
-    "nextSteps": ["step1", "step2", "step3"],
-    "confidence": <0.0-1.0 how confident you are in this analysis>
-  }},
-  "suggestedQuestions": ["question1", "question2", "question3", "question4", "question5"],
+  "risks": [
+    {{"id": "r1", "level": "HIGH", "description": "<max 20 words>", "sourceDocument": "<filename>", "category": "Misleading Claim"}},
+    {{"id": "r2", "level": "HIGH", "description": "<max 20 words>", "sourceDocument": "<filename>", "category": "Hidden Trade-off"}},
+    {{"id": "r3", "level": "MEDIUM", "description": "<max 20 words>", "sourceDocument": "<filename>", "category": "Vague Language"}}
+  ],
+  "recommendation": {{"title": "<5 words>", "summary": "<1 sentence>", "nextSteps": ["step1", "step2"], "confidence": 0.8}},
+  "suggestedQuestions": ["q1", "q2", "q3"],
   "conflicts": []
 }}
 
-SCORING GUIDE for greenwashScore (0 = total greenwashing, 100 = fully credible):
+SCORING: Start at 50. Subtract 15 per HIGH risk, 8 per MEDIUM. Add 15 per real certification found.
 
-Score by counting these factors:
-- Start at 50 (neutral)
-- SUBTRACT 15 for each HIGH-severity risk found
-- SUBTRACT 8 for each MEDIUM-severity risk
-- SUBTRACT 5 for each claim without third-party certification
-- SUBTRACT 10 if absolute metrics WORSENED while claiming improvement
-- ADD 10 for each specific, measurable, time-bound claim with evidence
-- ADD 15 for each recognized third-party certification (ISO 14001, B Corp, FSC, etc.)
-- Minimum score: 5, Maximum: 95
-
-You MUST identify 3-5 risks and 3 comparison rows. Keep descriptions SHORT (max 30 words each).
-
-CRITICAL: Output ONLY the JSON object. No thinking, no reasoning, no preamble. Start with {{ end with }}."""
+CRITICAL: Output ONLY the JSON. No thinking. No explanation. Start with {{ end with }}. Keep ALL text values SHORT."""
 
         # Call Fireworks directly (skip fallback chain to avoid 90s+ delay on failures)
         # IMPORTANT: Set FIREWORKS_MODEL_FAST=accounts/fireworks/models/deepseek-v4-flash on Railway!
