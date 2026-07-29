@@ -536,7 +536,7 @@ class PDFGenerator:
             ])
             row_styles.append(("BACKGROUND", (0, i), (-1, i), level_bg.get(risk.level, WHITE)))
 
-        table = Table(table_data, colWidths=[2.2*cm, 2.5*cm, 7.8*cm, 3.5*cm], repeatRows=1)
+        table = Table(table_data, colWidths=[2.8*cm, 2.5*cm, 7.2*cm, 3.5*cm], repeatRows=1)
         style = TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), SLATE_900),
             ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
