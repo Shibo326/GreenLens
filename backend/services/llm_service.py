@@ -237,7 +237,7 @@ CRITICAL: Output ONLY the JSON object. Do NOT include any thinking, reasoning, p
         # Use FAST tier (deepseek-v4-flash) — reasoning models (kimi-k2p6) waste tokens
         # on <think> blocks before producing JSON, often causing truncation/parse failures.
         # Flash produces clean JSON directly and is 3-5x faster.
-        raw = await self.complete(system_prompt, mega_prompt, max_tokens=max_tokens, temperature=0.0, tier="fast")
+        raw = await self.complete(system_prompt, mega_prompt, max_tokens=max_tokens, temperature=0.0, tier="premium")
         raw = _strip_json_fences(raw)
 
         # Extra aggressive: find the LAST complete JSON object (skip any reasoning preamble)
