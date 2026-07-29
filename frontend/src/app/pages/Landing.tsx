@@ -26,9 +26,9 @@ import { ClaimChecker } from "../components/ClaimChecker";
 import { OnboardingOverlay } from "../components/OnboardingOverlay";
 
 const LOADING_STAGES = [
-  { label: "Uploading document", icon: "\u{1F4C4}" },
-  { label: "Reading & embedding claims", icon: "\u{1F50D}" },
-  { label: "AI greenwash detection", icon: "\u{1F916}" },
+  { label: "Uploading document", icon: "\u{1F4C4}", estimatedSec: 5 },
+  { label: "Reading & embedding claims", icon: "\u{1F50D}", estimatedSec: 15 },
+  { label: "AI greenwash detection", icon: "\u{1F916}", estimatedSec: 60 },
 ];
 
 const SLOW_MESSAGES = [
@@ -190,7 +190,7 @@ export default function Landing() {
 
     try {
       const success = await doAnalyze();
-      if (success) { cleanup(); setIsLoading(false); navigate("/dashboard"); }
+      if (success) { cleanup(); setIsLoading(false); toast.success("Analysis complete! 🎉"); navigate("/dashboard"); }
     } catch (err) {
       cleanup();
       const rawMsg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
@@ -481,6 +481,7 @@ export default function Landing() {
               <div className="flex items-center justify-between mb-4">
                 <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 500, color: "var(--ash)" }}>
                   {files.length} file{files.length !== 1 ? "s" : ""} selected
+                  <span className="hidden sm:inline" style={{ fontSize: "11px", color: "var(--ghost)", marginLeft: "8px" }}>(Esc to clear)</span>
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
@@ -561,7 +562,13 @@ export default function Landing() {
                   <div className="flex items-center gap-2">
                     <span aria-hidden="true" className="animate-voltPulse" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--leaf)", display: "inline-block" }} />
                     <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", fontWeight: 600, color: "var(--leaf)" }}>GreenLens AI Processing</span>
-                    <span style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "13px", fontWeight: 600, color: "var(--ash)", marginLeft: "auto" }}>{elapsedSeconds}s</span>
+                    <span style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "13px", fontWeight: 600, color: "var(--ash)", marginLeft: "auto" }}>
+                      {elapsedSeconds}s{elapsedSeconds < 80 && (() => {
+                        const totalEstimate = LOADING_STAGES.reduce((sum, s) => sum + s.estimatedSec, 0);
+                        const remaining = Math.max(0, totalEstimate - elapsedSeconds);
+                        return remaining > 0 ? ` / ~${remaining}s left` : "";
+                      })()}
+                    </span>
                   </div>
                   <AnimatePresence mode="wait">
                     <motion.span key={loadingStage} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.3 }} style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)", display: "block" }}>

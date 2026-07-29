@@ -188,6 +188,8 @@ export function NavigationBar({ showDemo = true }: NavigationBarProps) {
             left: 0,
             right: 0,
             background: "rgba(10, 18, 14, 0.98)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
             borderBottom: "1px solid var(--rule)",
             padding: "16px",
             zIndex: 49,

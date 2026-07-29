@@ -1,4 +1,4 @@
-ï»¿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { NavigationBar } from "../components/NavigationBar";
 import { GhostButton } from "../components/Buttons";
 import { EvidenceTag, EvidenceBox } from "../components/Badges";
@@ -6,6 +6,7 @@ import {
   Send,
   AlertTriangle,
   ArrowRight,
+  ArrowDown,
   FileText,
   Sparkles,
   PanelLeft,
@@ -52,11 +53,17 @@ interface AssistantMessage {
 type ChatMessage = UserMessage | AssistantMessage;
 
 export default function Chat() {
-  const { sessionId, documents, analysis } = useAppState();
+  const { sessionId, documents, analysis, messages: persistedMessages } = useAppState();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Initialize local messages from persisted store (survives page navigation)
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (persistedMessages.length > 0) {
+      return persistedMessages as ChatMessage[];
+    }
+    return [];
+  });
   const [inputValue, setInputValue] = useState("");
   const [isThinking, setIsThinking] = useState(false);
   const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
@@ -73,7 +80,10 @@ export default function Chat() {
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const downloadRef = useRef<HTMLDivElement>(null);
   const streamAbortRef = useRef<(() => void) | null>(null);
@@ -118,8 +128,19 @@ export default function Chat() {
   }, [sessionId, analysis]);
 
   useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });  }, [messages, isThinking]);
+
+  // Track whether user has scrolled up (to show "scroll to bottom" button)
+  const handleMessagesScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    setShowScrollBtn(distanceFromBottom > 120);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isThinking]);
+  }, []);
 
   // Redirect to landing if no session
   useEffect(() => {
@@ -138,6 +159,7 @@ export default function Chat() {
 
     const userMsg: UserMessage = { id: `u-${Date.now()}`, role: "user", content: trimmed, timestamp: new Date().toISOString() };
     setMessages((prev) => [...prev, userMsg]);
+    dispatch({ type: "ADD_MESSAGE", payload: userMsg });
     setInputValue("");
     setIsThinking(true);
     setStreamingAnswer("");
@@ -157,6 +179,7 @@ export default function Chat() {
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMsg]);
+        dispatch({ type: "ADD_MESSAGE", payload: assistantMsg });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Vision analysis failed.";
         toast.error("Image analysis failed. Please try again.");
@@ -246,11 +269,12 @@ export default function Chat() {
             timestamp: new Date().toISOString(),
           };
           setMessages((prev) => [...prev, assistantMsg]);
+        dispatch({ type: "ADD_MESSAGE", payload: assistantMsg });
         },
         (error) => {
           setIsStreaming(false);
           setStreamingAnswer("");
-          // Show error inline in chat â€” no toast needed (avoids double notification)
+          // Show error inline in chat — no toast needed (avoids double notification)
           const errMsg: AssistantMessage = {
             id: `err-${Date.now()}`,
             role: "assistant",
@@ -307,7 +331,7 @@ export default function Chat() {
 
   const handleExportChat = () => {
     if (!messages.length) return;
-    const lines: string[] = [`GreenLens AI â€” Chat Export\n${new Date().toLocaleString()}\n${'='.repeat(60)}\n`];
+    const lines: string[] = [`GreenLens AI — Chat Export\n${new Date().toLocaleString()}\n${'='.repeat(60)}\n`];
     for (const msg of messages) {
       if (msg.role === 'user') {
         lines.push(`[You]\n${msg.content}\n`);
@@ -316,7 +340,7 @@ export default function Chat() {
         lines.push(`[GreenLens AI]\n${sr.answer}`);
         if (sr.evidence.length) {
           lines.push(`\nEvidence:`);
-          sr.evidence.forEach(ev => lines.push(`  â€” "${ev.quote}" â€” ${ev.sourceDocument}`));
+          sr.evidence.forEach(ev => lines.push(`  — "${ev.quote}" — ${ev.sourceDocument}`));
         }
         if (sr.risks) lines.push(`\nRisk: ${sr.risks}`);
         if (sr.recommendation) lines.push(`\nRecommendation: ${sr.recommendation}`);
@@ -363,7 +387,7 @@ export default function Chat() {
     try {
       dispatch({ type: "RESET" });
       navigate("/");
-      toast.success("Session cleared â€” upload new documents to start fresh.");
+      toast.success("Session cleared — upload new documents to start fresh.");
     } catch {
       toast.error("Failed to reset session.");
     }
@@ -415,7 +439,7 @@ export default function Chat() {
               <div className="animate-dot-1 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
               <div className="animate-dot-2 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
               <div className="animate-dot-3 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
-              <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)" }}>Generatingâ€¦</span>
+              <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)" }}>Generating…</span>
             </div>
           ) : (
             quickQuestions.map((q, idx) => (
@@ -518,7 +542,7 @@ export default function Chat() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace", fontSize: "11px", fontWeight: 500, color: "var(--leaf)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "200px" }}>
-                    {docCount} doc{docCount !== 1 ? "s" : ""} â€” greenwashing analysis ready
+                    {docCount} doc{docCount !== 1 ? "s" : ""} — greenwashing analysis ready
                   </span>
                   {isThinking && (
                     <div className="flex items-center gap-1">
@@ -574,7 +598,7 @@ export default function Chat() {
               <div className="relative" ref={downloadRef}>
                 <GhostButton small onClick={() => setDownloadOpen(!downloadOpen)} disabled={isExporting}>
                   <Download size={14} />
-                  <span className="hidden sm:inline">{isExporting ? "Exportingâ€¦" : "Download"}</span>
+                  <span className="hidden sm:inline">{isExporting ? "Exporting…" : "Download"}</span>
                   <ChevronDown size={12} style={{ transform: downloadOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                 </GhostButton>
                 {downloadOpen && (
@@ -679,8 +703,8 @@ export default function Chat() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5" style={{ background: "var(--ink)" }}>
-            {/* Empty state â€” show inline suggested questions */}
+          <div ref={messagesContainerRef} onScroll={handleMessagesScroll} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 relative" style={{ background: "var(--ink)" }}>
+            {/* Empty state — show inline suggested questions */}
             {messages.length === 0 && !isThinking && !isStreaming && (
               <div className="flex flex-col items-center justify-center h-full py-8 animate-fadeIn">
                 <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "var(--leaf-dim)", border: "1px solid var(--leaf-border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
@@ -690,7 +714,7 @@ export default function Chat() {
                   Ask GreenLens anything about the greenwashing analysis
                 </p>
                 <p style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "14px", color: "var(--ghost)", marginBottom: "24px", textAlign: "center" }}>
-                  {documents.length} document{documents.length !== 1 ? "s" : ""} loaded â€” greenwashing detection ready
+                  {documents.length} document{documents.length !== 1 ? "s" : ""} loaded — greenwashing detection ready
                 </p>
                 {/* Inline suggested questions grid */}
                 {quickQuestions.length > 0 && (
@@ -715,7 +739,7 @@ export default function Chat() {
                     <div className="animate-dot-1 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
                     <div className="animate-dot-2 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
                     <div className="animate-dot-3 w-1.5 h-1.5 rounded-full" style={{ background: "var(--leaf)" }} />
-                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)" }}>Generating questionsâ€¦</span>
+                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "12px", color: "var(--ghost)" }}>Generating questions…</span>
                   </div>
                 )}
               </div>
@@ -741,20 +765,36 @@ export default function Chat() {
               }
 
               const sr = msg.structuredResponse;
+              const isErrorMsg = msg.id.startsWith("err-");
               return (
                 <div key={msg.id} className="flex justify-start animate-slideUp">
                   <div style={{ maxWidth: "min(720px, 95vw)", width: "100%" }}>
-                    <div className="p-4 sm:p-5" style={{ background: "var(--lead)", borderLeft: "3px solid var(--leaf)", borderRadius: "4px 20px 20px 20px" }}>
+                    <div className="p-4 sm:p-5" style={{ background: isErrorMsg ? "var(--flag-red-dim)" : "var(--lead)", borderLeft: `3px solid ${isErrorMsg ? "var(--flag-red)" : "var(--leaf)"}`, borderRadius: "4px 20px 20px 20px" }}>
                       {/* ANSWER */}
                       <div className="mb-4">
                         <div className="flex items-center gap-2 mb-3">
                           <div className="flex items-center gap-1.5">
-                            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--leaf)", boxShadow: "0 0 6px rgba(61, 220, 132, 0.4)" }} />
-                            <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", color: "var(--leaf)", textTransform: "uppercase" }}>ANSWER</span>
+                            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: isErrorMsg ? "var(--flag-red)" : "var(--leaf)", boxShadow: isErrorMsg ? "0 0 6px rgba(240, 68, 82, 0.4)" : "0 0 6px rgba(61, 220, 132, 0.4)" }} />
+                            <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", color: isErrorMsg ? "var(--flag-red)" : "var(--leaf)", textTransform: "uppercase" }}>{isErrorMsg ? "ERROR" : "ANSWER"}</span>
                           </div>
                           <div style={{ flex: 1, height: "1px", background: "var(--rule)" }} />
                         </div>
                         <MarkdownText text={sr.answer} style={{ fontSize: "15px", lineHeight: 1.7 }} />
+                        {isErrorMsg && !sr.answer.toLowerCase().includes("session has expired") && (
+                          <button
+                            onClick={() => {
+                              const idx = messages.indexOf(msg);
+                              const lastUserMsg = messages.slice(0, idx).reverse().find(m => m.role === "user");
+                              if (lastUserMsg && lastUserMsg.role === "user") { void handleSubmit(lastUserMsg.content); }
+                            }}
+                            className="mt-3 flex items-center gap-2 px-4 py-2 rounded-lg"
+                            style={{ background: "rgba(240,68,82,0.08)", border: "1px solid rgba(240,68,82,0.3)", color: "var(--flag-red)", cursor: "pointer", fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", fontWeight: 600 }}
+                          >
+                            <RotateCcw size={13} />
+                            Retry this question
+                          </button>
+                        )}
+                        {!isErrorMsg && (
                         <div className="flex justify-end mt-2">
                           <button
                             onClick={() => {
@@ -771,6 +811,7 @@ export default function Chat() {
                             {copiedId === msg.id ? <><Check size={11} />&nbsp;Copied</> : <><Copy size={11} />&nbsp;Copy</>}
                           </button>
                         </div>
+                        )}
                       </div>
 
                       {/* EVIDENCE */}
@@ -894,13 +935,40 @@ export default function Chat() {
                     <div className="animate-dot-1 w-2 h-2 rounded-full" style={{ background: "var(--leaf)", boxShadow: "0 0 6px rgba(61, 220, 132, 0.5)" }} />
                     <div className="animate-dot-2 w-2 h-2 rounded-full" style={{ background: "var(--leaf)", boxShadow: "0 0 6px rgba(61, 220, 132, 0.5)" }} />
                     <div className="animate-dot-3 w-2 h-2 rounded-full" style={{ background: "var(--leaf)", boxShadow: "0 0 6px rgba(61, 220, 132, 0.5)" }} />
-                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)" }}>Scanning documents & reasoning...</span>
+                    <span style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "13px", color: "var(--ghost)" }}>{attachedImage ? "Analyzing image with AI vision..." : "Searching documents for evidence..."}</span>
                   </div>
                 </div>
               </div>
             )}
 
             <div ref={messagesEndRef} />
+
+            {/* Scroll to bottom FAB */}
+            {showScrollBtn && (
+              <button
+                onClick={scrollToBottom}
+                className="sticky bottom-4 flex items-center gap-1.5 px-3 py-2 rounded-full animate-slideUp z-10"
+                style={{
+                  background: "var(--lead)",
+                  border: "1px solid var(--leaf-border)",
+                  color: "var(--leaf)",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.3), 0 0 12px rgba(61,220,132,0.1)",
+                  fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  transition: "transform 0.15s, box-shadow 0.15s",
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                  display: "flex",
+                  width: "fit-content",
+                }}
+                aria-label="Scroll to latest messages"
+              >
+                <ArrowDown size={13} />
+                New messages
+              </button>
+            )}
           </div>
 
           {/* Chat Input */}
@@ -980,7 +1048,7 @@ export default function Chat() {
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="Ask about these sustainability claimsâ€¦"
+                placeholder="Ask about these sustainability claims…"
                 className="flex-1 bg-transparent border-none outline-none placeholder-ghost"
                 style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", fontSize: "15px", color: "var(--paper)", minWidth: 0 }}
                 value={inputValue}
@@ -995,7 +1063,7 @@ export default function Chat() {
                 onClick={() => imageInputRef.current?.click()}
                 onMouseOver={(e) => { e.currentTarget.style.color = "var(--leaf)"; }}
                 onMouseOut={(e) => { e.currentTarget.style.color = "var(--ghost)"; }}
-                title="Snap & Check â€” attach image for analysis"
+                title="Snap & Check — attach image for analysis"
               >
                 <Camera size={18} />
               </button>

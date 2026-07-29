@@ -318,7 +318,7 @@ export default function Dashboard() {
               </div>
               {/* Export Dropdown */}
               <div className="relative" ref={exportDropdownRef}>
-                <GhostButton small onClick={() => setExportDropdownOpen(!exportDropdownOpen)} disabled={isExporting}>
+                <GhostButton small onClick={() => setExportDropdownOpen(!exportDropdownOpen)} disabled={isExporting} title="Export report (Ctrl+E)">
                   <span className="flex items-center gap-1.5">
                     <FileDown size={14} />
                     <span className="hidden sm:inline">{isExporting ? "Exporting..." : "Export"}</span>
