@@ -23,7 +23,6 @@ import { toast } from "sonner";
 import { useAppDispatch } from "../../lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClaimChecker } from "../components/ClaimChecker";
-import { OnboardingOverlay } from "../components/OnboardingOverlay";
 
 const LOADING_STAGES = [
   { label: "Uploading document", icon: "\u{1F4C4}", estimatedSec: 5 },
@@ -223,7 +222,6 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen page-enter" style={{ background: "var(--ink)" }}>
-      <OnboardingOverlay />
       <NavigationBar />
 
       {/* Hero Section */}
