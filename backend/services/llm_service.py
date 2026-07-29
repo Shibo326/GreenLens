@@ -177,7 +177,7 @@ class LLMService:
         system_prompt: str,
         context: str,
         doc_names: list[str],
-        max_tokens: int = 8000,
+        max_tokens: int = 4000,
     ) -> dict:
         """
         SINGLE_CALL_MODE: combine ALL analysis into ONE LLM call.
@@ -234,10 +234,10 @@ You MUST identify at least 3 risks and 3 comparison rows. Sustainability documen
 
 CRITICAL: Output ONLY the JSON object. Do NOT include any thinking, reasoning, preamble, or explanation. Start your response with {{ and end with }}."""
 
-        # Use FAST tier — deepseek-v4-flash produces clean JSON without reasoning.
-        # kimi-k2p6 outputs extensive reasoning text that exceeds token limits.
+        # Call Fireworks directly (skip fallback chain to avoid 90s+ delay on failures)
         # IMPORTANT: Set FIREWORKS_MODEL_FAST=accounts/fireworks/models/deepseek-v4-flash on Railway!
-        raw = await self.complete(system_prompt, mega_prompt, max_tokens=max_tokens, temperature=0.0, tier="fast")
+        async with self._semaphore:
+            raw = await self._call_fireworks(system_prompt, mega_prompt, max_tokens, temperature=0.0, tier="fast")
         raw = _strip_json_fences(raw)
 
         # Extra aggressive: find the LAST complete JSON object (skip any reasoning preamble)
