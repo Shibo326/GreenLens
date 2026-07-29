@@ -210,7 +210,7 @@ Return ONLY valid JSON with ALL these keys (keep ALL values SHORT and concise):
     {{"id": "r3", "level": "MEDIUM", "description": "<max 20 words>", "sourceDocument": "<filename>", "category": "Vague Language"}}
   ],
   "recommendation": {{"title": "<5 words>", "summary": "<1 sentence>", "nextSteps": ["step1", "step2"], "confidence": 0.8}},
-  "suggestedQuestions": ["q1", "q2", "q3"],
+  "suggestedQuestions": ["<investigative question about the biggest red flag>", "<question challenging a specific claim with data>", "<question about missing certifications>", "<question a regulator would ask>", "<question about what consumers should do>"],
   "conflicts": []
 }}
 
