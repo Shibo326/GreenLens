@@ -147,7 +147,7 @@ async def health_check():
             "service": "greenlens-api",
             "version": "1.0.0",
             "provider": "fireworks",
-            "model": os.getenv("FIREWORKS_MODEL", "accounts/fireworks/models/gpt-oss-120b"),
+            "model": os.getenv("FIREWORKS_MODEL_QUALITY", os.getenv("FIREWORKS_MODEL", "accounts/fireworks/models/deepseek-v4-flash")),
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "ready": ready,
         },
@@ -161,7 +161,7 @@ async def provider_info():
     return {
         "provider": "fireworks",
         "isAMD": True,
-        "model": os.getenv("FIREWORKS_MODEL", "accounts/fireworks/models/gpt-oss-120b"),
+        "model": os.getenv("FIREWORKS_MODEL_QUALITY", os.getenv("FIREWORKS_MODEL", "accounts/fireworks/models/deepseek-v4-flash")),
         "endpoint": endpoint[:40] + "..." if endpoint else None,
     }
 
