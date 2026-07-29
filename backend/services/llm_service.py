@@ -225,10 +225,17 @@ Return ONLY valid JSON with ALL these keys:
   "conflicts": []
 }}
 
-SCORING GUIDE for greenwashScore:
-- 0-30: HIGH RISK — multiple misleading claims, major contradictions, no third-party verification
-- 31-60: MEDIUM RISK — vague claims, some unverified assertions, partial evidence gaps
-- 61-100: LOW RISK — claims are specific, measurable, third-party verified, data-consistent
+SCORING GUIDE for greenwashScore (0 = total greenwashing, 100 = fully credible):
+
+Score by counting these factors:
+- Start at 50 (neutral)
+- SUBTRACT 15 for each HIGH-severity risk found
+- SUBTRACT 8 for each MEDIUM-severity risk
+- SUBTRACT 5 for each claim without third-party certification
+- SUBTRACT 10 if absolute metrics WORSENED while claiming improvement
+- ADD 10 for each specific, measurable, time-bound claim with evidence
+- ADD 15 for each recognized third-party certification (ISO 14001, B Corp, FSC, etc.)
+- Minimum score: 5, Maximum: 95
 
 You MUST identify 3-5 risks and 3 comparison rows. Keep descriptions SHORT (max 30 words each).
 
