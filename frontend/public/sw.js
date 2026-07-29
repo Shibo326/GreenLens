@@ -33,8 +33,14 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Never cache API calls — always go to network
-  if (url.pathname.startsWith('/api')) {
+  // Never cache POST/PUT/DELETE requests or API calls
+  if (request.method !== 'GET') {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Never cache API calls — always go to network (local or external backend)
+  if (url.pathname.startsWith('/api') || url.hostname.includes('railway.app')) {
     event.respondWith(fetch(request));
     return;
   }
