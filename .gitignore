@@ -5,6 +5,7 @@
 # --- Dependencies ---
 node_modules/
 frontend/node_modules/
+.vite/
 /.pnp
 .pnp.js
 .yarn/install-state.gz
