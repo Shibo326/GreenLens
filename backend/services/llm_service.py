@@ -232,7 +232,7 @@ SCORING GUIDE for greenwashScore:
 
 You MUST identify at least 3 risks and 3 comparison rows. Sustainability documents ALWAYS have claims that can be scrutinized."""
 
-        raw = await self.complete(system_prompt, mega_prompt, max_tokens=max_tokens, temperature=0.0, tier="quality")
+        raw = await self.complete(system_prompt, mega_prompt, max_tokens=max_tokens, temperature=0.0, tier="premium")
         raw = _strip_json_fences(raw)
 
         # Extra aggressive: find the LAST complete JSON object (skip any reasoning preamble)
