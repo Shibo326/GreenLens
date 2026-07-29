@@ -265,19 +265,20 @@ CRITICAL: Output ONLY the JSON object. Do NOT include any thinking, reasoning, p
         try:
             return json.loads(raw)
         except json.JSONDecodeError as e:
+            # First attempt repair (fix trailing commas, truncation, etc.)
+            repaired = _repair_json(raw)
+            try:
+                return json.loads(repaired)
+            except json.JSONDecodeError:
+                pass
             # Try to extract the outer JSON object
             brace_start = raw.find("{")
             brace_end = raw.rfind("}")
             if brace_start != -1 and brace_end > brace_start:
                 candidate = raw[brace_start:brace_end + 1]
+                repaired2 = _repair_json(candidate)
                 try:
-                    return json.loads(candidate)
-                except json.JSONDecodeError:
-                    pass
-                # Attempt JSON repair: fix trailing commas, unquoted nulls, etc.
-                repaired = _repair_json(candidate)
-                try:
-                    return json.loads(repaired)
+                    return json.loads(repaired2)
                 except json.JSONDecodeError:
                     pass
             logger.error(f"[Fireworks] Mega-call raw response (first 2000 chars): {raw[:2000]}")
@@ -463,11 +464,10 @@ def _repair_json(text: str) -> str:
     Handles:
     - Trailing commas before } or ]
     - Single-line // comments
-    - Unescaped newlines inside strings
     - Truncated JSON (close all open braces/brackets)
+    - Incomplete key-value pairs at the end
     """
     # Remove single-line comments (// ...) that are NOT inside strings
-    # Simple heuristic: remove lines that are only comments
     lines = text.split('\n')
     cleaned_lines = []
     for line in lines:
@@ -480,19 +480,33 @@ def _repair_json(text: str) -> str:
     # Remove trailing commas before } or ]
     text = re.sub(r',\s*([}\]])', r'\1', text)
 
-    # Try to close unclosed braces/brackets (truncated responses)
-    open_braces = text.count('{') - text.count('}')
-    open_brackets = text.count('[') - text.count(']')
-    if open_braces > 0 or open_brackets > 0:
-        # Truncate to last complete value (last comma or colon+value)
-        # Then close remaining brackets
-        text = text.rstrip()
-        # Remove trailing incomplete key-value
-        if text and text[-1] not in ('}', ']', '"', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'e', 'l', 'u'):
-            last_comma = text.rfind(',')
-            if last_comma > 0:
-                text = text[:last_comma]
-        text += ']' * max(0, open_brackets) + '}' * max(0, open_braces)
+    # Try to parse as-is first
+    try:
+        json.loads(text)
+        return text
+    except json.JSONDecodeError:
+        pass
+
+    # Truncation repair: find the last position where JSON was valid
+    # Strategy: progressively trim from the end until we can close it
+    for trim_pos in range(len(text), max(0, len(text) - 500), -1):
+        candidate = text[:trim_pos].rstrip()
+        # Remove any trailing incomplete key or value
+        while candidate and candidate[-1] in ('"', ':', ',', ' ', '\n', '\t'):
+            candidate = candidate[:-1]
+        # Count open/close
+        open_braces = candidate.count('{') - candidate.count('}')
+        open_brackets = candidate.count('[') - candidate.count(']')
+        if open_braces >= 0 and open_brackets >= 0:
+            # Add trailing comma cleanup
+            candidate = re.sub(r',\s*$', '', candidate)
+            # Close everything
+            candidate += ']' * max(0, open_brackets) + '}' * max(0, open_braces)
+            try:
+                json.loads(candidate)
+                return candidate
+            except json.JSONDecodeError:
+                continue
 
     return text
 
