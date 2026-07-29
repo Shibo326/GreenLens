@@ -1,12 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Background -->
+  <!-- Dark background -->
   <rect width="512" height="512" rx="92" fill="#0a1f0f"/>
-  <!-- Magnifying glass -->
-  <circle cx="230" cy="210" r="120" fill="none" stroke="#22c55e" stroke-width="32"/>
-  <!-- Handle -->
-  <line x1="320" y1="300" x2="420" y2="400" stroke="#22c55e" stroke-width="36" stroke-linecap="round"/>
-  <!-- Leaf inside -->
-  <path d="M230 120 Q320 170 280 270 Q230 240 180 270 Q140 170 230 120Z" fill="#22c55e"/>
-  <!-- Leaf vein -->
-  <line x1="230" y1="130" x2="230" y2="255" stroke="#0a1f0f" stroke-width="6" stroke-linecap="round"/>
+  <!-- Leaf shape matching navbar -->
+  <path d="M256 80 C380 80 432 200 432 280 C432 380 340 432 256 432 C180 432 140 380 160 300 C180 220 220 180 256 160 C290 180 320 220 340 260" fill="none" stroke="#3DDC84" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M256 160 L256 400" fill="none" stroke="#3DDC84" stroke-width="20" stroke-linecap="round"/>
+  <path d="M256 250 L310 200" fill="none" stroke="#3DDC84" stroke-width="16" stroke-linecap="round"/>
+  <path d="M256 300 L200 250" fill="none" stroke="#3DDC84" stroke-width="16" stroke-linecap="round"/>
 </svg>
